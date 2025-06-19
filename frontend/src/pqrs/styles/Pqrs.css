@@ -1,0 +1,233 @@
+.header-pqrs {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.header-pqrs div {
+    float: left;
+    color: #fff;
+    font-family: 'Exo', sans-serif;
+    font-size: 42px;
+    font-weight: 200;
+}
+
+.header-pqrs div span {
+    color: #8dd9ff;
+}
+
+.pqrs-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.pqrs-otro{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+.pqrs-paciente{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.pqrs {
+    /* display: grid;
+    grid-template-columns: 1fr 1fr; */
+    /* gap: 1rem; */
+    width: 90%;
+    max-width: 800px;
+    padding: 2rem;
+    border-radius: 10px;
+    /* background: rgba(255, 255, 255, 0.1); 
+    backdrop-filter: blur(15px); 
+    -webkit-backdrop-filter: blur(15px); 
+
+    border: 1px solid rgba(255, 255, 255, 0.3); 
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);  
+    margin: 0 auto; */
+}
+
+/* Responsive grid layout interno, si hay elementos hijos */
+.pqrs>* {
+    min-width: 0;
+}
+
+.pqrs input,
+.pqrs select,
+.pqrs textarea {
+    width: 100%;
+    height: 57px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 2px;
+    color: #ffffff;
+    font-family: 'Exo', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 8px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+
+}
+
+.pqrs select option {
+    color: #ffffff;
+    background: #007aa1;
+}
+
+.pqrs input[name="nombre"],
+.pqrs input[name="apellido"],
+.pqrs input[name="documento_numero"],
+.pqrs input[name="telefono"] {
+    margin-bottom: 10px;
+}
+
+.pqrs textarea[name="descripcion"] {
+    height: 150px;
+    resize: vertical;
+}
+
+
+.pqrs button {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 40px;
+    background: #fff;
+    border: 1px solid #fff;
+    cursor: pointer;
+    border-radius: 2px;
+    color: #111b6e;
+    font-family: 'Exo', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 6px;
+    margin-top: 10px;
+}
+
+.pqrs button:hover {
+    opacity: 0.8;
+}
+
+.pqrs button:active {
+    opacity: 0.6;
+}
+
+.pqrs input[type="text"]:focus,
+.pqrs input[type="email"]:focus,
+.pqrs input[type="password"]:focus,
+.pqrs select:focus,
+.pqrs textarea:focus,
+.pqrs button:focus {
+    outline: none;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+/* .error{
+    color: #1fecb9;
+    font-size: 14px;
+    margin-top: 5px;
+    font-family: 'Exo', sans-serif;
+} */
+.error {
+    color: #1fecb9; 
+    font-size: 12px; 
+    margin-top: -5px; 
+    margin-bottom: 10px; 
+    font-family: 'Exo', sans-serif;
+    display: block; 
+    text-align: left; 
+    grid-column: 1 / -1; /
+}
+
+
+/* Contenedor del grupo */
+.titulo-form {
+    font-family: 'Exo', sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+}
+label {
+    font-family: 'Exo', sans-serif;
+    font-size: 20px;
+}
+.radio-group {
+  display: flex;
+  gap: 20px; /* espacio entre opciones */
+  margin: 8px 0 16px 0;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+}
+
+/* Estilos para cada label de radio */
+.radio-group label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Ocultar input original */
+.radio-group input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  margin-right: 8px;
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+/* Estilo cuando está seleccionado */
+.radio-group input[type="radio"]:checked {
+  border-color: #007bff;
+  background-color: #0e7aee;
+}
+
+/* El círculo interior cuando está seleccionado */
+.radio-group input[type="radio"]:checked::after {
+  content: "";
+  display: block;
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+
+/* Cambiar el color del label cuando el radio está seleccionado */
+.radio-group input[type="radio"]:checked + span {
+  font-weight: 600;
+  color: #007bff;
+}
+
+
+
+@media (max-width: 768px) {
+
+    .pqrs-paciente {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    .pqrs-otro {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .pqrs input[type="file"] {
+        font-size: 12px;
+    }
+}

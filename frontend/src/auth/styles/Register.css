@@ -1,0 +1,128 @@
+.header-register {
+  position: absolute;
+  top: calc(46% - -69px);
+  left: calc(50% - 313px);
+  z-index: 2;
+}
+
+.header-register div {
+  float: left;
+  color: #fff;
+  font-family: 'Exo', sans-serif;
+  font-size: 42px;
+  font-weight: 200;
+}
+
+.header-register div span {
+  color: #8dd9ff;
+}
+
+.register {
+  position: absolute;
+  top: calc(44% - 139px);
+  left: calc(50% - 50px);
+  height: 320px;
+  /* más alto para 4 inputs */
+  width: 350px;
+  padding: 10px;
+  z-index: 2;
+}
+
+.register input[type="text"],
+.register input[type="email"],
+.register input[type="password"] {
+  width: 300px;
+  height: 50px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+  color: #fff;
+  font-family: 'Exo', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  padding: 4px;
+  margin-top: 10px;
+}
+.register select {
+  width: 310px;
+  height: 50px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+  color: #fff;
+  font-family: 'Exo', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  padding: 4px;
+  margin-top: 10px;
+}
+
+.register select option {
+  background-color: #076e9d;
+  color: white;
+}
+
+
+.register button {
+  width: 310px;
+  height: 40px;
+  background: #fff;
+  border: 1px solid #fff;
+  cursor: pointer;
+  border-radius: 2px;
+  color: #a18d6c;
+  font-family: 'Exo', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  padding: 6px;
+  margin-top: 10px;
+}
+
+.register button:hover {
+  opacity: 0.8;
+}
+
+.register button:active {
+  opacity: 0.6;
+}
+
+.register input[type="text"]:focus,
+.register input[type="email"]:focus,
+.register input[type="password"]:focus,
+.register button:focus {
+  outline: none;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.error-message {
+  color: #1fecb9;
+  font-size: 14px;
+  margin-top: 5px;
+  font-family: 'Exo', sans-serif;
+}
+
+@media (max-width: 767px) {
+  .logo-img {
+    display: none;
+  }
+
+  .header-register {
+    top: 22%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .register {
+    top: calc(51% - 139px);
+    left: 50%;
+    transform: translateX(-45%);
+  }
+
+  .header-register div {
+    display: flex;
+  }
+
+  .header-register div span {
+    margin-left: 10px;
+  }
+}

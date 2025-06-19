@@ -1,0 +1,137 @@
+.header-details-user {
+    position: absolute;
+    top: calc(40% + 35px);
+    left: calc(50% - 255px);
+    z-index: 2;
+}
+
+.header-details-user div {
+    float: left;
+    color: #fff;
+    font-family: 'Exo', sans-serif;
+    font-size: 42px;
+    font-weight: 200;
+}
+
+.header-details-user div span {
+    color: #8dd9ff;
+}
+
+.details-user {
+    position: absolute;
+    top: calc(44% - 139px);
+    left: calc(50% - 50px);
+    width: 350px;
+    padding: 10px;
+    z-index: 2;
+}
+
+.details-user>div {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+/* Etiquetas (labels) */
+.details-user label {
+    margin-bottom: 6px;
+    color: #fff;
+    font-family: 'Exo', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+/* Estilo común para input, select y visualización (p) */
+.details-user input[type="text"],
+.details-user input[type="email"],
+.details-user input[type="password"],
+.details-user select,
+.details-user p {
+    width: 310px;
+    height: 50px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 2px;
+    color: #fff;
+    font-family: 'Exo', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 13px 10px;
+    margin-top: 4px;
+    margin-bottom: 21px;
+    box-sizing: border-box;
+}
+
+.select-role {
+    padding: 0px 10px !important;
+}
+
+.select-role option {
+    background-color: #076e9d;
+    color: white;
+}
+.select-role option[disabled] {
+  color: rgb(104, 243, 213); /* blanco */
+  opacity: 0.7; /* opcional, para que se vea deshabilitado */
+}
+
+/* Botones */
+.details-user button {
+    width: 310px;
+    height: 40px;
+    background: #fff;
+    border: 1px solid #fff;
+    cursor: pointer;
+    border-radius: 2px;
+    color: #a18d6c;
+    font-family: 'Exo', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 6px;
+    margin-top: 10px;
+    transition: opacity 0.3s ease;
+}
+
+.details-user button:hover {
+    opacity: 0.8;
+}
+
+.details-user button:active {
+    opacity: 0.6;
+}
+
+/* Focus */
+.details-user input[type="text"]:focus,
+.details-user input[type="email"]:focus,
+.details-user select:focus,
+.details-user button:focus {
+    outline: none;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+/* Errores */
+.error-message {
+    color: #1fecb9;
+    font-size: 14px;
+    margin-top: 5px;
+    font-family: 'Exo', sans-serif;
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+    .logo-img {
+        display: none;
+    }
+
+    .header-details-user {
+        top: 26%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .details-user {
+        top: calc(58% - 139px);
+        left: 50%;
+        transform: translateX(-45%);
+    }
+}

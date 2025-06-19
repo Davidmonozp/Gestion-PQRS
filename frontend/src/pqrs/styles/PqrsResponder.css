@@ -1,0 +1,92 @@
+.pqrs-res-container {
+    width: 80%;
+    margin: 210px auto;
+    background: transparent;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-family: 'Arial', sans-serif;
+    color: white;
+    font-size: 20px;
+    backdrop-filter: blur(170px);
+    position: absolute;
+    top: 34%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.pqrs-res-title {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: rgb(49, 189, 224);
+    border-bottom: 1px solid #ffffff;
+    padding-bottom: 0.5rem;
+}
+
+.pqrs-res-info p {
+    margin: 1.5rem 0;
+}
+
+.pqrs-res-info strong {
+    color: rgb(49, 189, 224);
+}
+
+.pqrs-res-descripcion {
+    background-color: transparent;
+    padding: 1rem;
+    border-radius: 6px;
+    white-space: pre-line;
+    color: rgb(255, 255, 255);
+    border: 0.5px solid rgba(255, 255, 255, 0.6);
+}
+
+.pqrs-res-form {
+    margin-top: 2rem;
+}
+
+.pqrs-res-form p {
+    color: rgb(49, 189, 224);
+}
+
+.pqrs-res-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 18px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    resize: vertical;
+    box-sizing: border-box;
+    margin-top: 0.5rem;
+}
+
+.pqrs-res-button {
+    height: 37px;
+    background-color: #030f54;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    margin-top: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.pqrs-res-button:hover {
+    background-color: #084cdf;
+}
+
+.pqrs-res-success {
+    color: green;
+    margin-top: 1rem;
+}
+
+.pqrs-res-error {
+    color: red;
+    font-weight: bold;
+    padding: 1rem;
+}
+
+.pqrs-res-loading {
+    font-style: italic;
+    padding: 1rem;
+}

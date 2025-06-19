@@ -1,0 +1,175 @@
+.container-pqrs {
+    padding: 20px 30px 20px 30px;
+}
+
+.container-pqrs .container-table th {
+    text-align: center;
+}
+
+.header-top {
+    display: flex;
+    flex-direction: column;
+    margin-top: 30px;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.container-table {
+    width: 100%;
+    min-width: 600px;
+    /* para evitar que se encoja demasiado */
+    border-collapse: collapse;
+    /* otros estilos que tengas */
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    /* Scroll horizontal si hace falta */
+    -webkit-overflow-scrolling: touch;
+    /* suaviza scroll en iOS */
+}
+
+table {
+    border-collapse: collapse;
+    overflow: hidden;
+    box-shadow: 0 0 20px transparent;
+    border: 1px solid white
+}
+
+th,
+td {
+    padding: 15px;
+    background-color: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.507)
+}
+
+th {
+    text-align: left;
+    background-color: #0087cd;
+}
+
+tbody tr:hover {
+    background-color: #1f9cce69;
+}
+
+tbody td {
+    position: relative;
+    z-index: 2;
+}
+
+tbody td:hover::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(12, 124, 115, 0.473);
+    z-index: -1;
+}
+
+
+/* BOTONES DE BUSQUEDA */
+.filtros-busqueda {
+    margin-bottom: 0px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.filtros-busqueda input {
+    background: transparent;
+    width: 206px;
+    height: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 2px;
+    color: #ffffff;
+    font-family: 'Exo', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+
+.filtros-busqueda button {
+    height: 30px;
+    padding: 6px 12px;
+    font-family: 'Exo', sans-serif;
+    background-color: #030f54;
+    color: white;
+    border: none;
+    cursor: pointer;
+
+
+    width: 100%;
+    max-width: 200px;
+    margin-top: 10px;
+    align-self: center;
+}
+
+.filtros-busqueda button:hover {
+    background: #1aacd9;
+}
+
+.input-placeholder::placeholder {
+    color: rgb(255, 255, 255);
+}
+
+/* FIN BOTONES DE BUSQUEDA */
+
+/* PAGINACION */
+.paginacion {
+    margin: 20px 0;
+
+}
+
+.elementosPaginacion {
+    list-style: none;
+    /*Quitar puntos lista*/
+    text-align: center;
+}
+
+.numero {
+    display: inline-block;
+    margin-right: 5px;
+    padding: 10px;
+    background: #1aacd9;
+    border-radius: 50%;
+    width: 15px;
+    height: 15px;
+}
+
+.numero a {
+    font-size: 17px;
+    display: block;
+    text-decoration: none;
+    color: #ffffff;
+    margin-top: -1px;
+}
+
+.numero:hover,
+.numero.active {
+    background: #030f54;
+}
+
+/* FIN PAGINACION */
+
+@media (max-width: 834px) {
+
+    th,
+    td {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+}
+
+@media (min-width: 671px) and (max-width: 893px) {
+    .filtros-busqueda button {
+        margin-top: 1px;
+    }
+}

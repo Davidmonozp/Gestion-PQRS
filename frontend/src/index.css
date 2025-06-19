@@ -1,0 +1,15 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #000046;
+  background: -webkit-linear-gradient(to left, #1CB5E0, #000046);
+  background: linear-gradient(to left, #1CB5E0, #000046);
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+}
+
+h2 {
+  color: rgb(40, 195, 241);
+}
