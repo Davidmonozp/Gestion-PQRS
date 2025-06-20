@@ -67,7 +67,7 @@ function PqrsList() {
 
   return (
     <div className="container-pqrs">
-      <div className="header-top">  
+      <div className="header-top">
         <PqrsFilters
           filters={filters}
           setFilters={setFilters}
@@ -91,6 +91,8 @@ function PqrsList() {
               <th>EPS</th>
               <th>Tipo Solicitud</th>
               <th>Archivo</th>
+              <th>Estado de la respuesta</th>
+              <th>Respuesta enviada a usuario</th>
               <th>Fecha</th>
               <th>Acciones</th>
             </tr>
@@ -122,6 +124,10 @@ function PqrsList() {
                   ) : (
                     "Sin archivo"
                   )}
+                </td>
+                <td>{pqr.estado_respuesta}</td>
+                <td>
+                  {pqr.respuesta_enviada === 1 ? "Enviada ✅" : "No enviada ❌"}
                 </td>
                 <td>{new Date(pqr.created_at).toLocaleString()}</td>
                 <td>

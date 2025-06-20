@@ -228,34 +228,32 @@ class PqrController extends Controller
     }
 
 
-public function show($id)
-{
-    try {
-        $user = JWTAuth::parseToken()->authenticate();
+    public function show($id)
+    {
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
 
-        // 👉 AÑADIR 'respuestas' a la carga con relaciones
-        $pqr = Pqr::with(['asignado', 'respuestas'])->findOrFail($id);
+            // 👉 AÑADIR 'respuestas' a la carga con relaciones
+            $pqr = Pqr::with(['asignado', 'respuestas'])->findOrFail($id);
 
-        if ($user->hasRole('Digitador')) {
-            if (
-                $pqr->registrador_documento_tipo !== $user->documento_tipo ||
-                $pqr->registrador_documento_numero !== $user->documento_numero
-            ) {
-                return response()->json([
-                    'message' => 'No tienes permiso para ver esta PQR.'
-                ], 403);
+            if ($user->hasRole('Digitador')) {
+                if (
+                    $pqr->registrador_documento_tipo !== $user->documento_tipo ||
+                    $pqr->registrador_documento_numero !== $user->documento_numero
+                ) {
+                    return response()->json([
+                        'message' => 'No tienes permiso para ver esta PQR.'
+                    ], 403);
+                }
             }
-        }
 
-        return response()->json([
-            'pqr' => $pqr,
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'Error al obtener la PQR: ' . $e->getMessage()
-        ], 500);
+            return response()->json(['pqr' => $pqr->load('respuestas')]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener la PQR: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}
     // public function show($id)
     // {
     //     $pqr = Pqr::with('asignado')->findOrFail($id);
@@ -264,14 +262,12 @@ public function show($id)
     //         'pqr' => $pqr,
     //     ]);
     // }
-
     public function update(Request $request, $id)
     {
         try {
-            // Buscar la Pqr por id
             $pqr = Pqr::findOrFail($id);
 
-            // Validar los campos básicos
+            // Campos ediciones comunes
             $data = $request->only([
                 'nombre',
                 'apellido',
@@ -287,30 +283,41 @@ public function show($id)
                 'archivo',
             ]);
 
-            // Si el usuario tiene rol admin o gestor, validar y añadir campos extras
+            // Solo Administrador o Gestor pueden asignar atributos extras
             if ($request->user()->hasRole(['Administrador', 'Gestor'])) {
                 $request->validate([
                     'atributo_calidad' => 'nullable|in:Accesibilidad,Continuidad,Oportunidad,Pertinencia,Satisfacción del usuario,Seguridad',
                     'fuente' => 'nullable|in:Formulario de la web,correo atención al usuario,Correo de Agendamiento NAC,Encuesta de satisfacción IPS,callcenter,Presencial',
                     'asignado_a' => 'nullable|exists:users,id',
+                    'prioridad' => 'nullable|in:Vital,Priorizado,Simple',
                 ]);
 
                 $data['atributo_calidad'] = $request->atributo_calidad;
                 $data['fuente'] = $request->fuente;
                 $data['asignado_a'] = $request->asignado_a;
+
+                // Asigna prioridad y calcula deadline solo si aún no tiene
+                if ($request->filled('prioridad') && !$pqr->deadline) {
+                    $requestPrio = $request->prioridad;
+                    match ($requestPrio) {
+                        'Vital'      => $hours = 24,
+                        'Priorizado' => $hours = 48,
+                        'Simple'     => $hours = 72,
+                        default      => $hours = 72,
+                    };
+                    $data['prioridad'] = $requestPrio;
+                    $data['deadline'] = now()->addHours($hours);
+                }
             }
 
-            // Actualizar la Pqr
             $pqr->update($data);
 
             return response()->json(['message' => 'PQR actualizada correctamente.', 'data' => $pqr]);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Error al actualizar',
-                'error' => $e->getMessage()
-            ], 500);
+            return response()->json(['message' => 'Error al actualizar', 'error' => $e->getMessage()], 500);
         }
     }
+
 
     public function asignadas()
     {

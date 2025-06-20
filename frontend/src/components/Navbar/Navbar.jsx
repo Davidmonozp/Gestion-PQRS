@@ -10,7 +10,7 @@ const Navbar = () => {
     <nav className="navbar">
       <div className="container">
         <div className="logo">
-          <NavLink to="/">Gestión PQRS</NavLink>
+          <NavLink to="/dashboard">Gestión PQRS</NavLink>
         </div>
 
         <div className="menu-icon" onClick={() => setMenuOpen(!menuOpen)}>

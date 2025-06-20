@@ -36,6 +36,8 @@ class Pqr extends Model
         // Estados de respuesta
         'estado_respuesta',
         'respuesta_enviada',
+        'prioridad',
+        'deadline'
     ];
     public function respuestas()
     {
@@ -45,5 +47,10 @@ class Pqr extends Model
     public function asignado()
     {
         return $this->belongsTo(User::class, 'asignado_a');
+    }
+    public function setPrioridadAttribute($value)
+    {
+        if ($this->prioridad) return;
+        $this->attributes['prioridad'] = $value;
     }
 }

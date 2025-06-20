@@ -63,7 +63,11 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador'])->gro
 Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,Supervisor'])->group(function () {
     Route::get('users', [UserController::class, 'index']);
     Route::post('/pqrs/{id}/respuesta', [RespuestaController::class, 'registrarRespuesta']);
-    Route::post('/pqrs/{id}/enviar-respuesta', [RespuestaController::class, 'enviarRespuesta']);
+    Route::post('/pqrs/{id}/enviar-respuesta-correo', [RespuestaController::class, 'enviarRespuesta']);
+});
+
+Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Consultor'])->group(function () {
+    Route::get('users', [UserController::class, 'index']);
 });
 
 // RUTA PARA RESPUESTA FINAL DE PQR

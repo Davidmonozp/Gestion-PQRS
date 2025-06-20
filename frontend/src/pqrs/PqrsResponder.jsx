@@ -7,13 +7,13 @@ import Swal from "sweetalert2";
 
 const PqrsResponder = () => {
   const { id } = useParams();
-  const pqrsId = parseInt(id);
+  const pqrsId = parseInt(id, 10);
   const navigate = useNavigate();
 
   const [pqr, setPqr] = useState(null);
   const [respuesta, setRespuesta] = useState("");
-  const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
+
   const yaRespondida = pqr?.estado_respuesta === "Preliminar";
 
   useEffect(() => {
@@ -21,9 +21,9 @@ const PqrsResponder = () => {
       try {
         const asignadas = await getPqrsAsignadas();
         const encontrada = asignadas.find((item) => item.id === pqrsId);
-        if (!encontrada)
+        if (!encontrada) {
           throw new Error("PQRS no encontrada o no asignada a usted.");
-
+        }
         setPqr(encontrada);
 
         if (
@@ -33,7 +33,7 @@ const PqrsResponder = () => {
           const result = await Swal.fire({
             icon: "info",
             title: "Respuesta ya registrada",
-            text: "Esta PQRS ya tiene una respuesta preliminar.",
+            text: "Esta PQRS ya tiene una respuesta.",
             confirmButtonText: "Aceptar",
           });
           if (result.isConfirmed) {
@@ -52,10 +52,15 @@ const PqrsResponder = () => {
     e.preventDefault();
     try {
       await registrarRespuesta(pqrsId, respuesta);
-      setMensaje("Respuesta enviada correctamente");
-      setRespuesta("");
+      await Swal.fire({
+        icon: "success",
+        title: "Respuesta enviada",
+        text: "Su respuesta ha sido registrada correctamente.",
+        confirmButtonText: "Aceptar",
+      });
+      navigate("/pqrs/asignadas");
     } catch (err) {
-      setError(err.message);
+      Swal.fire("Error", err.message || "Ocurrió un error", "error");
     }
   };
 
@@ -103,8 +108,6 @@ const PqrsResponder = () => {
             Enviar Respuesta
           </button>
         </form>
-
-        {mensaje && <p className="pqrs-res-success">{mensaje}</p>}
       </div>
     </>
   );
