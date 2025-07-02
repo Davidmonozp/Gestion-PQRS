@@ -118,6 +118,11 @@
     box-sizing: border-box;
 }
 
+.respuesta-final {
+    width: 100%;
+    height: auto;
+}
+
 form input {
     display: block;
 }
@@ -157,6 +162,54 @@ select option {
     /* 👈 Añade esto */
     box-sizing: border-box;
 }
+
+/* CONTADOR */
+.countdown {
+    font-weight: 500;
+}
+
+.countdown.late {
+    color: rgb(248, 55, 55);
+}
+
+/* ESTADOS RESPUESTA */
+.estado-badge {
+    padding: 0.3em 0.6em;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.estado-radicado {
+    color: white;
+    background-color: #BDBDBD;
+}
+
+.estado-asignado {
+    color: white;
+    background-color: #42A5F5;
+}
+
+.estado-en-proceso {
+    color: white;
+    background-color: #1E88E5;
+}
+
+.estado-cerrado {
+    color: white;
+    background-color: #2E7D32;
+}
+
+.pqr-card-container .boton-enviar-respuesta {
+    display: block;
+    margin: -30px auto 0;
+    padding: 10px 20px;
+    background-color: #030f54;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
 
 @media (min-width: 300px) and (max-width: 475px) {
     .pqr-card-container {

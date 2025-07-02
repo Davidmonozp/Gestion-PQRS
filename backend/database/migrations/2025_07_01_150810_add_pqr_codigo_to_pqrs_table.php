@@ -6,19 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::table('pqrs', function (Blueprint $table) {
-            $table->enum('estado_respuesta', ['Radicado', 'Asignado', 'En proceso', 'Requiere respuesta del usuario', 'Cerrado'])->default('Radicado');
-            $table->boolean('respuesta_enviada')->default(false);
+            $table->string('pqr_codigo')->unique()->after('id');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::table('pqrs', function (Blueprint $table) {
-            $table->dropColumn('estado_respuesta');
-            $table->dropColumn('respuesta_enviada');
+            $table->dropColumn('pqr_codigo');
         });
     }
 };

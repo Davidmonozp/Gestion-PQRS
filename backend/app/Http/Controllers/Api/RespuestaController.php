@@ -5,61 +5,62 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Mail\RespuestaFinalPQRSMail;
 use App\Mail\RespuestaPqrsMail;
+use App\Mail\SolicitarRespuestaCiudadanoMail;
 use App\Models\Pqr;
 use App\Models\Respuesta;
+use App\Services\PqrTiempoService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class RespuestaController extends Controller
 {
-    public function registrarRespuesta(Request $request, $id)
+    public function registrarRespuesta(Request $request, $pqr_codigo)
     {
         $request->validate([
             'contenido' => 'required|string',
         ]);
 
-        $pqrs = Pqr::findOrFail($id);
+        $pqrs = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
 
-        // Verifica que la PQRS esté asignada al usuario actual
         if ($pqrs->asignado_a !== Auth::id()) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
-        // Verificar si ya existe una respuesta de este usuario para esta PQRS
         $respuestaExistente = Respuesta::where('pqrs_id', $pqrs->id)
-            ->where('user_id', Auth::id(),)
+            ->where('user_id', Auth::id())
             ->exists();
 
         if ($respuestaExistente) {
             return response()->json(['error' => 'Ya has registrado una respuesta para esta PQRS'], 400);
         }
 
-        // Si no existe, crear la nueva respuesta
         Respuesta::create([
             'pqrs_id' => $pqrs->id,
             'user_id' => Auth::id(),
             'contenido' => $request->contenido,
         ]);
 
-        // Cambiar estado
-        $pqrs->estado_respuesta = 'Preliminar';
-        $pqrs->save();
+        if ($pqrs->estado_respuesta === 'Asignado') {
+            $pqrs->estado_respuesta = 'En proceso';
+            $pqrs->save();
+        }
 
         return response()->json(['mensaje' => 'Respuesta preliminar guardada']);
     }
 
 
 
-    public function registrarRespuestaFinal(Request $request, $id)
+    public function registrarRespuestaFinal(Request $request, $pqr_codigo)
     {
         $request->validate([
             'contenido' => 'required|string',
         ]);
 
-        $pqrs = Pqr::findOrFail($id);
+        $pqrs = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
 
-        // Verificar si ya existe una respuesta final
         $finalYaExiste = Respuesta::where('pqrs_id', $pqrs->id)
             ->where('es_final', true)
             ->exists();
@@ -68,7 +69,6 @@ class RespuestaController extends Controller
             return response()->json(['error' => 'Ya existe una respuesta final para esta PQRS'], 400);
         }
 
-        // Crear respuesta final
         Respuesta::create([
             'pqrs_id' => $pqrs->id,
             'user_id' => Auth::id(),
@@ -76,30 +76,61 @@ class RespuestaController extends Controller
             'es_final' => true,
         ]);
 
-        $pqrs->estado_respuesta = 'Respondida';
+        $pqrs->estado_respuesta = 'Cerrado';
         $pqrs->save();
 
         return response()->json(['mensaje' => 'Respuesta final registrada correctamente']);
     }
 
 
-    public function enviarRespuesta($pqrId)
-    {
-        $pqr = Pqr::findOrFail($pqrId);
 
-        // Buscar SOLO respuesta final
+
+    public function enviarRespuesta($pqr_codigo)
+    {
+        $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+
         $respuesta = $pqr->respuestas()->where('es_final', true)->latest()->first();
 
         if (!$respuesta) {
-            return response()->json(['error' => 'No hay respuesta final registrada.'], 400);
+            return response()->json(['error' => 'No hay respuesta final registrada para esta PQRS.'], 400);
         }
 
         Mail::to($pqr->correo)->send(new RespuestaFinalPQRSMail($pqr, $respuesta));
 
-        $pqr->estado_respuesta = 'Respondida';
+        $fechaRespuesta = Carbon::parse($respuesta->created_at, 'America/Bogota');
+
+        $pqr->estado_respuesta = 'Cerrado';
         $pqr->respuesta_enviada = true;
+        $pqr->respondido_en = $fechaRespuesta;
+
+        $pqr->deadline_interno = $fechaRespuesta;
+        $pqr->deadline_ciudadano = $fechaRespuesta;
+
+        $estadoTiempo = app(PqrTiempoService::class)->calcularEstadoTiempo($pqr);
+        $pqr->estado_tiempo = $estadoTiempo['estado'];
+
         $pqr->save();
 
-        return response()->json(['mensaje' => 'Respuesta final enviada al ciudadano']);
+        return response()->json(['mensaje' => 'Respuesta final enviada al ciudadano.']);
+    }
+
+    public function solicitarRespuestaUsuario($id)
+    {
+        $pqr = Pqr::findOrFail($id);
+
+        // Solo si está asignada o en proceso, por ejemplo
+        if (!in_array($pqr->estado_respuesta, ['Radicado', 'Asignado', 'En proceso', 'Respuesta de usuario registrada'])) {
+            return response()->json(['error' => 'Estado inválido para solicitar respuesta.'], 400);
+        }
+
+        $pqr->estado_respuesta = 'Requiere respuesta del usuario';
+        $pqr->usuario_token = Str::uuid(); // Genera token único
+        $pqr->save();
+
+        // Aquí puedes enviar el correo al ciudadano con el link
+        $link = url("/respuesta-ciudadano/{$pqr->usuario_token}");
+        Mail::to($pqr->correo)->send(new SolicitarRespuestaCiudadanoMail($pqr, $link));
+
+        return response()->json(['message' => 'Se solicitó respuesta al ciudadano.', 'token' => $pqr->usuario_token]);
     }
 }

@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "./styles/PqrsList.css";
 import PqrsFilters from "./components/PqrsFilters";
 import { tienePermiso } from "../utils/permisoHelper";
+import CountdownTimer from "./components/CountDownTimer";
 
 function PqrsList() {
   const [pqrs, setPqrs] = useState([]);
@@ -81,37 +82,60 @@ function PqrsList() {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Nombre</th>
+              <th>Fecha de solicitud</th>
+              <th>Sede</th>
+              <th>Tipo Solicitud</th>
+              <th>Prioridad</th>
+              <th>Estado de la respuesta</th>
               <th>Tipo Doc.</th>
               <th>Número Doc.</th>
-              <th>Correo</th>
-              <th>Teléfono</th>
-              <th>Sede</th>
-              <th>Servicio</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
               <th>EPS</th>
-              <th>Tipo Solicitud</th>
+              <th>Servicio prestado</th>
+              <th>Atributo de calidad</th>
+              <th>Asignado a</th>
+              <th>Fecha de cierre</th>
+              <th>Canal de ingreso</th>
+              <th>Tiempo de respuesta PASSUS</th>
               <th>Archivo</th>
-              <th>Estado de la respuesta</th>
               <th>Respuesta enviada a usuario</th>
-              <th>Fecha</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {pqrs.map((pqr) => (
-              <tr key={pqr.id}>
-                <td>{pqr.id}</td>
-                <td>
-                  {pqr.nombre} {pqr.apellido}
-                </td>
+              <tr key={pqr.pqr_codigo}>
+                <td>{pqr.pqr_codigo}</td>
+                <td>{new Date(pqr.created_at).toLocaleString()}</td>
+                <td>{pqr.sede}</td>
+                <td>{pqr.tipo_solicitud}</td>
+                <td>{pqr.prioridad || "No asignada"}</td>
+                <td>{pqr.estado_respuesta}</td>
                 <td>{pqr.documento_tipo}</td>
                 <td>{pqr.documento_numero}</td>
-                <td>{pqr.correo}</td>
-                <td>{pqr.telefono}</td>
-                <td>{pqr.sede}</td>
-                <td>{pqr.servicio_prestado}</td>
+                <td>{pqr.nombre} </td>
+                <td>{pqr.apellido} </td>
                 <td>{pqr.eps}</td>
-                <td>{pqr.tipo_solicitud}</td>
+                <td>{pqr.servicio_prestado}</td>
+                <td>{pqr.atributo_calidad}</td>
+                <td> {pqr.asignado ? pqr.asignado.name : "N/A"}</td>
+                <td>{pqr.respondido_en}</td>
+                <td>{pqr.fuente}</td>
+
+                <td>
+                  {pqr.estado_respuesta === "Cerrado" ? (
+                    <span style={{ color: "white", fontStyle: "italic" }}>
+                      Finalizado
+                    </span>
+                  ) : pqr.deadline_interno ? (
+                    <CountdownTimer targetDate={pqr.deadline_interno} />
+                  ) : (
+                    <span style={{ color: "white", fontStyle: "italic" }}>
+                      No iniciado
+                    </span>
+                  )}
+                </td>
                 <td>
                   {pqr.archivo ? (
                     <a
@@ -125,11 +149,9 @@ function PqrsList() {
                     "Sin archivo"
                   )}
                 </td>
-                <td>{pqr.estado_respuesta}</td>
                 <td>
                   {pqr.respuesta_enviada === 1 ? "Enviada ✅" : "No enviada ❌"}
                 </td>
-                <td>{new Date(pqr.created_at).toLocaleString()}</td>
                 <td>
                   {tienePermiso([
                     "Administrador",
@@ -138,7 +160,7 @@ function PqrsList() {
                     "Gestor",
                     "Digitador",
                   ]) && (
-                    <button onClick={() => navigate(`/pqrs/${pqr.id}`)}>
+                    <button onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}`)}>
                       <i className="fa fa-eye"></i>
                     </button>
                   )}

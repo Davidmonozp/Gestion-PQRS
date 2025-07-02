@@ -1,5 +1,3 @@
-
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
@@ -33,6 +31,9 @@ const UserDetailEdit = () => {
       role: "",
       password: "", // Añadir campos de contraseña
       confirmPassword: "", // Añadir campos de contraseña
+      cargo: "",
+      area: "",
+      sede: "",
     },
     // enableReinitialize: true es útil aquí para que el formulario se actualice
     // cuando el usuario se carga inicialmente.
@@ -54,23 +55,19 @@ const UserDetailEdit = () => {
             .required("Confirma la contraseña") // ...entonces 'confirmPassword' es requerido
             .oneOf([Yup.ref("password")], "Las contraseñas no coinciden"), // y debe coincidir con 'password'
       }),
+      cargo: Yup.string().required("El cargo es obligatorio"),
+      area: Yup.string().required("El área es obligatoria"),
+      sede: Yup.string().required("La sede es obligatoria"),
     }),
     onSubmit: async (values) => {
       try {
-        // Encuentra el objeto de rol completo basándose en el nombre seleccionado
-        const selectedRoleObject = availableRoles.find(
-          (r) => r.name === values.role
-        );
-
-        // Prepara el payload con el ID del rol
         const payload = {
           name: values.name,
           email: values.email,
-          // *** CAMBIO CRÍTICO AQUÍ ***
-          // Envía el ID del rol, no un objeto con el nombre
-          role: values.role, 
-          // Asegúrate de que tu backend espera 'role_id'. Si espera solo 'role',
-          // entonces sería: role: values.role
+          role: values.role,
+          cargo: values.cargo,
+          area: values.area,
+          sede: values.sede,
         };
 
         if (showPasswordFields && values.password) {
@@ -80,21 +77,20 @@ const UserDetailEdit = () => {
         const res = await api.put(`/users/${id}`, payload);
         const updatedUserFromServer = res.data.user;
 
-        // Actualizar el estado 'user' con los datos devueltos por la API (que sí incluye el objeto de rol completo)
         setUser(updatedUserFromServer);
-
         setEditMode(false);
         setShowPasswordFields(false);
 
-        // Reiniciar los valores del formulario con los datos actualizados y limpiar contraseñas
         formik.resetForm({
           values: {
             name: updatedUserFromServer.name,
             email: updatedUserFromServer.email,
-            // Al resetear el formulario, volvemos a obtener el nombre del rol del objeto completo
             role: updatedUserFromServer.roles[0]?.name || "",
             password: "",
             confirmPassword: "",
+            cargo: updatedUserFromServer.cargo || "",
+            area: updatedUserFromServer.area || "",
+            sede: updatedUserFromServer.sede || "",
           },
         });
 
@@ -129,6 +125,9 @@ const UserDetailEdit = () => {
           role: data.roles[0]?.name || "", // Asumiendo un solo rol
           password: "", // Asegurarse de que estos campos estén vacíos al cargar
           confirmPassword: "", // Asegurarse de que estos campos estén vacíos al cargar
+          cargo: data.cargo || "",
+          area: data.area || "",
+          sede: data.sede || "",
         });
       } catch (error) {
         Swal.fire({
@@ -153,7 +152,7 @@ const UserDetailEdit = () => {
 
   return (
     <>
-    <Navbar/>
+      <Navbar />
       <div className="header-details-user">
         <div>
           {editMode ? "Editar" : "Detalles"} <br />
@@ -232,6 +231,65 @@ const UserDetailEdit = () => {
               <div className="text-danger">{formik.errors.role}</div>
             )}
           </div>
+          {/* Campo Cargo */}
+          <div>
+            <label htmlFor="cargo">Cargo:</label>
+            {editMode ? (
+              <input
+                type="text"
+                id="cargo"
+                name="cargo"
+                value={formik.values.cargo}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            ) : (
+              <p>{user.cargo}</p>
+            )}
+            {formik.touched.cargo && formik.errors.cargo && (
+              <div className="text-danger">{formik.errors.cargo}</div>
+            )}
+          </div>
+
+          {/* Campo Área */}
+          <div>
+            <label htmlFor="area">Área:</label>
+            {editMode ? (
+              <input
+                type="text"
+                id="area"
+                name="area"
+                value={formik.values.area}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            ) : (
+              <p>{user.area}</p>
+            )}
+            {formik.touched.area && formik.errors.area && (
+              <div className="text-danger">{formik.errors.area}</div>
+            )}
+          </div>
+
+          {/* Campo Sede */}
+          <div>
+            <label htmlFor="sede">Sede:</label>
+            {editMode ? (
+              <input
+                type="text"
+                id="sede"
+                name="sede"
+                value={formik.values.sede}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            ) : (
+              <p>{user.sede}</p>
+            )}
+            {formik.touched.sede && formik.errors.sede && (
+              <div className="text-danger">{formik.errors.sede}</div>
+            )}
+          </div>
 
           {/* Botón para cambiar contraseña (visible en modo edición, si los campos no están visibles) */}
           {editMode && !showPasswordFields && (
@@ -301,6 +359,9 @@ const UserDetailEdit = () => {
                     role: user.roles[0]?.name || "",
                     password: "", // Asegurarse de limpiar las contraseñas al cancelar
                     confirmPassword: "", // Asegurarse de limpiar las contraseñas al cancelar
+                    cargo: user.cargo || "",
+                    area: user.area || "",
+                    sede: user.sede || "",
                   });
                   setEditMode(false); // Sale del modo de edición
                   setShowPasswordFields(false); // Oculta los campos de contraseña
@@ -337,9 +398,6 @@ const UserDetailEdit = () => {
 };
 
 export default UserDetailEdit;
-
-
-
 
 // import React, { useEffect, useState } from "react";
 // import { useParams, useNavigate } from "react-router-dom";

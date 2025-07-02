@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\PlantillaRespuestaController;
 use App\Http\Controllers\Api\PqrController;
 use App\Http\Controllers\Api\RespuestaController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UsuarioRespuestaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +19,11 @@ Route::prefix('auth')->group(function () {
 
 // Rutas de PQRS públicas (por ejemplo, para que cualquiera pueda crear una PQR)
 Route::post('pqrs', [PqrController::class, 'store']);
+Route::post('/pqrs/{id}/solicitar-respuesta', [RespuestaController::class, 'solicitarRespuestaUsuario']);
+Route::post('/respuesta-usuario/{token}', [UsuarioRespuestaController::class, 'guardarRespuesta']);
+
+
+
 
 
 
@@ -26,12 +33,12 @@ Route::middleware(['auth:api', 'check.role:Administrador,Supervisor,Gestor,Consu
 
     // Rutas de visualización de PQRS (solo roles autorizados pueden ver la lista o detalles)
     Route::get('pqrs', [PqrController::class, 'index']);
-    Route::get('pqrs/{id}', [PqrController::class, 'show']);
+    Route::get('pqrs/codigo/{pqr_codigo}', [PqrController::class, 'show']);
 });
 
 // RUTAS PROTEGIDAS QUE ACTUALIZAN LA PQRS
-Route::middleware(['auth:api', 'check.role:Administrador,Gestor'])->group(function () {
-    Route::put('pqrs/{id}', [PqrController::class, 'update']);
+Route::middleware(['auth:api', 'check.role:Administrador,Gestor,Supervisor'])->group(function () {
+    Route::put('pqrs/codigo/{pqr_codigo}', [PqrController::class, 'update']);
 });
 
 
@@ -62,15 +69,16 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador'])->gro
 // RUTA PARA PODER ASIGNAR USUARIOS a las pqr y dar respuesta
 Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,Supervisor'])->group(function () {
     Route::get('users', [UserController::class, 'index']);
-    Route::post('/pqrs/{id}/respuesta', [RespuestaController::class, 'registrarRespuesta']);
-    Route::post('/pqrs/{id}/enviar-respuesta-correo', [RespuestaController::class, 'enviarRespuesta']);
+    Route::post('/pqrs/codigo/{pqr_codigo}/respuesta', [RespuestaController::class, 'registrarRespuesta']);
+    Route::post('/pqrs/codigo/{pqr_codigo}/enviar-respuesta-correo', [RespuestaController::class, 'enviarRespuesta']);
 });
 
-Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Consultor'])->group(function () {
+Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Consultor,Supervisor,Gestor,Digitador'])->group(function () {
     Route::get('users', [UserController::class, 'index']);
 });
 
 // RUTA PARA RESPUESTA FINAL DE PQR
 Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,Supervisor'])->group(function () {
-    Route::post('/pqrs/{id}/respuesta-final', [RespuestaController::class, 'registrarRespuestaFinal']);
+    Route::post('/pqrs/codigo/{pqr_codigo}/respuesta-final', [RespuestaController::class, 'registrarRespuestaFinal']);
+    Route::get('/plantillas-respuesta', [PlantillaRespuestaController::class, 'index']);
 });

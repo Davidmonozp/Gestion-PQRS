@@ -63,7 +63,7 @@ function PqrsAsignadas() {
               ) : (
                 pqrs.map((pqr) => (
                   <tr key={pqr.id}>
-                    <td>{pqr.id}</td>
+                    <td>{pqr.pqr_codigo}</td>
                     <td>
                       {pqr.nombre} {pqr.apellido}
                     </td>
@@ -97,11 +97,11 @@ function PqrsAsignadas() {
                     </td>
                     <td>{new Date(pqr.created_at).toLocaleString()}</td>
                     <td>
-                      <button onClick={() => navigate(`/pqrs/${pqr.id}`)}>
+                      <button onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}`)}>
                         <i className="fa-solid fa-eye"></i>
                       </button>
                       <button
-                        onClick={() => navigate(`/pqrs/${pqr.id}/respuesta`)}
+                        onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}/respuesta`)}
                       >
                         <i className="fa-solid fa-pen-to-square"></i>
                       </button>

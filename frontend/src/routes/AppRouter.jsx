@@ -5,7 +5,7 @@ import Login from "../auth/Login";
 import Logout from "../auth/Logout";
 import { Register } from "../auth/Register";
 import PqrsForm from "../pqrs/PqrsForm";
-import { DashBoard } from "../pages/DashBoard";
+import { Pqr } from "../pages/Pqr";
 import PqrsList from "../pqrs/PqrsList";
 import PqrsDetail from "../pqrs/PqrsDetail";
 import UserList from "../users/UserList";
@@ -15,6 +15,7 @@ import ChangePasswordForm from "../users/ChangePasswordForm";
 import PqrsEdit from "../pqrs/PqrsEdit";
 import PqrsAsignadas from "../pqrs/PqrsAsignadas";
 import PqrsResponder from "../pqrs/PqrsResponder";
+import RespuestaUsuario from "../pqrs/RespuestaUsuario";
 
 export function AppRouter() {
   return (
@@ -30,9 +31,10 @@ export function AppRouter() {
       {/* <Route path="/pqrs/:id" element={<PqrsDetail />} /> */}
       {/* <Route path="/pqrs/asignadas" element={<PqrsAsignadas />} /> */}
       {/* <Route path="/pqrs/:id/respuesta" element={<PqrsResponder />} /> */}
+       <Route path="/respuesta-usuario/:token" element={<RespuestaUsuario />} />
 
       <Route
-        path="/dashboard"
+        path="/Pqr"
         element={
           <ProtectedRoute
             allowedRoles={[
@@ -43,7 +45,7 @@ export function AppRouter() {
               "Digitador",
             ]}
           >
-            <DashBoard />
+            <Pqr />
           </ProtectedRoute>
         }
       />
@@ -65,7 +67,7 @@ export function AppRouter() {
       />
 
       <Route
-        path="/pqrs/:id"
+        path="/pqrs/:pqr_codigo"
         element={
           <ProtectedRoute
             allowedRoles={[
@@ -83,7 +85,7 @@ export function AppRouter() {
       <Route
         path="/users"
         element={
-          <ProtectedRoute allowedRoles={["Administrador", "Supervisor"]}>
+          <ProtectedRoute allowedRoles={["Administrador", "Supervisor", "Gestor"]}>
             <UserList />
           </ProtectedRoute>
         }
@@ -113,7 +115,7 @@ export function AppRouter() {
         }
       />
       <Route
-        path="/pqrs/:id/respuesta"
+        path="/pqrs/:pqr_codigo/respuesta"
         element={
           <ProtectedRoute allowedRoles={["Administrador", "Gestor"]}>
             <PqrsResponder />

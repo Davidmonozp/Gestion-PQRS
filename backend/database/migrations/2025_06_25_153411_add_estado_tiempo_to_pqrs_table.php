@@ -12,9 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pqrs', function (Blueprint $table) {
-            $table->enum('prioridad', ['Vital', 'Priorizado', 'Simple'])->nullable()->after('asignado_a');
-            $table->timestamp('deadline_interno')->nullable()->after('prioridad');
-            $table->timestamp('deadline_ciudadano')->nullable()->after('deadline_interno');
+            // Usa enum para restringir a valores válidos
+            $table->enum('estado_tiempo', [
+                'En tiempo',
+                'Por vencer',
+                'Vencida sin respuesta',
+                'Cumplida a tiempo',
+                'Cumplida fuera del tiempo'
+            ])->nullable()->after('respondido_en'); // Puedes ajustar el orden si lo deseas
         });
     }
 
@@ -24,9 +29,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('pqrs', function (Blueprint $table) {
-            $table->dropColumn('prioridad');
-            $table->dropColumn('deadline_interno');
-            $table->dropColumn('deadline_ciudadano');
+            $table->dropColumn('estado_tiempo');
         });
     }
 };

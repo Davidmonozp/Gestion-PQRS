@@ -31,10 +31,13 @@ class UserController extends Controller
             'name' => 'required|string|max:100',
             'userName' => 'required|string|max:50|unique:users,userName',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:5',
+            'password' => 'required|string|min:5|confirmed',
             'role' => 'required|exists:roles,name',
             'documento_tipo' => 'required|string|max:5',
             'documento_numero' => 'required|string|max:20|unique:users,documento_numero',
+            'sede' => 'required|string|max:255',
+            'area' => 'required|string|max:255',
+            'cargo' => 'required|string|max:255',
         ]);
 
         $user = User::create([
@@ -44,6 +47,9 @@ class UserController extends Controller
             'documento_tipo' => $request->documento_tipo,
             'documento_numero' => $request->documento_numero,
             'password' => Hash::make($request->password),
+            'sede' => $request->sede,
+            'area' => $request->area,
+            'cargo' => $request->cargo,
         ]);
 
         $user->assignRole($request->role);
@@ -75,13 +81,27 @@ class UserController extends Controller
 
         $request->validate([
             'name' => 'sometimes|required|string|max:100',
+            'userName' => 'sometimes|required|string|max:50|unique:users,userName,' . $user->id,
             'email' => 'sometimes|required|email|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:5',
+            'password' => 'nullable|string|min:5|confirmed',
             'role' => 'sometimes|required|exists:roles,name',
+            'documento_tipo' => 'sometimes|required|string|max:5',
+            'documento_numero' => 'sometimes|required|string|max:20|unique:users,documento_numero,' . $user->id,
+            'sede' => 'sometimes|required|string|max:255',
+            'area' => 'sometimes|required|string|max:255',
+            'cargo' => 'sometimes|required|string|max:255',
         ]);
 
+        // Actualizar campos si vienen en la request, o conservar el valor anterior
         $user->name = $request->name ?? $user->name;
+        $user->userName = $request->userName ?? $user->userName;
         $user->email = $request->email ?? $user->email;
+        $user->documento_tipo = $request->documento_tipo ?? $user->documento_tipo;
+        $user->documento_numero = $request->documento_numero ?? $user->documento_numero;
+        $user->sede = $request->sede ?? $user->sede;
+        $user->area = $request->area ?? $user->area;
+        $user->cargo = $request->cargo ?? $user->cargo;
+
         if ($request->password) {
             $user->password = Hash::make($request->password);
         }
@@ -97,6 +117,7 @@ class UserController extends Controller
             'user' => $user->load('roles'),
         ]);
     }
+
 
     // Eliminar usuario
     public function destroy($id)

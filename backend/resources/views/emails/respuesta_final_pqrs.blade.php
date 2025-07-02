@@ -1,8 +1,7 @@
-<p>Estimado/a {{ $pqr->nombre }}:</p>
+<p>Estimado/a {{ $pqr->nombre }} {{ $pqr->apellido }}:</p>
 
-<p>Gracias por su PQRS. A continuación encontrará nuestra respuesta:</p>
+<p>Gracias por su PQR. A continuación encontrará nuestra respuesta:</p>
 
-<blockquote>{{ $respuesta->contenido }}</blockquote>
-
-<p>Atentamente,</p>
-<p>El equipo de atención</p>
+<blockquote style="white-space: pre-line; text-align: justify;">
+  {!! $respuesta->contenido !!}
+</blockquote>

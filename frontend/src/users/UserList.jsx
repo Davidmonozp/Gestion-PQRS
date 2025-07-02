@@ -103,9 +103,16 @@ const UserList = () => {
                 <th>Nombre</th>
                 <th>Nombre de usuario</th>
                 <th>Correo</th>
-                <th>Roles</th>
-                <th>Estado</th>
-                <th>Acciones</th>
+                {/* Ocultar estos tres encabezados para Gestor y Digitador */}
+                {!["Gestor", "Digitador"].includes(
+                  localStorage.getItem("role")
+                ) && (
+                  <>
+                    <th>Roles</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -115,40 +122,44 @@ const UserList = () => {
                   <td>{user.name}</td>
                   <td>{user.userName}</td>
                   <td>{user.email}</td>
-                  <td>{user.roles.map((role) => role.name).join(", ")}</td>
-                  <td>{user.activo ? "Activo" : "Inactivo"}</td>
-                  <td>
-                    <div className="actions">
-                      <button onClick={() => handleVer(user.id)} title="Ver">
-                        <i className="fa fa-eye"></i>
-                      </button>
-                      <button
-                        onClick={() => handleEditar(user.id)}
-                        title="Editar"
-                      >
-                        <i className="fa fa-edit"></i>
-                      </button>
-                      {/* Usa la función del hook para el toggle de estado */}
-                      <button
-                        onClick={() => alternarEstadoUsuario(user.id)}
-                        title={
-                          user.activo ? "Inactivar usuario" : "Activar usuario"
-                        }
-                      >
-                        {user.activo ? (
-                          <i className="fa-solid fa-handshake"></i>
-                        ) : (
-                          <i className="fa-solid fa-handshake-slash"></i>
-                        )}
-                      </button>
-                      {/* <button
-                      onClick={() => handleEliminar(user.id)}
-                      title="Eliminar"
-                    >
-                      <i className="fa fa-trash-alt"></i>
-                    </button> */}
-                    </div>
-                  </td>
+                  {!["Gestor", "Digitador", "Consultor"].includes(
+                    localStorage.getItem("role")
+                  ) && (
+                    <>
+                      <td>{user.roles.map((role) => role.name).join(", ")}</td>
+                      <td>{user.activo ? "Activo" : "Inactivo"}</td>
+                      <td>
+                        <div className="actions">
+                          <button
+                            onClick={() => handleVer(user.id)}
+                            title="Ver"
+                          >
+                            <i className="fa fa-eye"></i>
+                          </button>
+                          <button
+                            onClick={() => handleEditar(user.id)}
+                            title="Editar"
+                          >
+                            <i className="fa fa-edit"></i>
+                          </button>
+                          <button
+                            onClick={() => alternarEstadoUsuario(user.id)}
+                            title={
+                              user.activo
+                                ? "Inactivar usuario"
+                                : "Activar usuario"
+                            }
+                          >
+                            {user.activo ? (
+                              <i className="fa-solid fa-handshake"></i>
+                            ) : (
+                              <i className="fa-solid fa-handshake-slash"></i>
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>

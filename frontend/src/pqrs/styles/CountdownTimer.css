@@ -1,0 +1,15 @@
+.countdown {
+  font-weight: bold;
+}
+
+.countdown.normal {
+  color: #0c7ef8; /* Azul */
+}
+
+.countdown.warning {
+  color: #fd7e14; /* Naranja */
+}
+
+.countdown.late {
+  color: #ff011a; /* Rojo */
+}

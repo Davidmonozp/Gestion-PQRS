@@ -11,7 +11,7 @@ function Login() {
   const handleSubmit = async (values, actions) => {
     try {
       await login(values);
-      navigate('/dashboard');
+      navigate('/Pqr');
     } catch (err) {
       actions.setFieldError('general', 'Credenciales inválidas');
     }

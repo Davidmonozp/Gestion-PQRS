@@ -22,16 +22,17 @@ const fuentes = [
 ];
 
 function PqrsEdit() {
-  const { id } = useParams();
+  const { id: pqr_codigo } = useParams();
   const navigate = useNavigate();
   const [pqr, setPqr] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [pqrRes, usersRes] = await Promise.all([
-          api.get(`/pqrs/${id}`),
+          api.get(`/pqrs/codigo/${pqr_codigo}`),
           api.get("/users"),
         ]);
         setPqr(pqrRes.data.pqr);
@@ -41,25 +42,34 @@ function PqrsEdit() {
       }
     };
     fetchData();
-  }, [id]);
+  }, [pqr_codigo]);
 
   const handleChange = (e) => {
-    setPqr({ ...pqr, [e.target.name]: e.target.value });
+    let value = e.target.value;
+    if (e.target.name === "asignado_a") {
+      value = value === "" ? null : parseInt(value, 10);
+    }
+    setPqr({ ...pqr, [e.target.name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      await api.put(`/pqrs/${id}`, {
+      await api.put(`/pqrs/codigo/${pqr_codigo}`, {
         atributo_calidad: pqr.atributo_calidad,
         fuente: pqr.fuente,
         asignado_a: pqr.asignado_a,
+        // Si necesitas más campos los agregas aquí
       });
       Swal.fire("Actualizado", "PQRS actualizada correctamente", "success").then(() => {
-        navigate(`/pqrs/${id}`);
+        navigate(`/pqrs/${pqr_codigo}`);
       });
     } catch (err) {
+      console.error(err.response?.data || err);
       Swal.fire("Error", "No se pudo actualizar", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,39 +77,59 @@ function PqrsEdit() {
 
   return (
     <div className="pqr-card-container">
-      <h2>Editar PQRS #{id}</h2>
+      <h2>Editar PQRS #{pqr_codigo}</h2>
       <form onSubmit={handleSubmit}>
         <div>
           <label>Atributo de Calidad:</label>
-          <select name="atributo_calidad" value={pqr.atributo_calidad || ""} onChange={handleChange}>
+          <select
+            name="atributo_calidad"
+            value={pqr.atributo_calidad || ""}
+            onChange={handleChange}
+          >
             <option value="">Seleccione</option>
             {atributos.map((op) => (
-              <option key={op} value={op}>{op}</option>
+              <option key={op} value={op}>
+                {op}
+              </option>
             ))}
           </select>
         </div>
 
         <div>
           <label>Fuente:</label>
-          <select name="fuente" value={pqr.fuente || ""} onChange={handleChange}>
+          <select
+            name="fuente"
+            value={pqr.fuente || ""}
+            onChange={handleChange}
+          >
             <option value="">Seleccione</option>
             {fuentes.map((op) => (
-              <option key={op} value={op}>{op}</option>
+              <option key={op} value={op}>
+                {op}
+              </option>
             ))}
           </select>
         </div>
 
         <div>
           <label>Asignado a:</label>
-          <select name="asignado_a" value={pqr.asignado_a || ""} onChange={handleChange}>
+          <select
+            name="asignado_a"
+            value={pqr.asignado_a !== null ? pqr.asignado_a : ""}
+            onChange={handleChange}
+          >
             <option value="">Seleccione un usuario</option>
             {usuarios.map((user) => (
-              <option key={user.id} value={user.id}>{user.name}</option>
+              <option key={user.id} value={user.id}>
+                {user.name}
+              </option>
             ))}
           </select>
         </div>
 
-        <button type="submit">Guardar cambios</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Guardando..." : "Guardar cambios"}
+        </button>
       </form>
     </div>
   );

@@ -2,12 +2,17 @@
 
 namespace App\Models;
 
+use App\Services\PqrTiempoService;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
+
 
 class Pqr extends Model
 {
     protected $fillable = [
         // 📌 Datos del solicitante
+        'pqr_codigo',
         'nombre',
         'apellido',
         'documento_tipo',
@@ -37,7 +42,13 @@ class Pqr extends Model
         'estado_respuesta',
         'respuesta_enviada',
         'prioridad',
-        'deadline'
+        'deadline_ciudadano',
+        'deadline_interno',
+        'respondido_en',
+        'estado_tiempo',
+
+        // token para respuesta del usuario
+        'usuario_token'
     ];
     public function respuestas()
     {
@@ -53,4 +64,52 @@ class Pqr extends Model
         if ($this->prioridad) return;
         $this->attributes['prioridad'] = $value;
     }
+    public function getCreatedAtAttribute($value)
+    {
+        return Carbon::parse($value)->timezone('America/Bogota')->toDateTimeString();
+    }
+    public function getUpdatedAtAttribute($value)
+    {
+        return Carbon::parse($value)->timezone('America/Bogota')->toDateTimeString();
+    }
+
+
+
+    public function getTiempoRespondidoAttribute()
+    {
+        if (!$this->respondido_en) {
+            return null;
+        }
+
+        $created = Carbon::parse($this->created_at);
+        $respondido = Carbon::parse($this->respondido_en);
+
+        $diffInMinutes = $created->diffInMinutes($respondido);
+
+        $hours = floor($diffInMinutes / 60);
+        $minutes = $diffInMinutes % 60;
+
+        return "{$hours} horas y {$minutes} minutos";
+    }
+
+
+
+    public function getDeadlineCiudadanoAttribute()
+    {
+        if (!$this->created_at || !$this->prioridad) return null;
+
+        $created = Carbon::parse($this->created_at);
+        $hours = match ($this->prioridad) {
+            'Vital' => 24,
+            'Priorizado' => 48,
+            'Simple' => 72,
+            default => 24
+        };
+
+        return $created->copy()->addHours($hours)->toDateTimeString();
+    }
+
+    protected $appends = [
+        'deadline_ciudadano',
+    ];
 }

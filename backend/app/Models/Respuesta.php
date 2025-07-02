@@ -13,7 +13,9 @@ class Respuesta extends Model
         'pqrs_id',
         'user_id',
         'contenido',
+        'es_respuesta_usuario',
         'es_final',
+        'archivo',
     ];
 
     // Relaciones

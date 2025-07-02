@@ -1,273 +1,4 @@
-// import React, { useState } from "react";
-// import { createPqr } from "./pqrsService";
-// import "./styles/Pqrs.css";
-// import Swal from "sweetalert2";
 
-// function PqrsForm() {
-//   const [form, setForm] = useState({
-//     nombre: "",
-//     apellido: "",
-//     documento_tipo: "",
-//     documento_numero: "",
-//     correo: "",
-//     telefono: "",
-//     sede: "",
-//     servicio_prestado: "",
-//     eps: "",
-//     tipo_solicitud: "",
-//     descripcion: "",
-//   });
-
-//   const [archivo, setArchivo] = useState(null);
-//   const [loading, setLoading] = useState(false);
-//   const [message, setMessage] = useState("");
-//   const epsOptions = [
-//     "Compensar",
-//     "Fomag",
-//     "Famisanar",
-//     "Nueva Eps",
-//     "Sanitas",
-//     "Sura",
-//     "Aliansalud",
-//     "Asmet Salud",
-//     "Seguros Bolivar",
-//     "Cafam",
-//     "Colmédica",
-//   ];
-//   const serviciosPrestados = [
-//     "Hidroterapia",
-//     "Programa-Rehabilitacion",
-//     "Neuropediatria",
-//     "Psiquiatria",
-//     "Fisiatria",
-//     "Acuamotricidad",
-//     "Natacion-infantil",
-//     "Natacion-jovenes-adultos",
-//     "Yoga",
-//     "Yoga-acuatico",
-//     "Mindfulness",
-//     "Pilates",
-//     "Pilates-acuatico",
-//   ];
-
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-//     setForm((prev) => ({ ...prev, [name]: value }));
-//   };
-
-//   const handleFileChange = (e) => {
-//     setArchivo(e.target.files[0]);
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-//     setLoading(true);
-//     setMessage("");
-
-//     try {
-//       const formData = new FormData();
-//       Object.entries(form).forEach(([key, value]) => {
-//         formData.append(key, value);
-//       });
-//       if (archivo) {
-//         formData.append("archivo", archivo);
-//       }
-
-//       await createPqr(formData);
-
-//       Swal.fire({
-//         icon: "success",
-//         title: "¡PQR enviada!",
-//         text: "Tu PQRS ha sido enviada con éxito.",
-//         confirmButtonColor: "#3085d6",
-//       });
-
-//       setForm({
-//         nombre: "",
-//         apellido: "",
-//         documento_tipo: "",
-//         documento_numero: "",
-//         correo: "",
-//         telefono: "",
-//         sede: "",
-//         servicio_prestado: "",
-//         eps: "",
-//         tipo_solicitud: "",
-//         descripcion: "",
-//       });
-//       setArchivo(null);
-//     } catch (error) {
-//       Swal.fire({
-//         icon: "error",
-//         title: "Error",
-//         text: error.message || "Ocurrió un error al enviar la PQR.",
-//         confirmButtonColor: "#d33",
-//       });
-//     }
-
-//     setLoading(false);
-//   };
-
-//   return (
-//     <>
-//       <div className="pqrs-container">
-//         <div className="header-pqrs">
-//           <div>
-//             Envía tu <span>PQRS</span>
-//           </div>
-//         </div>
-//         <br />
-//         <form className="pqrs" onSubmit={handleSubmit}>
-//           <input
-//             name="nombre"
-//             placeholder="Nombre"
-//             value={form.nombre}
-//             onChange={handleChange}
-//             required
-//           />
-//           <input
-//             name="apellido"
-//             placeholder="Apellido"
-//             value={form.apellido}
-//             onChange={handleChange}
-//             required
-//           />
-
-//           <select
-//             name="documento_tipo"
-//             value={form.documento_tipo}
-//             onChange={handleChange}
-//             required
-//           >
-//             <option value="" hidden>
-//               Tipo de documento
-//             </option>
-//             <option value="CC">Cédula de ciudadanía</option>
-//             <option value="CE">Cédula de extranjería</option>
-//             <option value="TI">Tarjeta de identidad</option>
-//           </select>
-
-//           <input
-//             name="documento_numero"
-//             placeholder="Número de documento"
-//             value={form.documento_numero}
-//             onChange={handleChange}
-//             required
-//           />
-
-//           <input
-//             name="correo"
-//             type="email"
-//             placeholder="Correo"
-//             value={form.correo}
-//             onChange={handleChange}
-//             required
-//           />
-
-//           <input
-//             name="telefono"
-//             placeholder="Teléfono"
-//             value={form.telefono}
-//             onChange={handleChange}
-//             required
-//           />
-
-//           <select
-//             name="sede"
-//             value={form.sede}
-//             onChange={handleChange}
-//             required
-//           >
-//             <option value="" hidden>
-//               Sede de atención
-//             </option>
-//             <option value="Bogota-Sur-Occidente-Rehabilitación">
-//               Bogotá-Sur-Occidente-Rehabilitación
-//             </option>
-//             <option value="Bogota-Sur-Occidente-Hidroterapia">
-//               Bogotá-Sur-Occidente-Hidroterapia
-//             </option>
-//             <option value="Bogota-Norte-Hidroterapia">
-//               Bogotá-Norte-Hidroterapia
-//             </option>
-//             <option value="Bogota-Centro-Hidroterapia">
-//               Bogotá-Centro-Hidroterapia
-//             </option>
-//             <option value="Chia-Rehabilitacion">Chia-Rehabilitacion</option>
-//             <option value="Florencia-Hidroterapia-Rehabilitacion">
-//               Florencia-Hidroterapia-Rehabilitacion
-//             </option>
-//             <option value="Ibague-Hidroterapia-Rehabilitacion">
-//               Ibagué-Hidroterapia-Rehabilitacion
-//             </option>
-//           </select>
-
-//           <select
-//             name="servicio_prestado"
-//             value={form.servicio_prestado}
-//             onChange={handleChange}
-//             required
-//           >
-//             <option value="" hidden>
-//               Servicio prestado
-//             </option>
-//             {serviciosPrestados.map((servicio) => (
-//               <option key={servicio} value={servicio}>
-//                 {servicio
-//                   .replace(/-/g, " ")
-//                   .replace(/\b\w/g, (c) => c.toUpperCase())}
-//               </option>
-//             ))}
-//           </select>
-
-//           <select name="eps" value={form.eps} onChange={handleChange} required>
-//             <option value="" hidden>
-//               EPS ó ARL
-//             </option>
-//             {epsOptions.map((eps) => (
-//               <option key={eps} value={eps}>
-//                 {eps}
-//               </option>
-//             ))}
-//           </select>
-
-//           <select
-//             name="tipo_solicitud"
-//             value={form.tipo_solicitud}
-//             onChange={handleChange}
-//             required
-//           >
-//             <option value="" hidden>
-//               Tipo de solicitud
-//             </option>
-//             <option value="Felicitacion">Felicitación</option>
-//             <option value="Peticion">Petición ó solicitud</option>
-//             <option value="Queja">Queja</option>
-//             <option value="Reclamo">Reclamo</option>
-//             <option value="Sugerencia">Sugerencia</option>
-//             <option value="Denuncia">Denuncia</option>
-//           </select>
-
-//           <textarea
-//             name="descripcion"
-//             placeholder="Descripción detallada"
-//             value={form.descripcion}
-//             onChange={handleChange}
-//             required
-//           />
-
-//           <input type="file" onChange={handleFileChange} />
-
-//           <button type="submit" disabled={loading}>
-//             {loading ? "Enviando..." : "Enviar Solicitud"}
-//           </button>
-
-//           {message && <p>{message}</p>}
-//         </form>
-//       </div>
-//     </>
-//   );
-// }
 import React, { useState } from "react";
 import { createPqr } from "./pqrsService";
 import "./styles/Pqrs.css";
@@ -721,11 +452,12 @@ function PqrsForm() {
                 Tipo de solicitud
               </option>
               <option value="Felicitacion">Felicitación</option>
-              <option value="Peticion">Petición ó solicitud</option>
+              <option value="Peticion">Petición</option>
               <option value="Queja">Queja</option>
               <option value="Reclamo">Reclamo</option>
               <option value="Sugerencia">Sugerencia</option>
               <option value="Denuncia">Denuncia</option>
+              <option value="Denuncia">Solicitud</option>
             </select>
             {errors.tipo_solicitud && (
               <p className="error">{errors.tipo_solicitud}</p>
@@ -756,3 +488,279 @@ function PqrsForm() {
 }
 
 export default PqrsForm;
+
+
+
+
+
+
+// import React, { useState } from "react";
+// import { createPqr } from "./pqrsService";
+// import "./styles/Pqrs.css";
+// import Swal from "sweetalert2";
+
+// function PqrsForm() {
+//   const [form, setForm] = useState({
+//     nombre: "",
+//     apellido: "",
+//     documento_tipo: "",
+//     documento_numero: "",
+//     correo: "",
+//     telefono: "",
+//     sede: "",
+//     servicio_prestado: "",
+//     eps: "",
+//     tipo_solicitud: "",
+//     descripcion: "",
+//   });
+
+//   const [archivo, setArchivo] = useState(null);
+//   const [loading, setLoading] = useState(false);
+//   const [message, setMessage] = useState("");
+//   const epsOptions = [
+//     "Compensar",
+//     "Fomag",
+//     "Famisanar",
+//     "Nueva Eps",
+//     "Sanitas",
+//     "Sura",
+//     "Aliansalud",
+//     "Asmet Salud",
+//     "Seguros Bolivar",
+//     "Cafam",
+//     "Colmédica",
+//   ];
+//   const serviciosPrestados = [
+//     "Hidroterapia",
+//     "Programa-Rehabilitacion",
+//     "Neuropediatria",
+//     "Psiquiatria",
+//     "Fisiatria",
+//     "Acuamotricidad",
+//     "Natacion-infantil",
+//     "Natacion-jovenes-adultos",
+//     "Yoga",
+//     "Yoga-acuatico",
+//     "Mindfulness",
+//     "Pilates",
+//     "Pilates-acuatico",
+//   ];
+
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setForm((prev) => ({ ...prev, [name]: value }));
+//   };
+
+//   const handleFileChange = (e) => {
+//     setArchivo(e.target.files[0]);
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setLoading(true);
+//     setMessage("");
+
+//     try {
+//       const formData = new FormData();
+//       Object.entries(form).forEach(([key, value]) => {
+//         formData.append(key, value);
+//       });
+//       if (archivo) {
+//         formData.append("archivo", archivo);
+//       }
+
+//       await createPqr(formData);
+
+//       Swal.fire({
+//         icon: "success",
+//         title: "¡PQR enviada!",
+//         text: "Tu PQRS ha sido enviada con éxito.",
+//         confirmButtonColor: "#3085d6",
+//       });
+
+//       setForm({
+//         nombre: "",
+//         apellido: "",
+//         documento_tipo: "",
+//         documento_numero: "",
+//         correo: "",
+//         telefono: "",
+//         sede: "",
+//         servicio_prestado: "",
+//         eps: "",
+//         tipo_solicitud: "",
+//         descripcion: "",
+//       });
+//       setArchivo(null);
+//     } catch (error) {
+//       Swal.fire({
+//         icon: "error",
+//         title: "Error",
+//         text: error.message || "Ocurrió un error al enviar la PQR.",
+//         confirmButtonColor: "#d33",
+//       });
+//     }
+
+//     setLoading(false);
+//   };
+
+//   return (
+//     <>
+//       <div className="pqrs-container">
+//         <div className="header-pqrs">
+//           <div>
+//             Envía tu <span>PQRS</span>
+//           </div>
+//         </div>
+//         <br />
+//         <form className="pqrs" onSubmit={handleSubmit}>
+//           <input
+//             name="nombre"
+//             placeholder="Nombre"
+//             value={form.nombre}
+//             onChange={handleChange}
+//             required
+//           />
+//           <input
+//             name="apellido"
+//             placeholder="Apellido"
+//             value={form.apellido}
+//             onChange={handleChange}
+//             required
+//           />
+
+//           <select
+//             name="documento_tipo"
+//             value={form.documento_tipo}
+//             onChange={handleChange}
+//             required
+//           >
+//             <option value="" hidden>
+//               Tipo de documento
+//             </option>
+//             <option value="CC">Cédula de ciudadanía</option>
+//             <option value="CE">Cédula de extranjería</option>
+//             <option value="TI">Tarjeta de identidad</option>
+//           </select>
+
+//           <input
+//             name="documento_numero"
+//             placeholder="Número de documento"
+//             value={form.documento_numero}
+//             onChange={handleChange}
+//             required
+//           />
+
+//           <input
+//             name="correo"
+//             type="email"
+//             placeholder="Correo"
+//             value={form.correo}
+//             onChange={handleChange}
+//             required
+//           />
+
+//           <input
+//             name="telefono"
+//             placeholder="Teléfono"
+//             value={form.telefono}
+//             onChange={handleChange}
+//             required
+//           />
+
+//           <select
+//             name="sede"
+//             value={form.sede}
+//             onChange={handleChange}
+//             required
+//           >
+//             <option value="" hidden>
+//               Sede de atención
+//             </option>
+//             <option value="Bogota-Sur-Occidente-Rehabilitación">
+//               Bogotá-Sur-Occidente-Rehabilitación
+//             </option>
+//             <option value="Bogota-Sur-Occidente-Hidroterapia">
+//               Bogotá-Sur-Occidente-Hidroterapia
+//             </option>
+//             <option value="Bogota-Norte-Hidroterapia">
+//               Bogotá-Norte-Hidroterapia
+//             </option>
+//             <option value="Bogota-Centro-Hidroterapia">
+//               Bogotá-Centro-Hidroterapia
+//             </option>
+//             <option value="Chia-Rehabilitacion">Chia-Rehabilitacion</option>
+//             <option value="Florencia-Hidroterapia-Rehabilitacion">
+//               Florencia-Hidroterapia-Rehabilitacion
+//             </option>
+//             <option value="Ibague-Hidroterapia-Rehabilitacion">
+//               Ibagué-Hidroterapia-Rehabilitacion
+//             </option>
+//           </select>
+
+//           <select
+//             name="servicio_prestado"
+//             value={form.servicio_prestado}
+//             onChange={handleChange}
+//             required
+//           >
+//             <option value="" hidden>
+//               Servicio prestado
+//             </option>
+//             {serviciosPrestados.map((servicio) => (
+//               <option key={servicio} value={servicio}>
+//                 {servicio
+//                   .replace(/-/g, " ")
+//                   .replace(/\b\w/g, (c) => c.toUpperCase())}
+//               </option>
+//             ))}
+//           </select>
+
+//           <select name="eps" value={form.eps} onChange={handleChange} required>
+//             <option value="" hidden>
+//               EPS ó ARL
+//             </option>
+//             {epsOptions.map((eps) => (
+//               <option key={eps} value={eps}>
+//                 {eps}
+//               </option>
+//             ))}
+//           </select>
+
+//           <select
+//             name="tipo_solicitud"
+//             value={form.tipo_solicitud}
+//             onChange={handleChange}
+//             required
+//           >
+//             <option value="" hidden>
+//               Tipo de solicitud
+//             </option>
+//             <option value="Felicitacion">Felicitación</option>
+//             <option value="Peticion">Petición ó solicitud</option>
+//             <option value="Queja">Queja</option>
+//             <option value="Reclamo">Reclamo</option>
+//             <option value="Sugerencia">Sugerencia</option>
+//             <option value="Denuncia">Denuncia</option>
+//           </select>
+
+//           <textarea
+//             name="descripcion"
+//             placeholder="Descripción detallada"
+//             value={form.descripcion}
+//             onChange={handleChange}
+//             required
+//           />
+
+//           <input type="file" onChange={handleFileChange} />
+
+//           <button type="submit" disabled={loading}>
+//             {loading ? "Enviando..." : "Enviar Solicitud"}
+//           </button>
+
+//           {message && <p>{message}</p>}
+//         </form>
+//       </div>
+//     </>
+//   );
+// }

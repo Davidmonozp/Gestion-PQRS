@@ -19,6 +19,6 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
         ]);
         $this->call(PqrSeeder::class);
-
+        $this->call(PlantillaRespuestaSeeder::class);
     }
 }
