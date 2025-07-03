@@ -81,4 +81,6 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Consult
 Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,Supervisor'])->group(function () {
     Route::post('/pqrs/codigo/{pqr_codigo}/respuesta-final', [RespuestaController::class, 'registrarRespuestaFinal']);
     Route::get('/plantillas-respuesta', [PlantillaRespuestaController::class, 'index']);
+    Route::get('/pqrs/{pqr_codigo}/respuestas', [RespuestaController::class, 'listarRespuestas']);
+
 });

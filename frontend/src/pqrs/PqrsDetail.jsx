@@ -6,11 +6,11 @@ import { tienePermiso } from "../utils/permisoHelper";
 import Swal from "sweetalert2";
 import Navbar from "../components/Navbar/Navbar";
 import CountdownTimer from "./components/CountDownTimer";
-import SolicitarRespuestaUsuarioButton from "./components/SolicitarRespuestaUsuarioButton";
 
 function PqrsDetail() {
   const { pqr_codigo } = useParams();
   const navigate = useNavigate();
+  const currentUserRole = localStorage.getItem("role");
 
   const [pqr, setPqr] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
@@ -19,7 +19,14 @@ function PqrsDetail() {
   const [respuestaFinal, setRespuestaFinal] = useState("");
   const [yaTieneFinal, setYaTieneFinal] = useState(false);
   const [mailEnviado, setMailEnviado] = useState(false);
+
+  // Estados para controlar la deshabilitación de los campos
   const [prioridadBloqueada, setPrioridadBloqueada] = useState(false);
+  const [atributoCalidadBloqueado, setAtributoCalidadBloqueado] =
+    useState(false);
+  const [fuenteBloqueada, setFuenteBloqueada] = useState(false);
+  const [asignadoABloqueado, setAsignadoABloqueado] = useState(false);
+
   const estadoStyles = {
     Radicado: "estado-radicado",
     Asignado: "estado-asignado",
@@ -57,7 +64,12 @@ function PqrsDetail() {
         asignado_a: p?.asignado?.id || "",
         prioridad: p.prioridad || "",
       });
+
+      // Actualizar el estado de bloqueo basado en si el campo ya tiene un valor
       setPrioridadBloqueada(!!p.prioridad);
+      setAtributoCalidadBloqueado(!!p.atributo_calidad);
+      setFuenteBloqueada(!!p.fuente);
+      setAsignadoABloqueado(!!p.asignado?.id); // Asignado a se bloquea si ya tiene un ID de asignación
     } catch (err) {
       setError("Error cargando la PQRS");
     } finally {
@@ -69,10 +81,19 @@ function PqrsDetail() {
   useEffect(() => {
     const cargarPlantillas = async () => {
       try {
-        const res = await api.get("/plantillas-respuesta"); // Asegúrate de que esta ruta exista
+        const res = await api.get("/plantillas-respuesta"); // Ruta para cargar plantillas
         setPlantillas(res.data);
       } catch (error) {
-        console.error("Error cargando plantillas:", error);
+        // console.error("Error cargando plantillas:", error); // Eliminado console.log
+      }
+    };
+
+    const fetchRespuestas = async () => {
+      try {
+        const res = await api.get(`/pqrs/${pqr_codigo}/respuestas`); // Ruta para cargar respuestas
+        setRespuestas(res.data);
+      } catch (error) {
+        // console.error("Error cargando respuestas:", error); // Eliminado console.log
       }
     };
 
@@ -93,9 +114,10 @@ function PqrsDetail() {
       return;
     }
 
-    // Cargar PQR y plantillas
+    // Cargar PQR, plantillas y respuestas
     fetchPqr();
     cargarPlantillas();
+    fetchRespuestas();
   }, [pqr_codigo, navigate]);
 
   const handleChange = (e) => {
@@ -127,123 +149,116 @@ function PqrsDetail() {
       const response = await api.put(`/pqrs/codigo/${pqr_codigo}`, cleanedData);
 
       setPqr(response.data.data);
+      // Actualizar estados de bloqueo después de una actualización exitosa
       setPrioridadBloqueada(!!response.data.data.prioridad);
+      setAtributoCalidadBloqueado(!!response.data.data.atributo_calidad);
+      setFuenteBloqueada(!!response.data.data.fuente);
+      setAsignadoABloqueado(!!response.data.data.asignado_a);
 
       Swal.fire("Actualizado", "PQRS actualizada correctamente", "success");
     } catch (err) {
-      // 1. Registra el error completo en la consola para depuración
-      console.error("Error al actualizar PQRS:", err);
-      let errorMessage = "No se pudo actualizar"; // Mensaje por defecto
+      let errorMessage = "No se pudo actualizar";
 
       if (err.response) {
-        // 2. Si hay una respuesta del servidor, intenta usar su mensaje
         errorMessage =
           err.response.data?.error ||
           err.response.data?.message ||
           errorMessage;
-        // Opcional: registrar más detalles de la respuesta del API en consola
-        console.error("Detalles del error de la API:", err.response.data);
-        console.error("Código de estado:", err.response.status);
       } else if (err.request) {
-        // 3. Si no hay respuesta (ej. problema de red)
         errorMessage =
           "No se recibió respuesta del servidor. Inténtalo de nuevo.";
       } else {
-        // 4. Otros errores (ej. error de código local)
         errorMessage = err.message;
       }
-      Swal.fire("Error", errorMessage, "error"); // Muestra el mensaje más específico
+      Swal.fire("Error", errorMessage, "error");
     }
   };
 
   // Registrar respuesta final y refrescar datos con fetchPqr
- const registrarRespuestaFinal = async () => {
-  if (!respuestaFinal.trim()) {
-    return Swal.fire("Error", "El contenido no puede estar vacío", "warning");
-  }
+  const registrarRespuestaFinal = async () => {
+    if (!respuestaFinal.trim()) {
+      return Swal.fire("Error", "El contenido no puede estar vacío", "warning");
+    }
 
-  // --- Paso 1: Mostrar el cuadro de diálogo de confirmación ---
-  const result = await Swal.fire({
-    title: '¿Estás seguro?',
-    text: "Se registrará la respuesta final al ciudadano. ¡Esta acción es irreversible!",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Sí, enviar respuesta',
-    cancelButtonText: 'Cancelar'
-  });
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Se registrará la respuesta final que se le enviará al usuario. ¡Esta acción es irreversible!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, registrar respuesta",
+      cancelButtonText: "Cancelar",
+    });
 
-  // --- Paso 2: Verificar si el usuario confirmó ---
-  if (result.isConfirmed) {
-    try {
-      // Como habíamos discutido, si `respuestaFinal` ya es texto plano con \n,
-      // no necesitas esta línea. Si tu `textarea` genera <br> por alguna razón,
-      // la mantendrías, pero el enfoque ideal es guardar \n.
-      const contenidoConHTML = respuestaFinal.replace(/\n/g, "<br>"); // Revisa si esta línea sigue siendo necesaria
+    if (result.isConfirmed) {
+      try {
+        const contenidoConHTML = respuestaFinal.replace(/\n/g, "<br>");
 
-      await api.post(`/pqrs/codigo/${pqr_codigo}/respuesta-final`, {
-        contenido: contenidoConHTML,
-      });
+        await api.post(`/pqrs/codigo/${pqr_codigo}/respuesta-final`, {
+          contenido: contenidoConHTML,
+        });
 
-      Swal.fire("¡Registrada!", "La respuesta final ha sido resgistrada con éxito.", "success").then(() => {
-        setRespuestaFinal(""); // limpiar texto
-        fetchPqr(); // refrescar datos sin recargar página
-      });
-    } catch (err) {
-      console.error("Error al registrar respuesta final:", err);
+        Swal.fire(
+          "¡Registrada!",
+          "La respuesta final ha sido registrada con éxito.",
+          "success"
+        ).then(() => {
+          setRespuestaFinal("");
+          fetchPqr();
+        });
+      } catch (err) {
+        Swal.fire(
+          "Error",
+          err.response?.data?.error || "Error al registrar la respuesta final.",
+          "error"
+        );
+      }
+    } else {
       Swal.fire(
-        "Error",
-        err.response?.data?.error || "Error al registrar la respuesta final.",
-        "error"
+        "Cancelado",
+        "El envío de la respuesta ha sido cancelado.",
+        "info"
       );
     }
-  } else {
-    // El usuario canceló la operación
-    Swal.fire("Cancelado", "El envío de la respuesta ha sido cancelado.", "info");
-  }
-};
+  };
 
   // Enviar respuesta final por correo y refrescar estado mailEnviado
- const enviarAlCiudadano = async () => {
-  // --- Paso 1: Mostrar el cuadro de diálogo de confirmación ---
-  const result = await Swal.fire({
-    title: '¿Estás seguro?',
-    text: "Se enviará la respuesta final por correo electrónico al ciudadano. ¡Esta acción es irreversible!",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Sí, enviar correo',
-    cancelButtonText: 'Cancelar'
-  });
+  const enviarAlCiudadano = async () => {
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "Se enviará la respuesta por correo electrónico al usuario. ¡Esta acción es irreversible!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, enviar correo",
+      cancelButtonText: "Cancelar",
+    });
 
-  // --- Paso 2: Verificar si el usuario confirmó ---
-  if (result.isConfirmed) {
-    try {
-      await api.post(`/pqrs/codigo/${pqr_codigo}/enviar-respuesta-correo`);
-      
-      Swal.fire(
-        "¡Correo enviado!",
-        "La respuesta final fue enviada exitosamente al usuario.",
-        "success"
-      ).then(() => {
-        setMailEnviado(true);
-        fetchPqr(); // refrescar datos para reflejar estado actualizado
-      });
-    } catch (err) {
-      console.error("Error al enviar correo al ciudadano:", err); // Mensaje más descriptivo
-      Swal.fire(
-        "Error",
-        err.response?.data?.error || "No se pudo enviar el correo.", // Mensaje más descriptivo
-        "error"
-      );
+    if (result.isConfirmed) {
+      try {
+        await api.post(`/pqrs/codigo/${pqr_codigo}/enviar-respuesta-correo`);
+
+        Swal.fire(
+          "¡Correo enviado!",
+          "La respuesta final fue enviada exitosamente al usuario.",
+          "success"
+        ).then(() => {
+          setMailEnviado(true);
+          fetchPqr();
+        });
+      } catch (err) {
+        Swal.fire(
+          "Error",
+          err.response?.data?.error || "No se pudo enviar el correo.",
+          "error"
+        );
+      }
+    } else {
+      Swal.fire("Cancelado", "El envío del correo ha sido cancelado.", "info");
     }
-  } else {
-    // El usuario canceló la operación
-    Swal.fire("Cancelado", "El envío del correo ha sido cancelado.", "info");
-  }
-};
+  };
 
   // Función auxiliar para calcular deadline
   const getUserDeadline = (prioridad, createdAt) => {
@@ -261,6 +276,9 @@ function PqrsDetail() {
         break;
       case "Simple":
         hours = 72;
+        break;
+      case "Solicitud":
+        hours = 48;
         break;
       default:
         hours = 24;
@@ -406,6 +424,11 @@ function PqrsDetail() {
                   value={formData.atributo_calidad}
                   onChange={handleChange}
                   className="styled-input"
+                  // Se deshabilita si atributoCalidadBloqueado es true Y el rol NO es "Administrador"
+                  disabled={
+                    atributoCalidadBloqueado &&
+                    currentUserRole !== "Administrador"
+                  }
                 >
                   <option value="" disabled>
                     Seleccione
@@ -430,6 +453,10 @@ function PqrsDetail() {
                   value={formData.fuente}
                   onChange={handleChange}
                   className="styled-input"
+                  // Se deshabilita si fuenteBloqueada es true Y el rol NO es "Administrador"
+                  disabled={
+                    fuenteBloqueada && currentUserRole !== "Administrador"
+                  }
                 >
                   <option value="" disabled>
                     Seleccione
@@ -453,6 +480,10 @@ function PqrsDetail() {
                   value={formData.asignado_a}
                   onChange={handleChange}
                   className="styled-input"
+                  // Se deshabilita si asignadoABloqueado es true Y el rol NO es "Administrador"
+                  disabled={
+                    asignadoABloqueado && currentUserRole !== "Administrador"
+                  }
                 >
                   <option value="" disabled>
                     Seleccione
@@ -469,12 +500,12 @@ function PqrsDetail() {
                   value={formData.prioridad}
                   onChange={handleChange}
                   className="styled-input"
-                  disabled={prioridadBloqueada} // <- agrega esto
+                  disabled={prioridadBloqueada}
                 >
                   <option value="" disabled>
                     Seleccione prioridad
                   </option>
-                  {["Vital", "Priorizado", "Simple"].map((opt) => (
+                  {["Vital", "Priorizado", "Simple", "Solicitud"].map((opt) => (
                     <option key={opt} value={opt}>
                       {opt}
                     </option>
@@ -573,7 +604,11 @@ function PqrsDetail() {
                   {esRespuestaUsuario
                     ? "👤 Respuesta del Usuario"
                     : resp.es_final
-                    ? "📌 Respuesta Final"
+                    ? `📌 Respuesta Final registrada por ${
+                        resp.autor?.name || "Usuario desconocido"
+                      }`
+                    : resp.autor?.name
+                    ? `📝 Respuesta Preliminar registrada por ${resp.autor.name}`
                     : "📝 Respuesta Preliminar"}
                 </h4>
 
@@ -669,7 +704,11 @@ function PqrsDetail() {
                         "[TIPO_DOC]": pqr.documento_tipo || "",
                         "[NUMERO_DOC]": pqr.documento_numero || "",
                         "[TELEFONO]": pqr.telefono || "",
-                        "[FECHA]": new Date().toLocaleDateString("es-CO"),
+                        "[FECHA]": new Date().toLocaleDateString("es-CO", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        }),
                         "[PQR_CREADA]": fechaPqrCreada,
                         "[PACIENTE]": `${pqr.nombre || ""} ${
                           pqr.apellido || ""
@@ -727,6 +766,27 @@ function PqrsDetail() {
 
 export default PqrsDetail;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // import React, { useEffect, useState } from "react";
 // import { useParams, useNavigate } from "react-router-dom";
 // import api from "../api/api";
@@ -738,8 +798,9 @@ export default PqrsDetail;
 // import SolicitarRespuestaUsuarioButton from "./components/SolicitarRespuestaUsuarioButton";
 
 // function PqrsDetail() {
-//   const { id } = useParams();
+//   const { pqr_codigo } = useParams();
 //   const navigate = useNavigate();
+//   const [respuestas, setRespuestas] = useState([]);
 
 //   const [pqr, setPqr] = useState(null);
 //   const [usuarios, setUsuarios] = useState([]);
@@ -775,7 +836,7 @@ export default PqrsDetail;
 //       setUsuarios(resUsers.data);
 
 //       // Traer detalle PQR
-//       const res = await api.get(`/pqrs/${id}`);
+//       const res = await api.get(`/pqrs/codigo/${pqr_codigo}`);
 //       const p = res.data.pqr;
 //       setPqr(p);
 //       setYaTieneFinal(p.respuestas?.some((r) => r.es_final) || false);
@@ -796,6 +857,24 @@ export default PqrsDetail;
 
 //   // Verificación de permisos y carga inicial
 //   useEffect(() => {
+//     const cargarPlantillas = async () => {
+//       try {
+//         const res = await api.get("/plantillas-respuesta"); // Ruta para cargar plantillas
+//         setPlantillas(res.data);
+//       } catch (error) {
+//         // console.error("Error cargando plantillas:", error); // Eliminado console.log
+//       }
+//     };
+
+//     const fetchRespuestas = async () => {
+//       try {
+//         const res = await api.get(`/pqrs/${pqr_codigo}/respuestas`); // Ruta para cargar respuestas
+//         setRespuestas(res.data);
+//       } catch (error) {
+//         // console.error("Error cargando respuestas:", error); // Eliminado console.log
+//       }
+//     };
+
 //     if (
 //       !tienePermiso([
 //         "Administrador",
@@ -813,8 +892,11 @@ export default PqrsDetail;
 //       return;
 //     }
 
+//     // Cargar PQR, plantillas y respuestas
 //     fetchPqr();
-//   }, [id, navigate]);
+//     cargarPlantillas();
+//     fetchRespuestas();
+//   }, [pqr_codigo, navigate]);
 
 //   const handleChange = (e) => {
 //     const { name, value } = e.target;
@@ -842,14 +924,27 @@ export default PqrsDetail;
 //     }
 
 //     try {
-//       const response = await api.put(`/pqrs/${id}`, cleanedData);
+//       const response = await api.put(`/pqrs/codigo/${pqr_codigo}`, cleanedData);
 
 //       setPqr(response.data.data);
 //       setPrioridadBloqueada(!!response.data.data.prioridad);
 
 //       Swal.fire("Actualizado", "PQRS actualizada correctamente", "success");
 //     } catch (err) {
-//       Swal.fire("Error", "No se pudo actualizar", "error");
+//       let errorMessage = "No se pudo actualizar"; // Mensaje por defecto
+
+//       if (err.response) {
+//         errorMessage =
+//           err.response.data?.error ||
+//           err.response.data?.message ||
+//           errorMessage;
+//       } else if (err.request) {
+//         errorMessage =
+//           "No se recibió respuesta del servidor. Inténtalo de nuevo.";
+//       } else {
+//         errorMessage = err.message;
+//       }
+//       Swal.fire("Error", errorMessage, "error"); // Muestra el mensaje más específico
 //     }
 //   };
 
@@ -858,41 +953,90 @@ export default PqrsDetail;
 //     if (!respuestaFinal.trim()) {
 //       return Swal.fire("Error", "El contenido no puede estar vacío", "warning");
 //     }
-//     try {
-//       await api.post(`/pqrs/${id}/respuesta-final`, {
-//         contenido: respuestaFinal,
-//       });
-//       Swal.fire("Éxito", "Respuesta final registrada", "success").then(() => {
-//         setRespuestaFinal(""); // limpiar texto
-//         fetchPqr(); // refrescar datos sin recargar página
-//       });
-//     } catch (err) {
+
+//     // --- Paso 1: Mostrar el cuadro de diálogo de confirmación ---
+//     const result = await Swal.fire({
+//       title: "¿Estás seguro?",
+//       text: "Se registrará la respuesta final que se le enviará al usuario. ¡Esta acción es irreversible!",
+//       icon: "warning",
+//       showCancelButton: true,
+//       confirmButtonColor: "#3085d6",
+//       cancelButtonColor: "#d33",
+//       confirmButtonText: "Sí, registrar respuesta",
+//       cancelButtonText: "Cancelar",
+//     });
+
+//     // --- Paso 2: Verificar si el usuario confirmó ---
+//     if (result.isConfirmed) {
+//       try {
+//         const contenidoConHTML = respuestaFinal.replace(/\n/g, "<br>");
+
+//         await api.post(`/pqrs/codigo/${pqr_codigo}/respuesta-final`, {
+//           contenido: contenidoConHTML,
+//         });
+
+//         Swal.fire(
+//           "¡Registrada!",
+//           "La respuesta final ha sido registrada con éxito.",
+//           "success"
+//         ).then(() => {
+//           setRespuestaFinal(""); // limpiar texto
+//           fetchPqr(); // refrescar datos sin recargar página
+//         });
+//       } catch (err) {
+//         Swal.fire(
+//           "Error",
+//           err.response?.data?.error || "Error al registrar la respuesta final.",
+//           "error"
+//         );
+//       }
+//     } else {
+//       // El usuario canceló la operación
 //       Swal.fire(
-//         "Error",
-//         err.response?.data?.error || "Error al registrar",
-//         "error"
+//         "Cancelado",
+//         "El envío de la respuesta ha sido cancelado.",
+//         "info"
 //       );
 //     }
 //   };
 
 //   // Enviar respuesta final por correo y refrescar estado mailEnviado
 //   const enviarAlCiudadano = async () => {
-//     try {
-//       await api.post(`/pqrs/${id}/enviar-respuesta-correo`);
-//       Swal.fire(
-//         "Correo enviado",
-//         "La respuesta final fue enviada exitosamente al usuario.",
-//         "success"
-//       ).then(() => {
-//         setMailEnviado(true);
-//         fetchPqr(); // refrescar datos para reflejar estado actualizado
-//       });
-//     } catch (err) {
-//       Swal.fire(
-//         "Error",
-//         err.response?.data?.error || "No se pudo enviar",
-//         "error"
-//       );
+//     // --- Paso 1: Mostrar el cuadro de diálogo de confirmación ---
+//     const result = await Swal.fire({
+//       title: "¿Estás seguro?",
+//       text: "Se enviará la respuesta por correo electrónico al usuario. ¡Esta acción es irreversible!",
+//       icon: "warning",
+//       showCancelButton: true,
+//       confirmButtonColor: "#3085d6",
+//       cancelButtonColor: "#d33",
+//       confirmButtonText: "Sí, enviar correo",
+//       cancelButtonText: "Cancelar",
+//     });
+
+//     // --- Paso 2: Verificar si el usuario confirmó ---
+//     if (result.isConfirmed) {
+//       try {
+//         await api.post(`/pqrs/codigo/${pqr_codigo}/enviar-respuesta-correo`);
+
+//         Swal.fire(
+//           "¡Correo enviado!",
+//           "La respuesta final fue enviada exitosamente al usuario.",
+//           "success"
+//         ).then(() => {
+//           setMailEnviado(true);
+//           fetchPqr(); // refrescar datos para reflejar estado actualizado
+//         });
+//       } catch (err) {
+//         Swal.fire(
+//           "Error",
+//           err.response?.data?.error || "No se pudo enviar el correo.",
+//           "error"
+//         );
+//       }
+//     } else {
+//       // El usuario canceló la operación
+//       Swal.fire("Cancelado", "El envío del correo ha sido cancelado.", "info");
 //     }
 //   };
 
@@ -913,6 +1057,9 @@ export default PqrsDetail;
 //       case "Simple":
 //         hours = 72;
 //         break;
+//       case "Solicitud":
+//         hours = 48;
+//         break;
 //       default:
 //         hours = 24;
 //     }
@@ -932,7 +1079,7 @@ export default PqrsDetail;
 //     <>
 //       <Navbar />
 //       <div className="pqr-card-container">
-//         <h2>Detalle y edición de la PQRS #{pqr.id}</h2>
+//         <h2>Detalle y edición de la PQRS #{pqr.pqr_codigo}</h2>
 //         <div className="pqr-card-columns">
 //           {/* Columna de datos simples */}
 //           <div className="pqr-card-col">
@@ -1026,7 +1173,7 @@ export default PqrsDetail;
 //               <strong>Tipo Solicitud:</strong> {pqr.tipo_solicitud}
 //             </p>
 //             <p>
-//               <strong>Fecha:</strong>{" "}
+//               <strong>Fecha solicitud:</strong>{" "}
 //               {new Date(pqr.created_at).toLocaleString()}
 //             </p>
 
@@ -1120,12 +1267,12 @@ export default PqrsDetail;
 //                   value={formData.prioridad}
 //                   onChange={handleChange}
 //                   className="styled-input"
-//                   disabled={prioridadBloqueada} // <- agrega esto
+//                   disabled={prioridadBloqueada}
 //                 >
 //                   <option value="" disabled>
 //                     Seleccione prioridad
 //                   </option>
-//                   {["Vital", "Priorizado", "Simple"].map((opt) => (
+//                   {["Vital", "Priorizado", "Simple", "Solicitud"].map((opt) => (
 //                     <option key={opt} value={opt}>
 //                       {opt}
 //                     </option>
@@ -1224,7 +1371,9 @@ export default PqrsDetail;
 //                   {esRespuestaUsuario
 //                     ? "👤 Respuesta del Usuario"
 //                     : resp.es_final
-//                     ? "📌 Respuesta Final"
+//                     ? `📌 Respuesta Final registrada por ${resp.autor?.name || "Usuario desconocido"}`
+//                     : resp.autor?.name
+//                     ? `📝 Respuesta Preliminar registrada por ${resp.autor.name}`
 //                     : "📝 Respuesta Preliminar"}
 //                 </h4>
 
@@ -1233,7 +1382,11 @@ export default PqrsDetail;
 //                   {new Date(resp.created_at).toLocaleString()}
 //                 </p>
 
-//                 <div className="contenido-respuesta">{resp.contenido}</div>
+//                 <div
+//                   className="contenido-respuesta"
+//                   style={{ textAlign: "justify" }}
+//                   dangerouslySetInnerHTML={{ __html: resp.contenido }}
+//                 />
 
 //                 {/* Mostrar archivo si existe */}
 //                 {urlArchivo && (
@@ -1276,21 +1429,90 @@ export default PqrsDetail;
 //           })}
 
 //           {/* Formulario para crear respuesta final */}
-//           {tienePermiso(["Supervisor", "Administrador"]) && !yaTieneFinal && (
-//             <div className="pqr-card-section pqr-card-col">
-//               <h3>Registrar Respuesta Final</h3>
-//               <textarea
-//                 value={respuestaFinal}
-//                 onChange={(e) => setRespuestaFinal(e.target.value)}
-//                 rows="5"
-//                 placeholder="Escribe la respuesta final..."
-//                 className="styled-input respuesta-final"
-//               />
-//               <button onClick={registrarRespuestaFinal}>
-//                 Registrar Respuesta Final
-//               </button>
-//             </div>
-//           )}
+//           {tienePermiso(["Supervisor", "Administrador"]) &&
+//             !yaTieneFinal &&
+//             pqr && (
+//               <div className="pqr-card-section pqr-card-col">
+//                 <h3>Registrar Respuesta Final</h3>
+
+//                 {/* Dropdown de plantillas */}
+//                 <label>Seleccionar plantilla:</label>
+//                 <select
+//                   className="styled-input"
+//                   value={plantillaSeleccionada}
+//                   onChange={(e) => {
+//                     const idSeleccionado = e.target.value;
+//                     setPlantillaSeleccionada(idSeleccionado);
+
+//                     const plantilla = plantillas.find(
+//                       (p) => p.id.toString() === idSeleccionado
+//                     );
+
+//                     if (plantilla && pqr) {
+//                       let contenido = plantilla.contenido;
+
+//                       const fechaPqrCreada = new Date(
+//                         pqr.created_at
+//                       ).toLocaleDateString("es-CO", {
+//                         day: "numeric",
+//                         month: "long",
+//                         year: "numeric",
+//                       });
+
+//                       // Reemplazo dinámico de placeholders
+//                       const placeholders = {
+//                         "[NOMBRE]": `${pqr.nombre || ""} ${
+//                           pqr.apellido || ""
+//                         }`.trim(),
+//                         "[CIUDAD]": pqr.sede || "Ciudad",
+//                         "[CORREO]": pqr.correo || "",
+//                         "[TIPO_DOC]": pqr.documento_tipo || "",
+//                         "[NUMERO_DOC]": pqr.documento_numero || "",
+//                         "[TELEFONO]": pqr.telefono || "",
+//                         "[FECHA]": new Date().toLocaleDateString("es-CO", {
+//                           day: "numeric",
+//                           month: "long",
+//                           year: "numeric",
+//                         }),
+//                         "[PQR_CREADA]": fechaPqrCreada,
+//                         "[PACIENTE]": `${pqr.nombre || ""} ${
+//                           pqr.apellido || ""
+//                         }`.trim(),
+//                         "[CC]": pqr.documento_tipo || "",
+//                       };
+
+//                       for (const clave in placeholders) {
+//                         const valor = placeholders[clave];
+//                         contenido = contenido.replaceAll(clave, valor);
+//                       }
+
+//                       setRespuestaFinal(contenido);
+//                     }
+//                   }}
+//                 >
+//                   <option value="">-- Selecciona una plantilla --</option>
+//                   {plantillas.map((p) => (
+//                     <option key={p.id} value={p.id}>
+//                       {p.nombre}
+//                     </option>
+//                   ))}
+//                 </select>
+
+//                 {/* Área de texto editable */}
+//                 <textarea
+//                   value={respuestaFinal}
+//                   onChange={(e) => setRespuestaFinal(e.target.value)}
+//                   rows="10"
+//                   placeholder="Escribe la respuesta final..."
+//                   className="styled-input respuesta-final"
+//                 />
+
+//                 <button onClick={registrarRespuestaFinal}>
+//                   Registrar Respuesta Final
+//                 </button>
+//               </div>
+//             )}
+
 //           {yaTieneFinal && !mailEnviado && (
 //             <div>
 //               <button

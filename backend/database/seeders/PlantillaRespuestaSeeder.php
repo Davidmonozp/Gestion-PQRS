@@ -12,11 +12,14 @@ class PlantillaRespuestaSeeder extends Seeder
         $plantillas = [
             [
                 'nombre' => 'ASIGNACION DE CITAS',
-                'contenido' =>
+                'contenido' => '
 
-                'Señor(a) [NOMBRE]
+                Bogotá, [FECHA]
+
+                Señor(a) [NOMBRE]
 
                 Ciudad: BOGOTÁ
+                
 
                 Cordial saludo,
 
@@ -26,17 +29,21 @@ class PlantillaRespuestaSeeder extends Seeder
 
                 Passus IPS Taller Psicomotriz SAS, comprometido con la mejora continua en pro de la calidad de la prestación de sus servicios brindada por nuestros profesionales y demás colaboradores. Agradecemos haberse puesto en contacto con nosotros, para expresar sus felicitaciones, inquietudes y sugerencias que nos permiten definir acciones en beneficio de todos nuestros usuarios.
 
-                Cordialmente;',
+                Cordialmente,
+                
+                Passus IPS
+                ',
             ],
             [
                 'nombre' => 'CANCELACION DE CITAS',
                 'contenido' => '
 
-                Bogotá, [CIUDAD]
+                Bogotá, [FECHA]
 
                 Señor (a) [NOMBRE]
 
-                Ciudad: BOGOTÁ
+                Sede: [CIUDAD]
+
 
                 Cordial saludo,
 
@@ -53,17 +60,20 @@ class PlantillaRespuestaSeeder extends Seeder
                 Señor usuario, recuerde que sus datos serán tratados de acuerdo con lo establecido en la Ley estatutaria 1581 de 2012 de Habeas Data. Los tiempos de respuesta están sujetos a lo dispuesto.
 
                 Cordialmente,
+
+                Passus IPS
                 ',
             ],
             [
                 'nombre' => 'DIRECCIONAR AL CALLCENTER PARA ASIGNACION DE CITAS',
                 'contenido' => '
 
-                Bogotá, [CIUDAD]
+                Bogotá, [FECHA] 
 
                 Señor (a) [NOMBRE]
 
-                Ciudad: BOGOTÁ
+                Sede: [CIUDAD]
+
 
                 Cordial saludo,
 
@@ -84,17 +94,20 @@ class PlantillaRespuestaSeeder extends Seeder
                 Señor usuario, recuerde que sus datos serán tratados de acuerdo con lo establecido en la Ley estatutaria 1581 de 2012 de Habeas Data. Los tiempos de respuesta están sujetos a lo dispuesto.
 
                 Cordialmente,
+
+                Passus IPS
                 ',
             ],
             [
                 'nombre' => 'EXONERACION DE MULTAS',
                 'contenido' => '
 
-                Bogotá, [CIUDAD]
+                Bogotá, [FECHA] 
 
                 Señor (a) [NOMBRE]
 
-                Ciudad: BOGOTÁ
+                Sede: [CIUDAD]
+
 
                 Cordial saludo,
 
@@ -111,17 +124,20 @@ class PlantillaRespuestaSeeder extends Seeder
                 Passus IPS Taller Psicomotriz SAS, comprometido con la mejora continua en pro de la calidad de la prestación de sus servicios brindada por nuestros profesionales y demás colaboradores. Agradecemos haberse puesto en contacto con nosotros, para expresar sus felicitaciones, inquietudes y sugerencias que nos permiten definir acciones en pro de todos nuestros usuarios.
 
                 Cordialmente,
+
+                Passus IPS
                 ',
             ],
             [
                 'nombre' => 'INFORMACION DEL COBRO MULTA',
                 'contenido' => '
                
-                Bogotá, [CIUDAD]
+                Bogotá, [FECHA] 
 
                 Señor (a) [NOMBRE]
 
-                Ciudad: BOGOTÁ
+                Sede: [CIUDAD]
+
 
                 Cordial saludo,
 
@@ -133,17 +149,20 @@ class PlantillaRespuestaSeeder extends Seeder
 
                 Cordialmente,
 
+                Passus IPS
+
                 ',
             ],
             [
                 'nombre' => 'QUEJA O SUGERENCIA',
                 'contenido' => 
 
-                'Bogotá, [CIUDAD]
+                'Bogotá, [FECHA]
 
                 Señor (a) [NOMBRE]
 
-                Ciudad: BOGOTÁ
+                Sede: [CIUDAD]
+
 
                 Estimado(a) Sr(a),
 
@@ -157,18 +176,21 @@ class PlantillaRespuestaSeeder extends Seeder
 
                 Agradecemos haberse puesto en contacto con nosotros.
 
-                Cordialmente;             
+                Cordialmente, 
+                
+                Passus IPS
                 ',
             ],
             [
                 'nombre' => 'REITERACION DE MULTAS',
                 'contenido' => '
                
-                Bogotá, [CIUDAD]
+                Bogotá, [FECHA] 
 
                 Señor (a) [NOMBRE]
 
-                Ciudad: BOGOTÁ
+                Sede: [CIUDAD]
+
 
                 Estimado(a) Sr(a),
 
@@ -182,18 +204,20 @@ class PlantillaRespuestaSeeder extends Seeder
 
                 Agradecemos haberse puesto en contacto con nosotros.
 
-                Cordialmente;
+                Cordialmente,
+
+                Passus IPS
                 ',
             ],
             [
                 'nombre' => 'RESPUESTA DE INASISTENCIA',
                 'contenido' => '               
                 
-                Bogotá, [CIUDAD]
+                Bogotá, [FECHA] 
 
                 Señor (a) [NOMBRE]
 
-                Ciudad: BOGOTÁ
+                Sede: [CIUDAD]
 
 
                 Cordial saludo,
@@ -214,17 +238,20 @@ class PlantillaRespuestaSeeder extends Seeder
 
                 Cordialmente,
 
+                Passus IPS
+
                 ',
             ],
             [
                 'nombre' => 'RESPUESTA GENREAL',
                 'contenido' => '
                
-                Bogotá, [CIUDAD]
+                Bogotá, [FECHA] 
 
                 Señor (a) [NOMBRE]
 
-                Ciudad: BOGOTÁ
+                Sede: [CIUDAD]
+
 
                 Cordial saludo,
 
@@ -241,6 +268,8 @@ class PlantillaRespuestaSeeder extends Seeder
                 Señor usuario, recuerde que sus datos serán tratados de acuerdo con lo establecido en la Ley estatutaria 1581 de 2012 de Habeas Data. Los tiempos de respuesta están sujetos a lo dispuesto.
 
                 Cordialmente,
+
+                Passus IPS
                 ',
             ],
             [
@@ -248,11 +277,12 @@ class PlantillaRespuestaSeeder extends Seeder
                 'contenido' => '
                
                 
-                Bogotá, [CIUDAD]
+                Bogotá, [FECHA] 
 
                 Señor (a) [NOMBRE]
 
-                Ciudad: BOGOTÁ
+                Sede: [CIUDAD]
+
 
                 Cordial saludo,
 
@@ -269,18 +299,19 @@ class PlantillaRespuestaSeeder extends Seeder
                 Señor usuario, recuerde que sus datos serán tratados de acuerdo con lo establecido en la Ley estatutaria 1581 de 2012 de Habeas Data. Los tiempos de respuesta están sujetos a lo dispuesto.
 
                 Cordialmente,
+
+                Passus IPS
                 ',
             ],
                [
                 'nombre' => 'MODELO PARA REPROGRAMACION DE CITAS',
                 'contenido' => '               
                 
-                Bogotá, [CIUDAD]
+                Bogotá, [FECHA] 
 
                 Señor(a) [NOMBRE]
 
-                Ciudad: BOGOTÁ
-
+                Sede: [CIUDAD]
 
 
                 Cordial saludo,
@@ -295,7 +326,9 @@ class PlantillaRespuestaSeeder extends Seeder
 
                 Señor usuario, recuerde que sus datos serán tratados de acuerdo con lo establecido en la Ley estatutaria 1581 de 2012 de Habeas Data. Los tiempos de respuesta están sujetos a lo dispuesto.
 
-                Cordialmente,
+                Cordialmente, 
+
+                Passus IPS
                 ',
             ],
         ];

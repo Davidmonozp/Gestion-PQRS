@@ -104,85 +104,128 @@ class PqrController extends Controller
 
 
 
-    public function index(Request $request)
-    {
-        try {
-            $user = JWTAuth::parseToken()->authenticate();
+public function index(Request $request)
+{
+    try {
+        $user = JWTAuth::parseToken()->authenticate();
 
-            $query = Pqr::query();
+        $query = Pqr::query();
 
-            // Si el usuario es un Digitador, filtrar por su documento
-            // if ($user->hasRole('Digitador')) {
-            //     $query->where(function ($digitadorFilter) use ($user) {
-            //         $digitadorFilter
-            //             ->where(function ($matchAsSolicitante) use ($user) {
-            //                 $matchAsSolicitante
-            //                     ->where('documento_tipo', $user->documento_tipo)
-            //                     ->where('documento_numero', $user->documento_numero);
-            //             })
-            //             ->orWhere(function ($matchAsRegistrador) use ($user) {
-            //                 $matchAsRegistrador
-            //                     ->where('registrador_documento_tipo', $user->documento_tipo)
-            //                     ->where('registrador_documento_numero', $user->documento_numero);
-            //             });
-            //     });
-            // }
+        // Si quieres aplicar el filtro por usuario Digitador, descomenta y ajusta
+        // if ($user->hasRole('Digitador')) {
+        //     $query->where(function ($digitadorFilter) use ($user) {
+        //         $digitadorFilter
+        //             ->where(function ($matchAsSolicitante) use ($user) {
+        //                 $matchAsSolicitante
+        //                     ->where('documento_tipo', $user->documento_tipo)
+        //                     ->where('documento_numero', $user->documento_numero);
+        //             })
+        //             ->orWhere(function ($matchAsRegistrador) use ($user) {
+        //                 $matchAsRegistrador
+        //                     ->where('registrador_documento_tipo', $user->documento_tipo)
+        //                     ->where('registrador_documento_numero', $user->documento_numero);
+        //             });
+        //     });
+        // }
 
-            // Filtros adicionales (opcional)
-            if ($request->filled('id')) {
-                $query->where('id', $request->id);
-            }
-
-            if ($request->filled('documento_numero')) {
-                $query->where('documento_numero', 'like', '%' . $request->documento_numero . '%');
-            }
-
-            if ($request->filled('servicio_prestado')) {
-                $query->where('servicio_prestado', 'like', '%' . $request->servicio_prestado . '%');
-            }
-
-            if ($request->filled('tipo_solicitud')) {
-                $query->where('tipo_solicitud', 'like', '%' . $request->tipo_solicitud . '%');
-            }
-
-            // Ordenar por fecha más reciente
-             $pqrs = $query->orderBy('created_at', 'desc')
-                          ->with('asignado:id,name') 
-                          ->paginate(10);
-
-            return response()->json([
-                'pqrs' => $pqrs->items(),
-                'current_page' => $pqrs->currentPage(),
-                'last_page' => $pqrs->lastPage(),
-                'total' => $pqrs->total(),
-                'per_page' => $pqrs->perPage(),
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error al obtener las PQRS: ' . $e->getMessage()
-            ], 500);
+        // Filtros con OR
+        if (
+            $request->filled('pqr_codigo') ||
+            $request->filled('documento_numero') ||
+            $request->filled('servicio_prestado') ||
+            $request->filled('tipo_solicitud')
+        ) {
+            $query->where(function ($q) use ($request) {
+                if ($request->filled('pqr_codigo')) {
+                    $q->orWhere('pqr_codigo', 'like', '%' . $request->pqr_codigo . '%');
+                }
+                if ($request->filled('documento_numero')) {
+                    $q->orWhere('documento_numero', 'like', '%' . $request->documento_numero . '%');
+                }
+                if ($request->filled('servicio_prestado')) {
+                    $q->orWhere('servicio_prestado', 'like', '%' . $request->servicio_prestado . '%');
+                }
+                if ($request->filled('tipo_solicitud')) {
+                    $q->orWhere('tipo_solicitud', 'like', '%' . $request->tipo_solicitud . '%');
+                }
+            });
         }
+
+        // Ordenar por fecha más reciente
+        $pqrs = $query->orderBy('created_at', 'desc')
+            ->with('asignado:id,name')
+            ->paginate(10);
+
+        return response()->json([
+            'pqrs' => $pqrs->items(),
+            'current_page' => $pqrs->currentPage(),
+            'last_page' => $pqrs->lastPage(),
+            'total' => $pqrs->total(),
+            'per_page' => $pqrs->perPage(),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Error al obtener las PQRS: ' . $e->getMessage()
+        ], 500);
     }
+}
 
 
+
+    // public function show($pqr_codigo)
+    // {
+    //     try {
+    //         $user = JWTAuth::parseToken()->authenticate();
+
+    //         $pqr = Pqr::with(['asignado', 'respuestas'])->where('pqr_codigo', $pqr_codigo)->firstOrFail();
+
+    //         // Calcular tiempo_respondido usando Carbon (asegúrate de importar Carbon)
+    //         $tiempoRespondido = null;
+    //         if ($pqr->respondido_en) {
+    //             $createdAt = Carbon::parse($pqr->created_at);
+    //             $respondidoEn = Carbon::parse($pqr->respondido_en);
+
+    //             // Diferencia total en minutos
+    //             $diffInMinutes = $createdAt->diffInMinutes($respondidoEn);
+
+    //             // Convertir a horas enteras (redondeando hacia abajo)
+    //             $diffInHours = intdiv($diffInMinutes, 60);
+
+    //             $tiempoRespondido = $diffInHours . ' horas';
+    //         }
+
+    //         // Adjuntar al objeto pqr (como atributo dinámico)
+    //         $pqr->tiempo_respondido = $tiempoRespondido;
+
+    //         return response()->json(['pqr' => $pqr->load('respuestas')]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'error' => 'Error al obtener la PQR: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     public function show($pqr_codigo)
     {
         try {
-            $user = JWTAuth::parseToken()->authenticate();
+            // No es estrictamente necesario autenticar al usuario aquí si solo vas a mostrar la PQR,
+            // pero si tu lógica de negocio lo requiere, déjalo.
+            // $user = JWTAuth::parseToken()->authenticate();
 
-            $pqr = Pqr::with(['asignado', 'respuestas'])->where('pqr_codigo', $pqr_codigo)->firstOrFail();
+            $pqr = Pqr::where('pqr_codigo', $pqr_codigo)
+                ->with([
+                    'asignado',          // Carga el usuario asignado a la PQR
+                    'respuestas.autor'   // ¡Esto es lo crucial! Carga las respuestas Y el autor de cada respuesta
+                ])
+                ->firstOrFail();
 
-            // Calcular tiempo_respondido usando Carbon (asegúrate de importar Carbon)
+            // Calcular tiempo_respondido usando Carbon
             $tiempoRespondido = null;
             if ($pqr->respondido_en) {
                 $createdAt = Carbon::parse($pqr->created_at);
                 $respondidoEn = Carbon::parse($pqr->respondido_en);
 
-                // Diferencia total en minutos
                 $diffInMinutes = $createdAt->diffInMinutes($respondidoEn);
-
-                // Convertir a horas enteras (redondeando hacia abajo)
                 $diffInHours = intdiv($diffInMinutes, 60);
 
                 $tiempoRespondido = $diffInHours . ' horas';
@@ -191,13 +234,15 @@ class PqrController extends Controller
             // Adjuntar al objeto pqr (como atributo dinámico)
             $pqr->tiempo_respondido = $tiempoRespondido;
 
-            return response()->json(['pqr' => $pqr->load('respuestas')]);
+            // Retorna la PQR ya con todas las relaciones cargadas
+            return response()->json(['pqr' => $pqr]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Error al obtener la PQR: ' . $e->getMessage()
             ], 500);
         }
     }
+
 
     public function update(Request $request, $pqr_codigo, PqrTiempoService $tiempoService)
     {
@@ -224,7 +269,7 @@ class PqrController extends Controller
                     'atributo_calidad' => 'nullable|in:Accesibilidad,Continuidad,Oportunidad,Pertinencia,Satisfacción del usuario,Seguridad',
                     'fuente'           => 'nullable|in:Formulario de la web,correo atención al usuario,Correo de Agendamiento NAC,Encuesta de satisfacción IPS,callcenter Presencial',
                     'asignado_a'       => 'nullable|exists:users,id',
-                    'prioridad'        => 'required|in:Vital,Priorizado,Simple',
+                    'prioridad'        => 'required|in:Vital,Priorizado,Simple,Solicitud',
                 ]);
 
                 $data['atributo_calidad'] = $request->atributo_calidad;
@@ -245,6 +290,7 @@ class PqrController extends Controller
                         'Vital'      => 24,
                         'Priorizado' => 48,
                         'Simple'     => 72,
+                        'Solicitud'  => 48,
                     };
 
                     // Plazos internos
@@ -252,6 +298,7 @@ class PqrController extends Controller
                         'Vital'      => 6,
                         'Priorizado' => 24,
                         'Simple'     => 24,
+                        'Solicitud'  => 24,
                     };
 
 
@@ -282,7 +329,7 @@ class PqrController extends Controller
             $user = JWTAuth::parseToken()->authenticate();
 
             $pqrs = Pqr::where('asignado_a', $user->id)
-                ->with('asignado:id,name') 
+                ->with('asignado:id,name')
                 ->get();
 
             return response()->json(['pqrs' => $pqrs]);

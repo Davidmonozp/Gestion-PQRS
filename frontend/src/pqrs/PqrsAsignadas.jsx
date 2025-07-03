@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { tienePermiso } from "../utils/permisoHelper";
 import "./styles/PqrsList.css";
 import Navbar from "../components/Navbar/Navbar";
+import Swal from "sweetalert2";
 
 function PqrsAsignadas() {
   const [pqrs, setPqrs] = useState([]);
@@ -97,11 +98,26 @@ function PqrsAsignadas() {
                     </td>
                     <td>{new Date(pqr.created_at).toLocaleString()}</td>
                     <td>
-                      <button onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}`)}>
+                      <button
+                        onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}`)}
+                      >
                         <i className="fa-solid fa-eye"></i>
                       </button>
                       <button
-                        onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}/respuesta`)}
+                        onClick={() => {
+                          if (pqr.estado_respuesta === "En proceso") {
+                            Swal.fire({
+                              title: "¡Atención!",
+                              text: "Ya existe una respuesta preliminar registrada para esta PQR.",
+                              icon: "info",
+                              confirmButtonText: "Aceptar",
+                            }).then(() => {
+                              navigate(`/pqrs/asignadas`);
+                            });
+                          } else {
+                            navigate(`/pqrs/${pqr.pqr_codigo}/respuesta`);
+                          }
+                        }}
                       >
                         <i className="fa-solid fa-pen-to-square"></i>
                       </button>

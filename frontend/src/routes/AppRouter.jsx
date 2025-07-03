@@ -16,6 +16,7 @@ import PqrsEdit from "../pqrs/PqrsEdit";
 import PqrsAsignadas from "../pqrs/PqrsAsignadas";
 import PqrsResponder from "../pqrs/PqrsResponder";
 import RespuestaUsuario from "../pqrs/RespuestaUsuario";
+import { Solicitudes } from "../pages/Solicitudes";
 
 export function AppRouter() {
   return (
@@ -32,6 +33,8 @@ export function AppRouter() {
       {/* <Route path="/pqrs/asignadas" element={<PqrsAsignadas />} /> */}
       {/* <Route path="/pqrs/:id/respuesta" element={<PqrsResponder />} /> */}
        <Route path="/respuesta-usuario/:token" element={<RespuestaUsuario />} />
+       <Route path="/solicitudes" element={<Solicitudes />} />
+
 
       <Route
         path="/Pqr"

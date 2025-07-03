@@ -19,6 +19,14 @@ const Navbar = () => {
 
         <div className={`nav-elements ${menuOpen ? "active" : ""}`}>
           <ul>
+             <li>
+              <NavLink
+                to="/solicitudes"
+                className={({ isActive }) => (isActive ? "active-link" : "")}
+              >
+                solicitud
+              </NavLink>
+            </li>
             <li>
               <NavLink
                 to="/Pqr"

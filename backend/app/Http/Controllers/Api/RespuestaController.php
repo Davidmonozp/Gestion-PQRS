@@ -53,6 +53,35 @@ class RespuestaController extends Controller
 
 
 
+    // public function registrarRespuestaFinal(Request $request, $pqr_codigo)
+    // {
+    //     $request->validate([
+    //         'contenido' => 'required|string',
+    //     ]);
+
+    //     $pqrs = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+
+    //     $finalYaExiste = Respuesta::where('pqrs_id', $pqrs->id)
+    //         ->where('es_final', true)
+    //         ->exists();
+
+    //     if ($finalYaExiste) {
+    //         return response()->json(['error' => 'Ya existe una respuesta final para esta PQRS'], 400);
+    //     }
+
+    //     Respuesta::create([
+    //         'pqrs_id' => $pqrs->id,
+    //         'user_id' => Auth::id(),
+    //         'contenido' => $request->contenido,
+    //         'es_final' => true,
+    //     ]);
+
+    //     $pqrs->estado_respuesta = 'Cerrado';
+    //     $pqrs->save();
+
+    //     return response()->json(['mensaje' => 'Respuesta final registrada correctamente']);
+    // }
+
     public function registrarRespuestaFinal(Request $request, $pqr_codigo)
     {
         $request->validate([
@@ -69,17 +98,25 @@ class RespuestaController extends Controller
             return response()->json(['error' => 'Ya existe una respuesta final para esta PQRS'], 400);
         }
 
-        Respuesta::create([
+        // Crear la respuesta final y guardarla en una variable
+        $respuestaFinal = Respuesta::create([
             'pqrs_id' => $pqrs->id,
             'user_id' => Auth::id(),
             'contenido' => $request->contenido,
             'es_final' => true,
         ]);
 
+        // Cargar la relación user para devolverla en la respuesta
+        $respuestaFinal->load('autor');
+
+        // Actualizar estado del PQR
         $pqrs->estado_respuesta = 'Cerrado';
         $pqrs->save();
 
-        return response()->json(['mensaje' => 'Respuesta final registrada correctamente']);
+        return response()->json([
+            'mensaje' => 'Respuesta final registrada correctamente',
+            'respuesta' => $respuestaFinal,  // Aquí devuelves la respuesta con el usuario
+        ]);
     }
 
 
@@ -132,5 +169,17 @@ class RespuestaController extends Controller
         Mail::to($pqr->correo)->send(new SolicitarRespuestaCiudadanoMail($pqr, $link));
 
         return response()->json(['message' => 'Se solicitó respuesta al ciudadano.', 'token' => $pqr->usuario_token]);
+    }
+
+    public function listarRespuestas($pqr_codigo)
+    {
+        // Obtener la PQR primero (según tu lógica)
+        $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+
+        // Luego obtener las respuestas con la relación 'autor' cargada
+        $respuestas = Respuesta::with('autor')->where('pqrs_id', $pqr->id)->get();
+
+        // Devolver como JSON
+        return response()->json($respuestas);
     }
 }

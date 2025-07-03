@@ -14,7 +14,7 @@ function PqrsList() {
   const [lastPage, setLastPage] = useState(1);
 
   const [filters, setFilters] = useState({
-    id: "",
+    pqr_codigo: "",
     documento_numero: "",
     servicio_prestado: "",
     tipo_solicitud: "",
@@ -31,7 +31,8 @@ function PqrsList() {
       setLoading(true);
       const queryParams = new URLSearchParams();
 
-      if (filters.id) queryParams.append("id", filters.id);
+      if (filters.pqr_codigo)
+        queryParams.append("pqr_codigo", filters.pqr_codigo);
       if (filters.documento_numero)
         queryParams.append("documento_numero", filters.documento_numero);
       if (filters.servicio_prestado)
@@ -54,7 +55,13 @@ function PqrsList() {
   };
 
   const handleBuscar = () => {
-    fetchPqrs(1); // Siempre buscar desde la primera página
+    fetchPqrs(1);
+    setFilters({
+      pqr_codigo: "",
+      documento_numero: "",
+      servicio_prestado: "",
+      tipo_solicitud: "",
+    });
   };
 
   const handlePageChange = (page) => {

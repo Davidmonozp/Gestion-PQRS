@@ -103,6 +103,7 @@ class Pqr extends Model
             'Vital' => 24,
             'Priorizado' => 48,
             'Simple' => 72,
+            'Solicitud' => 48,
             default => 24
         };
 
