@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('userName')->unique();
             $table->string('documento_tipo', 50);
             $table->string('documento_numero')->unique();
-            $table->string('email')->unique();
+            $table->string('email');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->boolean('activo')->default(true);

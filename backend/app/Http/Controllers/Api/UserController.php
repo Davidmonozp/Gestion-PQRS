@@ -28,9 +28,9 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => 'required|string|min:7|max:100',
             'userName' => 'required|string|max:50|unique:users,userName',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email',
             'password' => 'required|string|min:5|confirmed',
             'role' => 'required|exists:roles,name',
             'documento_tipo' => 'required|string|max:5',
@@ -82,7 +82,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'sometimes|required|string|max:100',
             'userName' => 'sometimes|required|string|max:50|unique:users,userName,' . $user->id,
-            'email' => 'sometimes|required|email|unique:users,email,' . $user->id,
+            'email' => 'sometimes|required|email',
             'password' => 'nullable|string|min:5|confirmed',
             'role' => 'sometimes|required|exists:roles,name',
             'documento_tipo' => 'sometimes|required|string|max:5',

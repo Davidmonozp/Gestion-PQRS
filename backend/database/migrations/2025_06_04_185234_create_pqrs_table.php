@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('eps');
             $table->string('tipo_solicitud');
             $table->text('descripcion');
-            $table->string('archivo')->nullable(); 
+            $table->json('archivo')->nullable();  
 
             // NUEVOS CAMPOS: Datos del registrador
             $table->boolean('registra_otro')->default(false);

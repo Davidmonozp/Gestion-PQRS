@@ -16,11 +16,11 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $rules = [
-            'name' => 'required|string|max:100',
+            'name' => 'required|string|min:7|max:100',
             'userName' => 'required|string|max:50|unique:users,userName',
             'documento_tipo' => 'required|string|max:5',
             'documento_numero' => 'required|string|max:20|unique:users,documento_numero',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email|',
             'password' => 'required|string|min:5|max:20|confirmed',
         ];
 

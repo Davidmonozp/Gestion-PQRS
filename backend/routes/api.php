@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\RespuestaController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UsuarioRespuestaController;
+use App\Http\Controllers\Api\FelicitacionController;
+use App\Http\Controllers\Api\PqrAlertaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +23,11 @@ Route::prefix('auth')->group(function () {
 Route::post('pqrs', [PqrController::class, 'store']);
 Route::post('/pqrs/{id}/solicitar-respuesta', [RespuestaController::class, 'solicitarRespuestaUsuario']);
 Route::post('/respuesta-usuario/{token}', [UsuarioRespuestaController::class, 'guardarRespuesta']);
+Route::post('/felicitaciones', [FelicitacionController::class, 'store']);
+Route::get('/pqrs/alertas-tiempo', [PqrAlertaController::class, 'alertas']);
+Route::post('/pqrs/consultar-radicado', [PqrController::class, 'consultarRadicado']);
+
+
 
 
 
@@ -82,5 +89,6 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,
     Route::post('/pqrs/codigo/{pqr_codigo}/respuesta-final', [RespuestaController::class, 'registrarRespuestaFinal']);
     Route::get('/plantillas-respuesta', [PlantillaRespuestaController::class, 'index']);
     Route::get('/pqrs/{pqr_codigo}/respuestas', [RespuestaController::class, 'listarRespuestas']);
+    Route::put('/pqrs/respuestas/{respuesta}', [RespuestaController::class, 'updateRespuestaFinal']);
 
 });

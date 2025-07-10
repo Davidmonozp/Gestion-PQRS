@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ConsultaRadicadoInfo;
 use App\Models\Pqr;
 use App\Services\CodigoPqrService;
 use App\Services\PqrTiempoService;
@@ -10,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class PqrController extends Controller
 {
@@ -27,14 +29,19 @@ class PqrController extends Controller
                 'documento_tipo' => 'required|string',
                 'documento_numero' => 'required|string',
                 'correo' => 'required|email',
+                'correo_confirmacion' => 'required|email|same:correo',
                 'telefono' => 'nullable|string',
                 'sede' => 'required|string',
                 'servicio_prestado' => 'required|string',
                 'eps' => 'required|string',
+                'regimen' => 'required|string',
                 'tipo_solicitud' => 'required|string',
+                'fuente' => 'nullable|string|max:100',
                 'descripcion' => 'required|string',
-                'archivo' => 'nullable|file|max:5120',
+                'archivos' => 'nullable|array',
+                'archivos.*' => 'file|max:8000',
                 'registra_otro' => 'required|in:si,no',
+                'politica_aceptada' => 'accepted'
             ];
 
             if ($registra_otro) {
@@ -45,15 +52,25 @@ class PqrController extends Controller
                     'registrador_documento_numero' => 'required|string',
                     'registrador_correo' => 'required|email',
                     'registrador_telefono' => 'nullable|string',
+                    'parentesco' => 'required|string|max:50',
                 ]);
             }
 
             $validated = $request->validate($rules);
 
+            $uploadedFilesData = [];
             // Guardar archivo si se envió
-            if ($request->hasFile('archivo')) {
-                $path = $request->file('archivo')->store('pqrs_files', 'public');
-                $validated['archivo'] = $path;
+            $uploadedFilesData = []; // Array para almacenar objetos {path, original_name}
+            if ($request->hasFile('archivos')) {
+                foreach ($request->file('archivos') as $file) {
+                    $path = $file->store('pqrs_files', 'public'); // Guarda el archivo
+                    $originalName = $file->getClientOriginalName(); // Obtiene el nombre original del archivo
+
+                    $uploadedFilesData[] = [
+                        'path' => $path,
+                        'original_name' => $originalName,
+                    ];
+                }
             }
 
             // Generar el código único de la PQR
@@ -71,9 +88,11 @@ class PqrController extends Controller
                 'sede' => $validated['sede'],
                 'servicio_prestado' => $validated['servicio_prestado'],
                 'eps' => $validated['eps'],
+                'regimen' => $validated['regimen'],
                 'tipo_solicitud' => $validated['tipo_solicitud'],
+                'fuente' => $validated['fuente'] ?? null,
                 'descripcion' => $validated['descripcion'],
-                'archivo' => $validated['archivo'] ?? null,
+                'archivo' => $uploadedFilesData, 
                 'registra_otro' => $registra_otro,
                 'registrador_nombre' => $validated['registrador_nombre'] ?? null,
                 'registrador_apellido' => $validated['registrador_apellido'] ?? null,
@@ -81,12 +100,17 @@ class PqrController extends Controller
                 'registrador_documento_numero' => $validated['registrador_documento_numero'] ?? null,
                 'registrador_correo' => $validated['registrador_correo'] ?? null,
                 'registrador_telefono' => $validated['registrador_telefono'] ?? null,
+                'parentesco' => $validated['parentesco'] ?? null,
             ]);
 
             Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
 
             // Agregar URL del archivo para respuesta
-            $pqr->archivo_url = $pqr->archivo ? asset('storage/' . $pqr->archivo) : null;
+             $pqr->archivo_urls = collect($pqr->archivo)->map(function($fileItem) {
+                // Asegúrate de que $fileItem sea un objeto o array asociativo
+                $path = is_array($fileItem) ? $fileItem['path'] : $fileItem->path;
+                return asset('storage/' . $path);
+            })->all();
 
             return response()->json([
                 'message' => 'PQR creada con éxito',
@@ -104,71 +128,71 @@ class PqrController extends Controller
 
 
 
-public function index(Request $request)
-{
-    try {
-        $user = JWTAuth::parseToken()->authenticate();
+    public function index(Request $request)
+    {
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
 
-        $query = Pqr::query();
+            $query = Pqr::query();
 
-        // Si quieres aplicar el filtro por usuario Digitador, descomenta y ajusta
-        // if ($user->hasRole('Digitador')) {
-        //     $query->where(function ($digitadorFilter) use ($user) {
-        //         $digitadorFilter
-        //             ->where(function ($matchAsSolicitante) use ($user) {
-        //                 $matchAsSolicitante
-        //                     ->where('documento_tipo', $user->documento_tipo)
-        //                     ->where('documento_numero', $user->documento_numero);
-        //             })
-        //             ->orWhere(function ($matchAsRegistrador) use ($user) {
-        //                 $matchAsRegistrador
-        //                     ->where('registrador_documento_tipo', $user->documento_tipo)
-        //                     ->where('registrador_documento_numero', $user->documento_numero);
-        //             });
-        //     });
-        // }
+            // Si quieres aplicar el filtro por usuario Digitador, descomenta y ajusta
+            // if ($user->hasRole('Digitador')) {
+            //     $query->where(function ($digitadorFilter) use ($user) {
+            //         $digitadorFilter
+            //             ->where(function ($matchAsSolicitante) use ($user) {
+            //                 $matchAsSolicitante
+            //                     ->where('documento_tipo', $user->documento_tipo)
+            //                     ->where('documento_numero', $user->documento_numero);
+            //             })
+            //             ->orWhere(function ($matchAsRegistrador) use ($user) {
+            //                 $matchAsRegistrador
+            //                     ->where('registrador_documento_tipo', $user->documento_tipo)
+            //                     ->where('registrador_documento_numero', $user->documento_numero);
+            //             });
+            //     });
+            // }
 
-        // Filtros con OR
-        if (
-            $request->filled('pqr_codigo') ||
-            $request->filled('documento_numero') ||
-            $request->filled('servicio_prestado') ||
-            $request->filled('tipo_solicitud')
-        ) {
-            $query->where(function ($q) use ($request) {
-                if ($request->filled('pqr_codigo')) {
-                    $q->orWhere('pqr_codigo', 'like', '%' . $request->pqr_codigo . '%');
-                }
-                if ($request->filled('documento_numero')) {
-                    $q->orWhere('documento_numero', 'like', '%' . $request->documento_numero . '%');
-                }
-                if ($request->filled('servicio_prestado')) {
-                    $q->orWhere('servicio_prestado', 'like', '%' . $request->servicio_prestado . '%');
-                }
-                if ($request->filled('tipo_solicitud')) {
-                    $q->orWhere('tipo_solicitud', 'like', '%' . $request->tipo_solicitud . '%');
-                }
-            });
+            // Filtros con OR
+            if (
+                $request->filled('pqr_codigo') ||
+                $request->filled('documento_numero') ||
+                $request->filled('servicio_prestado') ||
+                $request->filled('tipo_solicitud')
+            ) {
+                $query->where(function ($q) use ($request) {
+                    if ($request->filled('pqr_codigo')) {
+                        $q->orWhere('pqr_codigo', 'like', '%' . $request->pqr_codigo . '%');
+                    }
+                    if ($request->filled('documento_numero')) {
+                        $q->orWhere('documento_numero', 'like', '%' . $request->documento_numero . '%');
+                    }
+                    if ($request->filled('servicio_prestado')) {
+                        $q->orWhere('servicio_prestado', 'like', '%' . $request->servicio_prestado . '%');
+                    }
+                    if ($request->filled('tipo_solicitud')) {
+                        $q->orWhere('tipo_solicitud', 'like', '%' . $request->tipo_solicitud . '%');
+                    }
+                });
+            }
+
+            // Ordenar por fecha más reciente
+            $pqrs = $query->orderBy('created_at', 'desc')
+                ->with('asignado:id,name')
+                ->paginate(15);
+
+            return response()->json([
+                'pqrs' => $pqrs->items(),
+                'current_page' => $pqrs->currentPage(),
+                'last_page' => $pqrs->lastPage(),
+                'total' => $pqrs->total(),
+                'per_page' => $pqrs->perPage(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener las PQRS: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Ordenar por fecha más reciente
-        $pqrs = $query->orderBy('created_at', 'desc')
-            ->with('asignado:id,name')
-            ->paginate(10);
-
-        return response()->json([
-            'pqrs' => $pqrs->items(),
-            'current_page' => $pqrs->currentPage(),
-            'last_page' => $pqrs->lastPage(),
-            'total' => $pqrs->total(),
-            'per_page' => $pqrs->perPage(),
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'Error al obtener las PQRS: ' . $e->getMessage()
-        ], 500);
     }
-}
 
 
 
@@ -267,7 +291,7 @@ public function index(Request $request)
             if ($request->user()->hasRole(['Administrador', 'Supervisor'])) {
                 $request->validate([
                     'atributo_calidad' => 'nullable|in:Accesibilidad,Continuidad,Oportunidad,Pertinencia,Satisfacción del usuario,Seguridad',
-                    'fuente'           => 'nullable|in:Formulario de la web,correo atención al usuario,Correo de Agendamiento NAC,Encuesta de satisfacción IPS,callcenter Presencial',
+                    'fuente'           => 'nullable|in:Formulario de la web,Correo atención al usuario,Correo de Agendamiento NAC,Encuesta de satisfacción IPS,Callcenter,Presencial',
                     'asignado_a'       => 'nullable|exists:users,id',
                     'prioridad'        => 'required|in:Vital,Priorizado,Simple,Solicitud',
                 ]);
@@ -337,6 +361,30 @@ public function index(Request $request)
             return response()->json([
                 'error' => 'Error al obtener la PQR: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+
+    public function consultarRadicado(Request $request)
+    {
+        $codigo = $request->input('pqr_codigo');
+        Log::info('Código recibido en API:', ['codigo' => $codigo]);
+
+        $pqr = Pqr::with('estados')->where('pqr_codigo', $codigo)->first();
+
+        if (!$pqr) {
+            Log::warning('PQR no encontrada:', ['codigo' => $codigo]);
+            return response()->json(['error' => 'PQR no encontrada'], 404);
+        }
+
+        try {
+            Mail::to($pqr->correo)->send(new ConsultaRadicadoInfo($pqr));
+            return response()->json([
+                'message' => 'Correo enviado con la información del radicado',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error al enviar correo:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Error al enviar el correo: ' . $e->getMessage()], 500);
         }
     }
 }

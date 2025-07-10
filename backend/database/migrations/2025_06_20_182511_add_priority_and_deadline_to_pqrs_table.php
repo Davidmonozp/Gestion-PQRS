@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('pqrs', function (Blueprint $table) {
-            $table->enum('prioridad', ['Vital', 'Priorizado', 'Simple'])->nullable()->after('asignado_a');
+            $table->enum('prioridad', ['Vital', 'Priorizado', 'Simple', 'Solicitud'])->nullable()->after('asignado_a');
             $table->timestamp('deadline_interno')->nullable()->after('prioridad');
             $table->timestamp('deadline_ciudadano')->nullable()->after('deadline_interno');
         });

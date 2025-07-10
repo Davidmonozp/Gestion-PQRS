@@ -22,6 +22,7 @@ class Pqr extends Model
         'sede',
         'servicio_prestado',
         'eps',
+        'regimen',
         'tipo_solicitud',
         'descripcion',
         'archivo',
@@ -37,6 +38,7 @@ class Pqr extends Model
         'registrador_documento_numero',
         'registrador_correo',
         'registrador_telefono',
+        'parentesco',
 
         // Estados de respuesta
         'estado_respuesta',
@@ -49,6 +51,10 @@ class Pqr extends Model
 
         // token para respuesta del usuario
         'usuario_token'
+    ];
+
+    protected $casts = [
+        'archivo' => 'array', 
     ];
     public function respuestas()
     {

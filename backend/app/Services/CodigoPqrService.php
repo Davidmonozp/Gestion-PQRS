@@ -14,6 +14,8 @@ class CodigoPqrService
             'Reclamo' => 'RE',
             'Solicitud' => 'SO',
             'Felicitacion' => 'FE',
+            'Tutela' => 'TU',
+            'Derecho de peticion' => 'DP'
         ];
 
         $prefijo = $prefijos[$tipoSolicitud] ?? 'OT';

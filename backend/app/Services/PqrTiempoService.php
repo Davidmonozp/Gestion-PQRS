@@ -16,10 +16,11 @@ class PqrTiempoService
     $fechaCreacion = Carbon::parse($pqr->created_at, 'America/Bogota');
 
     $minutosMaximos = match ($pqr->prioridad) {
-        'Vital' => 24 * 60,
-        'Priorizado' => 48 * 60,
-        'Simple' => 72 * 60,
-        default => 72 * 60,
+        'Vital' => 6 * 60,
+        'Priorizado' => 24 * 60,
+        'Simple' => 24 * 60,
+        'Solicitud' => 24 * 60,
+        default => 24 * 60,
     };
 
     $fechaLimite = $fechaCreacion->copy()->addMinutes($minutosMaximos);

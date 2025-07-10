@@ -15,7 +15,12 @@ class Respuesta extends Model
         'contenido',
         'es_respuesta_usuario',
         'es_final',
-        'archivo',
+        'adjuntos',
+    ];
+
+    protected $casts = [
+        'es_final' => 'boolean',
+        'adjuntos' => 'array',
     ];
 
     // Relaciones
