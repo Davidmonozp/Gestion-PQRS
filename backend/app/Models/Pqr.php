@@ -54,7 +54,7 @@ class Pqr extends Model
     ];
 
     protected $casts = [
-        'archivo' => 'array', 
+        'archivo' => 'array',
     ];
     public function respuestas()
     {
@@ -78,7 +78,6 @@ class Pqr extends Model
     {
         return Carbon::parse($value)->timezone('America/Bogota')->toDateTimeString();
     }
-
 
 
     public function getTiempoRespondidoAttribute()
@@ -119,4 +118,9 @@ class Pqr extends Model
     protected $appends = [
         'deadline_ciudadano',
     ];
+
+     public function seguimientos()
+    {
+        return $this->hasMany(PqrSeguimiento::class);
+    }
 }

@@ -90,5 +90,6 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,
     Route::get('/plantillas-respuesta', [PlantillaRespuestaController::class, 'index']);
     Route::get('/pqrs/{pqr_codigo}/respuestas', [RespuestaController::class, 'listarRespuestas']);
     Route::put('/pqrs/respuestas/{respuesta}', [RespuestaController::class, 'updateRespuestaFinal']);
-
+    Route::get('/pqrs/{pqr_codigo}/seguimientos', [PqrController::class, 'obtenerSeguimientos']);
+    Route::post('/pqrs/{pqr_codigo}/seguimientos', [PqrController::class, 'registrarSeguimiento']);
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Mail\ConsultaRadicadoInfo;
+use App\Mail\PqrAsignada;
 use App\Models\Pqr;
 use App\Services\CodigoPqrService;
 use App\Services\PqrTiempoService;
@@ -92,7 +93,7 @@ class PqrController extends Controller
                 'tipo_solicitud' => $validated['tipo_solicitud'],
                 'fuente' => $validated['fuente'] ?? null,
                 'descripcion' => $validated['descripcion'],
-                'archivo' => $uploadedFilesData, 
+                'archivo' => $uploadedFilesData,
                 'registra_otro' => $registra_otro,
                 'registrador_nombre' => $validated['registrador_nombre'] ?? null,
                 'registrador_apellido' => $validated['registrador_apellido'] ?? null,
@@ -106,7 +107,7 @@ class PqrController extends Controller
             Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
 
             // Agregar URL del archivo para respuesta
-             $pqr->archivo_urls = collect($pqr->archivo)->map(function($fileItem) {
+            $pqr->archivo_urls = collect($pqr->archivo)->map(function ($fileItem) {
                 // Asegúrate de que $fileItem sea un objeto o array asociativo
                 $path = is_array($fileItem) ? $fileItem['path'] : $fileItem->path;
                 return asset('storage/' . $path);
@@ -340,6 +341,14 @@ class PqrController extends Controller
             $pqr->estado_tiempo = $estadoTiempo['estado'];
             $pqr->save();
 
+            // Enviar correo al asignado si hay uno nuevo
+            if ($request->filled('asignado_a')) {
+                $asignado = \App\Models\User::find($request->asignado_a);
+                if ($asignado && $asignado->email) {
+                    Mail::to($asignado->email)->send(new PqrAsignada($pqr));
+                }
+            }
+
             return response()->json(['message' => 'PQR actualizada correctamente.', 'data' => $pqr]);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al actualizar', 'error' => $e->getMessage()], 500);
@@ -386,5 +395,37 @@ class PqrController extends Controller
             Log::error('Error al enviar correo:', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Error al enviar el correo: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function registrarSeguimiento(Request $request, $pqr_codigo)
+    {
+        $request->validate([
+            'descripcion' => 'required|string|max:1000',
+        ]);
+
+        $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+
+        $seguimiento = $pqr->seguimientos()->create([
+            'user_id'     => $request->user()->id,
+            'descripcion' => $request->descripcion,
+        ]);
+
+        return response()->json([
+            'message' => 'Seguimiento registrado',
+            'data'    => $seguimiento
+        ]);
+    }
+
+
+    public function obtenerSeguimientos($pqr_codigo)
+    {
+        $pqr = Pqr::where('pqr_codigo', $pqr_codigo)
+            ->with(['seguimientos.user:id,name'])
+            ->firstOrFail();
+
+        return response()->json([
+            'pqr_codigo'  => $pqr->pqr_codigo,
+            'seguimientos' => $pqr->seguimientos
+        ]);
     }
 }
