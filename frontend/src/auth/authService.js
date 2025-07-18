@@ -2,7 +2,9 @@ import axios from 'axios';
 import Swal from 'sweetalert2';
 
 
-const API = "http://127.0.0.1:8000/api/auth/";
+// const API = "http://127.0.0.1:8000/api/auth/";
+const API = "http://192.168.1.30:8000/api/auth/";
+
 
 // 🔐 LOGIN
 export const login = async (credentials) => {
@@ -14,6 +16,13 @@ export const login = async (credentials) => {
 
     if (res.data.roles && res.data.roles.length > 0) {
       localStorage.setItem('role', res.data.roles[0]);
+    }
+    if (res.data.user && res.data.user.sede) {
+      localStorage.setItem('sede', res.data.user.sede);
+
+    }
+    if (res.data.user && res.data.user.name) {
+      localStorage.setItem('nameUser', res.data.user.name);
     }
 
     return res.data;
@@ -71,3 +80,5 @@ export const logout = () => {
 // ✅ Getters
 export const getToken = () => localStorage.getItem('token');
 export const getRole = () => localStorage.getItem('role');
+export const getSede = () => localStorage.getItem('sede');
+

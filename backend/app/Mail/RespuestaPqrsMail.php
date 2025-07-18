@@ -8,6 +8,8 @@ use App\Models\Pqr;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Envelope;
 
 class RespuestaPqrsMail extends Mailable
 {
@@ -25,4 +27,11 @@ class RespuestaPqrsMail extends Mailable
         return $this->subject('Respuesta a su PQRS')
                     ->view('emails.respuesta_pqrs');
     }
+    public function envelope(): Envelope
+    {
+       return new Envelope(
+            from: new Address('info@passusips.com', 'Passus IPS'), // <-- ¡ESTA ES LA LÍNEA CLAVE!
+        );
+    }
+    
 }

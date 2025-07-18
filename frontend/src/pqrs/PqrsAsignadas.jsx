@@ -29,7 +29,7 @@ function PqrsAsignadas() {
       <Navbar />
       <div className="container-pqrs">
         <div className="header-top">
-          <h2>Mis PQRs Asignadas</h2>
+          <h2>PQR-S Asignadas a {localStorage.getItem('nameUser')}</h2>
         </div>
 
         {error && <p style={{ color: "red" }}>{error}</p>}
@@ -38,6 +38,7 @@ function PqrsAsignadas() {
           <table className="container-table">
             <thead>
               <tr>
+                <th>Acciones</th>
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Tipo Doc.</th>
@@ -53,7 +54,6 @@ function PqrsAsignadas() {
                 <th>Estado de la respuesta</th>
                 <th>Respuesta enviada a usuario</th>
                 <th>Fecha</th>
-                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -64,6 +64,31 @@ function PqrsAsignadas() {
               ) : (
                 pqrs.map((pqr) => (
                   <tr key={pqr.id}>
+                    <td>
+                      <button
+                        onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}`)}
+                      >
+                        <i className="fa-solid fa-eye"></i>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (pqr.estado_respuesta === "En proceso") {
+                            Swal.fire({
+                              title: "¡Atención!",
+                              text: "Ya existe una respuesta preliminar registrada para esta PQR.",
+                              icon: "info",
+                              confirmButtonText: "Aceptar",
+                            }).then(() => {
+                              navigate(`/pqrs/asignadas`);
+                            });
+                          } else {
+                            navigate(`/pqrs/${pqr.pqr_codigo}/respuesta`);
+                          }
+                        }}
+                      >
+                        <i className="fa-solid fa-pen-to-square"></i>
+                      </button>
+                    </td>
                     <td>{pqr.pqr_codigo}</td>
                     <td>
                       {pqr.nombre} {pqr.apellido}
@@ -97,31 +122,6 @@ function PqrsAsignadas() {
                         : "No enviada ❌"}
                     </td>
                     <td>{new Date(pqr.created_at).toLocaleString()}</td>
-                    <td>
-                      <button
-                        onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}`)}
-                      >
-                        <i className="fa-solid fa-eye"></i>
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (pqr.estado_respuesta === "En proceso") {
-                            Swal.fire({
-                              title: "¡Atención!",
-                              text: "Ya existe una respuesta preliminar registrada para esta PQR.",
-                              icon: "info",
-                              confirmButtonText: "Aceptar",
-                            }).then(() => {
-                              navigate(`/pqrs/asignadas`);
-                            });
-                          } else {
-                            navigate(`/pqrs/${pqr.pqr_codigo}/respuesta`);
-                          }
-                        }}
-                      >
-                        <i className="fa-solid fa-pen-to-square"></i>
-                      </button>
-                    </td>
                   </tr>
                 ))
               )}

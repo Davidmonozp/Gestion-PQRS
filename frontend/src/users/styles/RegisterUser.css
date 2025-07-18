@@ -8,14 +8,14 @@
 .header-register-user div {
   float: left;
   /* margin-left: -136px; */
-  color: #fff;
+  color: #00933f;
   font-family: 'Exo', sans-serif;
   font-size: 42px;
   font-weight: 200;
 }
 
 .header-register-user div span {
-  color: #8dd9ff;
+  color: #0087cd;
 }
 
 .register-user {

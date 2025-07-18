@@ -12,11 +12,16 @@ import UserList from "../users/UserList";
 import RegisterUser from "../users/RegisterUser";
 import UserDetailEdit from "../users/UserDeatilEdit";
 import ChangePasswordForm from "../users/ChangePasswordForm";
-import PqrsEdit from "../pqrs/PqrsEdit";
 import PqrsAsignadas from "../pqrs/PqrsAsignadas";
 import PqrsResponder from "../pqrs/PqrsResponder";
 import RespuestaUsuario from "../pqrs/RespuestaUsuario";
 import { Solicitudes } from "../pages/Solicitudes";
+import FelicitacionForm from "../pqrs/FelicitacionForm";
+import DerechoPeticionForm from "../pqrs/DerechoPeticionForm";
+import TutelaForm from "../pqrs/TutelaForm";
+import SolicitudForm from "../pqrs/SolicitudForm";
+import InicioPQRS from "../pqrs/InicioPQRS";
+
 
 export function AppRouter() {
   return (
@@ -28,12 +33,20 @@ export function AppRouter() {
       <Route path="/register" element={<Register />} />
       <Route path="/pqrsForm" element={<PqrsForm />} />
 
+
       {/* <Route path="/pqrsList" element={<PqrsList />} /> */}
       {/* <Route path="/pqrs/:id" element={<PqrsDetail />} /> */}
       {/* <Route path="/pqrs/asignadas" element={<PqrsAsignadas />} /> */}
       {/* <Route path="/pqrs/:id/respuesta" element={<PqrsResponder />} /> */}
        <Route path="/respuesta-usuario/:token" element={<RespuestaUsuario />} />
        <Route path="/solicitudes" element={<Solicitudes />} />
+       <Route path="/felicitacion" element={<FelicitacionForm />} />
+       <Route path="/tutela" element={<TutelaForm />} />
+       <Route path="/derecho-peticion" element={<DerechoPeticionForm />} />
+       <Route path="/solicitud" element={<SolicitudForm />} />
+       <Route path="/inicio-pqrs" element={<InicioPQRS/>} />
+       
+
 
 
       <Route

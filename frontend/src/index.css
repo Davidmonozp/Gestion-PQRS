@@ -1,15 +1,17 @@
-html, body {
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&family=Oxygen:wght@400;700&display=swap');
+
+
+html,
+body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: #000046;
-  background: -webkit-linear-gradient(to left, #1CB5E0, #000046);
-  background: linear-gradient(to left, #1CB5E0, #000046);
-  color: #fff;
-  font-family: Arial, sans-serif;
+  background: #ffffff;
+  color: black;
+  /* font-family: 'Exo', sans-serif; */
+  /* font-family: sans-serif; */
+  font-family: 'Oxygen';
+  font-weight: 400;
   font-size: 12px;
 }
 
-h2 {
-  color: rgb(40, 195, 241);
-}

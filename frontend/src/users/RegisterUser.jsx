@@ -77,26 +77,50 @@ const RegisterUser = () => {
     { areaId: 3, name: "Auxiliar Gestión Facturación Y Cartera" },
     { areaId: 3, name: "Profesional Analista En Facturación Y Cartera" },
     { areaId: 4, name: "Director De Automatización Y Desarrollo Tecnológico" },
-    { areaId: 4, name: "Profesional Especializado En Automatización Y Análisis De Datos" },
-    { areaId: 4, name: "Profesional Junior En Automatización Y Desarrollo Tecnológico" },
+    {
+      areaId: 4,
+      name: "Profesional Especializado En Automatización Y Análisis De Datos",
+    },
+    {
+      areaId: 4,
+      name: "Profesional Junior En Automatización Y Desarrollo Tecnológico",
+    },
     { areaId: 4, name: "Auxiliar De Automatización Y Desarrollo Tecnologico" },
-    { areaId: 5, name: "Profesional De Aseguramiento De La Calidad En Salud Y PAMEC" },
-    { areaId: 7, name: "Subgerente Relacionamiento Y Fidelización Del Paciente" },
+    {
+      areaId: 5,
+      name: "Profesional De Aseguramiento De La Calidad En Salud Y PAMEC",
+    },
+    {
+      areaId: 7,
+      name: "Subgerente Relacionamiento Y Fidelización Del Paciente",
+    },
     { areaId: 7, name: "Aprendiz Sena En Entrenamiento Deportivo" },
     { areaId: 7, name: "Aprendiz Sena En Atencion A La Primera Infancia" },
-    { areaId: 8, name: "Gerente De Prestación De Servicios Y Aseguramiento Misional" },
+    {
+      areaId: 8,
+      name: "Gerente De Prestación De Servicios Y Aseguramiento Misional",
+    },
     { areaId: 10, name: "Subgerente Operaciones Misionales" },
     { areaId: 12, name: "Auxiliar De Admisiones Y Caja Nivel 1" },
     { areaId: 12, name: "Auxiliar De Admisiones Y Caja Nivel 2" },
     { areaId: 12, name: "Auxiliar De Admisiones Y Caja Nivel 3" },
     { areaId: 13, name: "Auxiliar Operativo Y Soporte Misional" },
     { areaId: 16, name: "Supervisor Administrativo De Agencia" },
-    { areaId: 18, name: "Profesional En Gestión Logística, Compras E Inventarios" },
+    {
+      areaId: 18,
+      name: "Profesional En Gestión Logística, Compras E Inventarios",
+    },
     { areaId: 19, name: "Auxiliar De Mantenimiento Y Oficios Varios" },
-    { areaId: 19, name: "Profesional De Infraestructura Y Ambiente Físico Junior" },
+    {
+      areaId: 19,
+      name: "Profesional De Infraestructura Y Ambiente Físico Junior",
+    },
     { areaId: 20, name: "Auxiliar De Apoyo Oficios Varios" },
     { areaId: 21, name: "Auxiliar Gestión Contable" },
-    { areaId: 24, name: "Profesional Analista De Modelo De Atención Y Seguridad Del Paciente" },
+    {
+      areaId: 24,
+      name: "Profesional Analista De Modelo De Atención Y Seguridad Del Paciente",
+    },
     { areaId: 25, name: "Gestor Administrativo De Agencia" },
     { areaId: 26, name: "Auxiliar De Enfermería De Agencia Nivel 2" },
     { areaId: 26, name: "Auxiliar De Enfermería De Agencia Nivel 1" },
@@ -108,7 +132,10 @@ const RegisterUser = () => {
     { areaId: 27, name: "Especialista En Pediatria" },
     { areaId: 27, name: "Fisiatria" },
     { areaId: 28, name: "Auxiliar De Apoyo Básico" },
-    { areaId: 29, name: "Profesional Junior En Gestión Documental Y Mapa De Procesos" },
+    {
+      areaId: 29,
+      name: "Profesional Junior En Gestión Documental Y Mapa De Procesos",
+    },
   ];
 
   // Crear un objeto para mapear cargos por nombre de área para facilidad de acceso
@@ -120,15 +147,50 @@ const RegisterUser = () => {
   }, {});
 
   const registerSchema = Yup.object().shape({
-    name: Yup.string().required("El nombre es obligatorio"),
-    userName: Yup.string().required("El nombre de usuario es obligatorio"),
-    email: Yup.string().email("Correo inválido").required("Requerido"),
-    documento_tipo: Yup.string().required("El tipo de documento es obligatorio"),
-    documento_numero: Yup.string().required("El número de documento es obligatorio"),
-    password: Yup.string().min(5, "Mínimo 5 caracteres").required("Requerido"),
+    name: Yup.string()
+      .transform((value) => value.trim())
+      .min(7, "El nombre no puede tener menos de 7 caracteres")
+      .max(100, "El nombre no puede tener más de 100 caracteres")
+      .required("El nombre es obligatorio")
+      .test(
+        "no-solo-espacios",
+        "El nombre no puede contener solo espacios en blanco",
+        (value) => value && value.trim().length > 0
+      ),
+
+    userName: Yup.string()
+      .transform((value) => value.trim())
+      .min(7, "El nombre no puede tener menos de 7 caracteres")
+      .max(50, "El userName no puede tener más de 50 caracteres")
+      .required("El nombre de usuario es obligatorio")
+      .test(
+        "no-solo-espacios",
+        "El nombre de usuario no puede contener solo espacios",
+        (value) => value && value.trim().length > 0
+      ),
+    email: Yup.string()
+      .transform((value) => value.trim())
+      .email("Debes ingresar un correo válido")
+      .required("El correo es obligatorio"),
+    documento_numero: Yup.string()
+      .transform((value) => value.trim())
+      .required("El número de documento es obligatorio")
+      .min(6, "El número de documento debe tener al menos 6 dígitos")
+      .max(30, "El número de documento no puede tener más de 30 dígitos")
+      .test(
+        "no-solo-espacios",
+        "El número de documento no puede contener solo espacios",
+        (value) => value && value.trim().length > 0
+      ),
+    password: Yup.string()
+      .transform((value) => value.trim())
+      .min(5, "La contraseña debe tener al menos 5 caracteres")
+      .max(20, "La contraseña no puede tener más de 20 caracteres")
+      .required("La contraseña es obligatoria"),
+
     password_confirmation: Yup.string()
       .oneOf([Yup.ref("password"), null], "Las contraseñas no coinciden")
-      .required("Requerido"),
+      .required("Confirma la contraseña"),
     role: Yup.string().required("Selecciona un rol"),
     sede: Yup.string().required("La sede es obligatoria"),
     area: Yup.string().required("El área es obligatoria"),
@@ -218,23 +280,41 @@ const RegisterUser = () => {
               }
             }, [values.area, setFieldValue]);
 
-            const filteredCargos = values.area ? cargosPorArea[values.area] || [] : [];
+            const filteredCargos = values.area
+              ? cargosPorArea[values.area] || []
+              : [];
 
             return (
               <Form className="register-user-form form-grid">
                 <div>
-                  <Field type="text" name="name" placeholder="Nombre" />
-                  <ErrorMessage name="name" component="div" className="error-message" />
+                  <Field type="text" name="name" placeholder="Nombre completo" />
+                  <ErrorMessage
+                    name="name"
+                    component="div"
+                    className="error-message"
+                  />
                 </div>
 
                 <div>
                   <Field type="text" name="userName" placeholder="Usuario" />
-                  <ErrorMessage name="userName" component="div" className="error-message" />
+                  <ErrorMessage
+                    name="userName"
+                    component="div"
+                    className="error-message"
+                  />
                 </div>
 
                 <div>
-                  <Field type="email" name="email" placeholder="Correo electrónico" />
-                  <ErrorMessage name="email" component="div" className="error-message" />
+                  <Field
+                    type="email"
+                    name="email"
+                    placeholder="Correo electrónico"
+                  />
+                  <ErrorMessage
+                    name="email"
+                    component="div"
+                    className="error-message"
+                  />
                 </div>
 
                 <div>
@@ -246,17 +326,37 @@ const RegisterUser = () => {
                       </option>
                     ))}
                   </Field>
-                  <ErrorMessage name="documento_tipo" component="div" className="error-message" />
+                  <ErrorMessage
+                    name="documento_tipo"
+                    component="div"
+                    className="error-message"
+                  />
                 </div>
 
                 <div>
-                  <Field type="text" name="documento_numero" placeholder="Número de documento" />
-                  <ErrorMessage name="documento_numero" component="div" className="error-message" />
+                  <Field
+                    type="text"
+                    name="documento_numero"
+                    placeholder="Número de documento"
+                  />
+                  <ErrorMessage
+                    name="documento_numero"
+                    component="div"
+                    className="error-message"
+                  />
                 </div>
 
                 <div>
-                  <Field type="password" name="password" placeholder="Contraseña" />
-                  <ErrorMessage name="password" component="div" className="error-message" />
+                  <Field
+                    type="password"
+                    name="password"
+                    placeholder="Contraseña"
+                  />
+                  <ErrorMessage
+                    name="password"
+                    component="div"
+                    className="error-message"
+                  />
                 </div>
 
                 <div>
@@ -265,7 +365,11 @@ const RegisterUser = () => {
                     name="password_confirmation"
                     placeholder="Confirmar contraseña"
                   />
-                  <ErrorMessage name="password_confirmation" component="div" className="error-message" />
+                  <ErrorMessage
+                    name="password_confirmation"
+                    component="div"
+                    className="error-message"
+                  />
                 </div>
 
                 <div>
@@ -277,7 +381,11 @@ const RegisterUser = () => {
                       </option>
                     ))}
                   </Field>
-                  <ErrorMessage name="role" component="div" className="error-message" />
+                  <ErrorMessage
+                    name="role"
+                    component="div"
+                    className="error-message"
+                  />
                 </div>
 
                 <div>
@@ -289,7 +397,11 @@ const RegisterUser = () => {
                       </option>
                     ))}
                   </Field>
-                  <ErrorMessage name="sede" component="div" className="error-message" />
+                  <ErrorMessage
+                    name="sede"
+                    component="div"
+                    className="error-message"
+                  />
                 </div>
 
                 <div>
@@ -304,11 +416,19 @@ const RegisterUser = () => {
                         </option>
                       ))}
                   </Field>
-                  <ErrorMessage name="area" component="div" className="error-message" />
+                  <ErrorMessage
+                    name="area"
+                    component="div"
+                    className="error-message"
+                  />
                 </div>
 
                 <div>
-                  <Field as="select" name="cargo" disabled={filteredCargos.length === 0}>
+                  <Field
+                    as="select"
+                    name="cargo"
+                    disabled={filteredCargos.length === 0}
+                  >
                     <option value="">
                       {filteredCargos.length === 0
                         ? "Selecciona un área primero"
@@ -320,12 +440,20 @@ const RegisterUser = () => {
                       </option>
                     ))}
                   </Field>
-                  <ErrorMessage name="cargo" component="div" className="error-message" />
+                  <ErrorMessage
+                    name="cargo"
+                    component="div"
+                    className="error-message"
+                  />
                 </div>
 
-                {errors.general && <div className="error-message">{errors.general}</div>}
+                {errors.general && (
+                  <div className="error-message">{errors.general}</div>
+                )}
 
-                {serverError && <div className="error-message">{serverError}</div>}
+                {serverError && (
+                  <div className="error-message">{serverError}</div>
+                )}
 
                 <button type="submit" disabled={isSubmitting}>
                   Registrar

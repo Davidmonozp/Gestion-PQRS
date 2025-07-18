@@ -1,0 +1,44 @@
+.seguimiento-container {
+  /* border: 1px solid #ddd; */
+  padding: 1rem;
+  border-radius: 8px;
+  margin: auto;
+  /* font-family: 'Exo', sans-serif; */
+}
+
+.seguimientos-list {
+  margin-bottom: 1rem;
+}
+
+.seguimiento-item {
+  border-bottom: 1px solid #00933f;
+  padding: 0.5rem 0;
+}
+
+.seguimiento-item span {
+  color: #00933f;
+}
+
+.seguimiento-form textarea {
+  width: 100%;
+  height: 120px;
+  background: transparent;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #00933f;
+  color: rgb(0, 0, 0);
+  font-size: 18px;
+  /* font-family: 'Exo', sans-serif; */
+}
+
+.seguimiento-form textarea::placeholder {
+  /* font-family: 'Exo', sans-serif; */
+  font-size: 15px;
+  color: #a1a1a1;
+}
+
+.seguimiento-form button {
+  padding: 0.5rem 1.5rem;
+  height: 33px;
+}
+

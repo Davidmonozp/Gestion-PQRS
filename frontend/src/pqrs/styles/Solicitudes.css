@@ -1,7 +1,3 @@
-body.modal-active {
-    overflow: hidden;
-}
-
 /* Modal Container */
 #modal-container {
     position: fixed;
@@ -10,31 +6,9 @@ body.modal-active {
     width: 100%;
     top: 0;
     left: 0;
-    transform: scale(0);
     z-index: 9999;
-    font-family: 'Exo', sans-serif;
+    /* font-family: 'Exo', sans-serif; */
 }
-
-/* Modal Type: One */
-#modal-container.one {
-    transform: scaleY(0.01) scaleX(0);
-    animation: unfoldIn 1s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-}
-
-#modal-container.one .modal-background .modal {
-    transform: scale(0);
-    animation: zoomIn 0.5s 0.8s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-}
-
-#modal-container.one.out {
-    transform: scale(1);
-    animation: unfoldOut 1s 0.3s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-}
-
-#modal-container.one.out .modal-background .modal {
-    animation: zoomOut 0.5s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-}
-
 
 /* General Modal Background and Modal Styles */
 #modal-container .modal-background {
@@ -64,7 +38,6 @@ body.modal-active {
     position: relative;
     background-color: #fff;
     max-height: 90vh;
-    /* Limita la altura total */
     width: 90%;
     max-width: 1100px;
     overflow: hidden;
@@ -85,16 +58,13 @@ body.modal-active {
 #modal-container .modal-background .modal p {
     font-size: 18px;
     color: #012e3f;
-    font-weight: 600;
-
+    font-weight: 500;
     text-align: justify;
     line-height: 1.6;
     overflow-y: auto;
     flex-grow: 1;
     max-height: 60vh;
-    /* Ajusta según diseño */
     padding-right: 10px;
-
 }
 
 #modal-container .modal-background .modal .modal-svg {
@@ -131,36 +101,10 @@ body.modal-active {
     color: rgb(255, 255, 255);
 }
 
-/* .content .buttons {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 0;
-    text-align: center;
-} */
-
-/* .content .buttons .button {
-    display: inline-block;
-    text-align: center;
-    padding: 10px 15px;
-    margin: 10px;
-    font-size: 18px;
-    background-color: #0dabb6;
-    border-radius: 3px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    cursor: pointer;
-} */
-
-/* .content .buttons .button:hover {
-    color: white;
-    background: #009bd5;
-} */
-
 .big-icon {
     font-size: 48px;
-    /* Puedes ajustar a 32px, 64px, etc. */
     margin: 10px;
     color: #ffffff;
-    /* Opcional: cambia el color */
 }
 
 .modal button {
@@ -171,7 +115,7 @@ body.modal-active {
     color: white;
     border: none;
     padding: 12px 24px;
-    font-family: 'Exo', sans-serif;
+    /* font-family: 'Exo', sans-serif; */
     font-size: 16px;
     font-weight: 600;
     border-radius: 6px;
@@ -186,7 +130,6 @@ body.modal-active {
 .modal button:hover,
 .modal button:focus {
     background-color: #015d85;
-    /* tono más oscuro al hover/focus */
     box-shadow: 0 6px 12px rgba(0, 142, 204, 0.6);
     outline: none;
     transform: translateY(-2px);
@@ -194,11 +137,11 @@ body.modal-active {
 
 .modal button:active {
     background-color: #007bb3;
-    /* aún más oscuro al click */
     box-shadow: 0 2px 4px rgba(0, 123, 179, 0.8);
     transform: translateY(0);
 }
 
+/* Cards Grid */
 .buttons {
     display: flex;
     width: 80%;
@@ -268,381 +211,4 @@ h6 {
 
 .modal p a:hover {
     color: #0056b3;
-}
-
-
-
-
-/* Keyframe Animations */
-@keyframes unfoldIn {
-    0% {
-        transform: scaleY(0.005) scaleX(0);
-    }
-
-    50% {
-        transform: scaleY(0.005) scaleX(1);
-    }
-
-    100% {
-        transform: scaleY(1) scaleX(1);
-    }
-}
-
-@keyframes unfoldOut {
-    0% {
-        transform: scaleY(1) scaleX(1);
-    }
-
-    50% {
-        transform: scaleY(0.005) scaleX(1);
-    }
-
-    100% {
-        transform: scaleY(0.005) scaleX(0);
-    }
-}
-
-@keyframes zoomIn {
-    0% {
-        transform: scale(0);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
-
-@keyframes zoomOut {
-    0% {
-        transform: scale(1);
-    }
-
-    100% {
-        transform: scale(0);
-    }
-}
-
-@keyframes fadeIn {
-    0% {
-        background: rgba(0, 0, 0, 0);
-    }
-
-    100% {
-        background: rgba(0, 0, 0, 0.7);
-        /* Adjusted alpha from .7 to .7 */
-    }
-}
-
-@keyframes fadeOut {
-    0% {
-        background: rgba(0, 0, 0, 0.7);
-    }
-
-    100% {
-        background: rgba(0, 0, 0, 0);
-    }
-}
-
-@keyframes scaleUp {
-    0% {
-        transform: scale(0.8) translateY(1000px);
-        opacity: 0;
-    }
-
-    100% {
-        transform: scale(1) translateY(0px);
-        opacity: 1;
-    }
-}
-
-@keyframes scaleDown {
-    0% {
-        transform: scale(1) translateY(0px);
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(0.8) translateY(1000px);
-        opacity: 0;
-    }
-}
-
-@keyframes scaleBack {
-    0% {
-        transform: scale(1);
-    }
-
-    100% {
-        transform: scale(0.85);
-    }
-}
-
-@keyframes scaleForward {
-    0% {
-        transform: scale(0.85);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
-
-@keyframes quickScaleDown {
-    0% {
-        transform: scale(1);
-    }
-
-    99.9% {
-        transform: scale(1);
-    }
-
-    100% {
-        transform: scale(0);
-    }
-}
-
-@keyframes slideUpLarge {
-    0% {
-        transform: translateY(0%);
-    }
-
-    100% {
-        transform: translateY(-100%);
-    }
-}
-
-@keyframes slideDownLarge {
-    0% {
-        transform: translateY(-100%);
-    }
-
-    100% {
-        transform: translateY(0%);
-    }
-}
-
-@keyframes moveUp {
-    0% {
-        transform: translateY(150px);
-    }
-
-    100% {
-        transform: translateY(0);
-    }
-}
-
-@keyframes moveDown {
-    0% {
-        transform: translateY(0px);
-    }
-
-    100% {
-        transform: translateY(150px);
-    }
-}
-
-@keyframes blowUpContent {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    99.9% {
-        transform: scale(2);
-        opacity: 0;
-    }
-
-    100% {
-        transform: scale(0);
-    }
-}
-
-@keyframes blowUpContentTwo {
-    0% {
-        transform: scale(2);
-        opacity: 0;
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-@keyframes blowUpModal {
-    0% {
-        transform: scale(0);
-    }
-
-    100% {
-        transform: scale(1);
-    }
-}
-
-@keyframes blowUpModalTwo {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    100% {
-        transform: scale(0);
-        opacity: 0;
-    }
-}
-
-@keyframes roadRunnerIn {
-    0% {
-        transform: translateX(-1500px) skewX(30deg) scaleX(1.3);
-    }
-
-    70% {
-        transform: translateX(30px) skewX(0deg) scaleX(0.9);
-    }
-
-    100% {
-        transform: translateX(0px) skewX(0deg) scaleX(1);
-    }
-}
-
-@keyframes roadRunnerOut {
-    0% {
-        transform: translateX(0px) skewX(0deg) scaleX(1);
-    }
-
-    30% {
-        transform: translateX(-30px) skewX(-5deg) scaleX(0.9);
-    }
-
-    100% {
-        transform: translateX(1500px) skewX(30deg) scaleX(1.3);
-    }
-}
-
-@keyframes sketchIn {
-    0% {
-        stroke-dashoffset: 778;
-    }
-
-    100% {
-        stroke-dashoffset: 0;
-    }
-}
-
-@keyframes sketchOut {
-    0% {
-        stroke-dashoffset: 0;
-    }
-
-    100% {
-        stroke-dashoffset: 778;
-    }
-}
-
-@keyframes modalFadeIn {
-    0% {
-        background-color: transparent;
-    }
-
-    100% {
-        background-color: white;
-    }
-}
-
-@keyframes modalFadeOut {
-    0% {
-        background-color: white;
-    }
-
-    100% {
-        background-color: transparent;
-    }
-}
-
-@keyframes modalContentFadeIn {
-    0% {
-        opacity: 0;
-        top: -20px;
-    }
-
-    100% {
-        opacity: 1;
-        top: 0;
-    }
-}
-
-@keyframes modalContentFadeOut {
-    0% {
-        opacity: 1;
-        top: 0px;
-    }
-
-    100% {
-        opacity: 0;
-        top: -20px;
-    }
-}
-
-@keyframes bondJamesBond {
-    0% {
-        transform: translateX(1000px);
-    }
-
-    80% {
-        transform: translateX(0px);
-        border-radius: 75px;
-        height: 75px;
-        width: 75px;
-    }
-
-    90% {
-        border-radius: 3px;
-        height: 182px;
-        width: 247px;
-    }
-
-    100% {
-        border-radius: 3px;
-        height: 162px;
-        width: 227px;
-    }
-}
-
-@keyframes killShot {
-    0% {
-        transform: translateY(0) rotate(0deg);
-        opacity: 1;
-    }
-
-    100% {
-        transform: translateY(300px) rotate(45deg);
-        opacity: 0;
-    }
-}
-
-@keyframes fadeToRed {
-    0% {
-        background-color: rgba(0, 0, 0, 0.6);
-        /* Changed rgba(black,.6) to numeric */
-    }
-
-    100% {
-        background-color: rgba(255, 0, 0, 0.8);
-        /* Changed rgba(red,.8) to numeric */
-    }
-}
-
-@keyframes slowFade {
-    0% {
-        opacity: 1;
-    }
-
-    99.9% {
-        opacity: 0;
-        transform: scale(1);
-    }
-
-    100% {
-        transform: scale(0);
-    }
 }

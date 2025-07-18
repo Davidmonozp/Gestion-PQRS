@@ -7,6 +7,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Mail\Mailables\Address;
 
 class ConsultaRadicadoInfo extends Mailable
 {
@@ -21,8 +22,9 @@ class ConsultaRadicadoInfo extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(
-            subject: 'Información de tu radicado ' . $this->pqr->pqr_codigo,
+       return new Envelope(
+            from: new Address('info@passusips.com', 'Passus IPS'), // <-- ¡ESTA ES LA LÍNEA CLAVE!
+            subject: 'Información de su radicado ' . $this->pqr->pqr_codigo, // Asunto que ya habías ajustado
         );
     }
 
@@ -30,6 +32,7 @@ class ConsultaRadicadoInfo extends Mailable
     {
         return new Content(
             markdown: 'emails.consulta-radicado',
+            with: ['pqr' => $this->pqr], // 🔥 Este es necesario
         );
     }
 

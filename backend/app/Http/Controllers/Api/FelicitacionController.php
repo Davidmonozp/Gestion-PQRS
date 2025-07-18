@@ -20,6 +20,7 @@ class FelicitacionController extends Controller
             'documento_tipo' => 'required|string',
             'documento_numero' => 'required|string',
             'correo' => 'required|email',
+            'correo_confirmacion' => 'required|same:correo',
             'descripcion' => 'required|string',
             'sede' => 'required|string|max:100',  // validar sede también
         ]);

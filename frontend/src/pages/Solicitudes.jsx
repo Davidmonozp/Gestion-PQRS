@@ -1,38 +1,31 @@
 import React, { useState } from "react";
-import "../pqrs/styles/Solicitudes.css"; // Asegúrate de que esta ruta sea correcta
-import { Link, useNavigate } from 'react-router-dom';
-import PqrsForm from '../pqrs/PqrsForm'; // ¡Importa el PqrsForm aquí!
+import "../pqrs/styles/Solicitudes.css";
+import 'animate.css';
+import { useNavigate } from 'react-router-dom';
 
 export const Solicitudes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState("");
-  const [modalAnimationType, setModalAnimationType] = useState("one");
+  const [animationClass, setAnimationClass] = useState("");
   const navigate = useNavigate();
-
-  // Estado para controlar si mostramos el PqrsForm principal en la página
-  const [showPqrsFormPage, setShowPqrsFormPage] = useState(false);
 
   const handleOpenModal = (type) => {
     setModalType(type);
-    setModalAnimationType("one");
+    setAnimationClass("animate__animated animate__zoomIn");
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setModalType("");
-    setModalAnimationType("");
+    setAnimationClass("");
   };
 
-  // Función para manejar la acción de "Registrar solicitud"
-  const handleRegisterSolicitud = () => {
-    // Aquí puedes cerrar el modal si está abierto
-    handleCloseModal();
-    // Y luego mostrar el PqrsForm principal en la página
-    setShowPqrsFormPage(true);
-    // Nota: La redirección a '/solicitudes' ya la maneja el router.
-    // Solo necesitamos que el componente Solicitudes cambie su estado
-    // para mostrar el formulario preconfigurado.
+  const startCloseAnimation = () => {
+ setAnimationClass("animate__animated animate__zoomOut");
+    setTimeout(() => {
+      handleCloseModal();
+    }, 1000);
   };
 
   const modalContent = {
@@ -58,7 +51,8 @@ export const Solicitudes = () => {
             2. Tercero autorizado:
             Fotocopia de la cédula del paciente y del autorizado.
             Soporte que acredite el parentesco (registro civil, acta de matrimonio).
-            Diligenciar el siguiente formato: <a href='https://passusips.com/uploads/GPS-FT-15%20Formato%20de%20Solicitud%20de%20Historia%20Clinica%20por%20tercero..pdf' target='_blank' rel='noopener noreferrer'>Formato de Solicitud por Tercero</a>.<br /><br />   
+            Diligenciar el siguiente formato: <a href='  https://passusips.com/uploads/GPS-FT-15%20Formato%20de%20Solicitud%20de%20Historia%20Clinica%20por%20tercero..pdf
+            'target='_blank' rel='noopener noreferrer'>Formato de Solicitud por Tercero</a>.<br /><br />
 
             3. Paciente menor de edad:
             Registro civil o tarjeta de identidad (según edad).
@@ -74,7 +68,7 @@ export const Solicitudes = () => {
             En caso de interdicción, adjuntar la sentencia de interdicción y copia de la cédula del curador.
             Diligenciar el siguiente formato: <a href='https://passusips.com/uploads/GPS-FT-15%20Formato%20de%20Solicitud%20de%20Historia%20Clinica%20por%20tercero..pdf' target='_blank' rel='noopener noreferrer'>LINK</a>. <br /><br />
 
-            Si desea realizar la <a href="#" data-action="register-solicitud">solicitud</a> por favor Adjuntar los soportes según corresponda. `,
+            Si desea realizar la <a href='http://localhost:5173/pqrsForm' target='_blank' rel='noopener noreferrer'>solicitud</a> por favor Adjuntar los soportes según corresponda. `,
     },
     multa: {
       title: "Exoneración de multa",
@@ -89,7 +83,7 @@ export const Solicitudes = () => {
 
             Agradecemos su comprensión y compromiso con el cumplimiento de nuestras políticas.<br /><br />
 
-            Si desea realizar la <a href="#" data-action="register-solicitud">solicitud</a> por favor adjuntar el soportes médico según corresponda.`,
+            Si desea realizar la <a href='http://localhost:5173/pqrsForm' target='_blank' rel='noopener noreferrer'>solicitud</a> por favor adjuntar el soportes médico según corresponda.`,
     },
     reprogramacion: {
       title: "Reprogramación o cancelación",
@@ -106,33 +100,35 @@ export const Solicitudes = () => {
 
             Si aún cuenta con vigencia activa y envía la incapacidad dentro del tiempo establecido, se procederá con la reprogramación de las sesiones pendientes.<br /><br />
 
-            Si desea registrar una <a href="#" data-action="register-solicitud">solicitud</a>, por favor adjunte los soportes médicos correspondientes o exponga claramente el motivo en el detalle de la solicitud.`
+            Si desea registrar una solicitud, por favor adjunte los soportes médicos correspondientes o exponga claramente el motivo en el detalle de la solicitud.`
 ,
     },
     info: {
       title: "Información general",
-      text: "Por favor revisa nuestro centro de ayuda o chatbot, donde respondemos preguntas frecuentes. <a href='#' data-action='register-solicitud'> ¿Deseas continuar con una solicitud personalizada?</a>",
+      text: "Por favor revisa nuestro centro de ayuda o chatbot, donde respondemos preguntas frecuentes.  <a href='/pqrsForm'>  ¿Deseas continuar con una solicitud personalizada?</a>",
     },
     reembolsos: {
       title: "Reembolsos",
       text: `
-            Estimado usuario:<br /><br />
-            PASSUS IPS realiza reembolsos únicamente en los siguientes casos:<br /><br />
-            • Cuando, durante la valoración inicial, se determina que el paciente no es apto para ingresar al programa de hidroterapia.<br />
-            • Cuando, por criterio médico debidamente soportado, se considera que el paciente no debe realizar terapias en agua, siempre y cuando no haya asistido a más de dos (2) sesiones acuáticas.<br /><br />
-            Si su caso corresponde a alguna de estas situaciones, por favor registre la <a href="#" data-action="register-solicitud">solicitud</a> y adjunte los soportes médicos correspondientes o explique claramente el motivo en el detalle de la solicitud.<br /><br />
-            Agradecemos su atención y comprensión.
-          `,
+          Estimado usuario:<br /><br />
+          PASSUS IPS realiza reembolsos únicamente en los siguientes casos:<br /><br />
+          • Cuando, durante la valoración inicial, se determina que el paciente no es apto para ingresar al programa de hidroterapia.<br />
+          • Cuando, por criterio médico debidamente soportado, se considera que el paciente no debe realizar terapias en agua, siempre y cuando no haya asistido a más de dos (2) sesiones acuáticas.<br /><br />
+          Si su caso corresponde a alguna de estas situaciones, por favor registre la <a href='/pqrsForm'>solicitud</a> y adjunte los soportes médicos correspondientes o explique claramente el motivo en el detalle de la solicitud.<br /><br />
+          Agradecemos su atención y comprensión.
+        `,
     },
   };
 
   return (
     <>
       {isModalOpen && (
-        <div id="modal-container" className={modalAnimationType}>
-          <div className="modal-background">
-            {/* Evita que los clics dentro del modal no cierren el modal */}
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div id="modal-container">
+          <div className="modal-background" onClick={startCloseAnimation}>
+            <div
+              className={`modal ${animationClass}`}
+              onClick={(e) => e.stopPropagation()}
+            >
               <h2>{modalContent[modalType]?.title}</h2>
               <p
                 dangerouslySetInnerHTML={{
@@ -140,39 +136,17 @@ export const Solicitudes = () => {
                 }}
                 onClick={(e) => {
                   const target = e.target;
-                  // Si el enlace tiene el atributo data-action="register-solicitud"
-                  if (target.tagName === 'A' && target.dataset.action === 'register-solicitud') {
-                    e.preventDefault(); // Previene la navegación por defecto
-                    handleRegisterSolicitud(); // Llama a la nueva función
+                  if (target.tagName === 'A' && target.getAttribute('href') === '/pqrsForm') {
+                    e.preventDefault();
+                    navigate('/pqrsForm');
                   }
-                  // Para los otros enlaces (ej. externos), permite el comportamiento predeterminado
                 }}
               ></p>
 
-
-              <svg
-                className="modal-svg"
-                xmlns="http://www.w3.org/2000/svg"
-                width="100%"
-                height="100%"
-                preserveAspectRatio="none"
-              >
-                <rect
-                  x="0"
-                  y="0"
-                  fill="none"
-                  width="226"
-                  height="162"
-                  rx="3"
-                  ry="3"
-                ></rect>
-              </svg>
               <button
-                onClick={() => {
-                  setModalAnimationType("out");
-                  setTimeout(() => {
-                    handleCloseModal();
-                  }, 1000);
+                onClick={(e) => {
+                  e.stopPropagation();
+                  startCloseAnimation();
                 }}
                 style={{ marginTop: "20px" }}
               >
@@ -183,68 +157,60 @@ export const Solicitudes = () => {
         </div>
       )}
 
-      {/* Aquí es donde decidimos qué mostrar: los botones o el PqrsForm */}
-      {showPqrsFormPage ? (
-        <div className="content-pqrs-form-page">
-          <PqrsForm
-            defaultTipoSolicitud="Solicitud" // Esto preselecciona "Solicitud"
-            readOnlyTipoSolicitud={true}      // Esto bloquea el campo
-          />
-        </div>
-      ) : (
-        <div className="content">
-          <div className="pqrs-container">
-            <div className="header-pqrs">
-              <div>
-                <i className="fas fa-file-pen big-icon"></i>
-                Registra tus <span>Solicitudes</span>
-                <h6>Tipos de solicitudes</h6>
-                <p className="parrafo-solicitudes">
-                  Por favor lee atentamente las descripciones de los tipos de
-                  SOLICITUDES y cuéntanos tu experiencia
-                </p>
-              </div>
+      <div className="content">
+        <div className="pqrs-container">
+          <div className="header-pqrs">
+            <div>
+              <i className="fas fa-file-pen big-icon"></i>
+              Registra tus <span>Solicitudes</span>
+              <h6>Tipos de solicitudes</h6>
+              <p className="parrafo-solicitudes">
+                Por favor lee atentamente las descripciones de los tipos de
+                SOLICITUDES y cuéntanos tu experiencia
+              </p>
             </div>
           </div>
+        </div>
 
-          <div className="buttons">
-            <div className="card" onClick={() => handleOpenModal("citas")}>
-              <i className="fas fa-calendar-check icon"></i>
-              <span>Agendar citas</span>
-            </div>
-            <div className="card" onClick={() => handleOpenModal("info")}>
-              <i className="fas fa-info-circle icon"></i>
-              <span>Información General</span>
-            </div>
-            <div className="card" onClick={() => handleOpenModal("reembolsos")}>
-              <i className="fas fa-file-invoice-dollar icon"></i>
-              <span>Reembolsos</span>
-            </div>
-            <div className="card" onClick={() => handleOpenModal("valoraciones")}>
-              <i className="fas fa-user-clock icon"></i>
-              <span>Valoraciones sin agenda - Lista de espera</span>
-            </div>
-            <div className="card" onClick={() => handleOpenModal("multa")}>
-              <i className="fas fa-ban icon"></i>
-              <span>Exoneración de Multa por Inasistencia</span>
-            </div>
-            <div className="card" onClick={() => handleOpenModal("historia")}>
-              <i className="fas fa-file-medical icon"></i>
-              <span>Envío de Historia Clínica ó Informes Finales</span>
-            </div>
-            <div
-              className="card"
-              onClick={() => handleOpenModal("reprogramacion")}
-            >
-              <i className="fas fa-calendar-times icon"></i>
-              <span>Reprogramación ó Cancelación de Citas</span>
-            </div>
+        <div className="buttons">
+          <div className="card" onClick={() => handleOpenModal("citas")}>
+            <i className="fas fa-calendar-check icon"></i>
+            <span>Agendar citas</span>
+          </div>
+          <div className="card" onClick={() => handleOpenModal("info")}>
+            <i className="fas fa-info-circle icon"></i>
+            <span>Información General</span>
+          </div>
+          <div className="card" onClick={() => handleOpenModal("reembolsos")}>
+            <i className="fas fa-file-invoice-dollar icon"></i>
+            <span>Reembolsos</span>
+          </div>
+          <div className="card" onClick={() => handleOpenModal("valoraciones")}>
+            <i className="fas fa-user-clock icon"></i>
+            <span>Valoraciones sin agenda - Lista de espera</span>
+          </div>
+          <div className="card" onClick={() => handleOpenModal("multa")}>
+            <i className="fas fa-ban icon"></i>
+            <span>Exoneración de Multa por Inasistencia</span>
+          </div>
+          <div className="card" onClick={() => handleOpenModal("historia")}>
+            <i className="fas fa-file-medical icon"></i>
+            <span>Envío de Historia Clínica ó Informes Finales</span>
+          </div>
+          <div className="card" onClick={() => handleOpenModal("reprogramacion")}>
+            <i className="fas fa-calendar-times icon"></i>
+            <span>Reprogramación ó Cancelación de Citas</span>
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 };
+
+
+
+
+
 
 
 
@@ -264,13 +230,11 @@ export const Solicitudes = () => {
 // import { Link } from 'react-router-dom';
 // import { useNavigate } from 'react-router-dom';
 
-
 // export const Solicitudes = () => {
 //   const [isModalOpen, setIsModalOpen] = useState(false);
 //   const [modalType, setModalType] = useState("");
 //   const [modalAnimationType, setModalAnimationType] = useState("one");
 //   const navigate = useNavigate();
-
 
 //   const handleOpenModal = (type) => {
 //     setModalType(type);
@@ -308,7 +272,7 @@ export const Solicitudes = () => {
 //             Fotocopia de la cédula del paciente y del autorizado.
 //             Soporte que acredite el parentesco (registro civil, acta de matrimonio).
 //             Diligenciar el siguiente formato: <a href='  https://passusips.com/uploads/GPS-FT-15%20Formato%20de%20Solicitud%20de%20Historia%20Clinica%20por%20tercero..pdf
-//             'target='_blank' rel='noopener noreferrer'>Formato de Solicitud por Tercero</a>.<br /><br />   
+//             'target='_blank' rel='noopener noreferrer'>Formato de Solicitud por Tercero</a>.<br /><br />
 
 //             3. Paciente menor de edad:
 //             Registro civil o tarjeta de identidad (según edad).
@@ -396,7 +360,6 @@ export const Solicitudes = () => {
 //     }
 //   }}
 // ></p>
-
 
 //               <svg
 //                 className="modal-svg"

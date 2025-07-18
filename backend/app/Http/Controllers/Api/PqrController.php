@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class PqrController extends Controller
 {
@@ -23,32 +24,40 @@ class PqrController extends Controller
         try {
             $registra_otro = $request->input('registra_otro') === 'si';
 
-            // Reglas de validación
+            // Reglas de validación base
             $rules = [
                 'nombre' => 'required|string|max:100',
+                'segundo_nombre' => 'nullable|string|max:100',
                 'apellido' => 'required|string|max:100',
+                'segundo_apellido' => 'nullable|string|max:100',
                 'documento_tipo' => 'required|string',
                 'documento_numero' => 'required|string',
                 'correo' => 'required|email',
                 'correo_confirmacion' => 'required|email|same:correo',
-                'telefono' => 'nullable|string',
+                'telefono' => 'nullable|string', // Considera validar formato con regex si es numérico
                 'sede' => 'required|string',
                 'servicio_prestado' => 'required|string',
                 'eps' => 'required|string',
                 'regimen' => 'required|string',
                 'tipo_solicitud' => 'required|string',
-                'fuente' => 'nullable|string|max:100',
                 'descripcion' => 'required|string',
-                'archivos' => 'nullable|array',
-                'archivos.*' => 'file|max:8000',
+                'archivos' => 'nullable|array', // 'archivos' es el nombre del array de files
+                'archivos.*' => 'file|max:8000', // Cada archivo dentro del array
                 'registra_otro' => 'required|in:si,no',
-                'politica_aceptada' => 'accepted'
+                'politica_aceptada' => 'required',
+
+                // INICIALIZA estos campos como NULLABLE por defecto
+                'fecha_inicio_real' => 'nullable|date_format:Y-m-d H:i',
+                'fuente' => 'nullable|string|max:100', // La regla 'in' se añade condicionalmente
             ];
 
+            // Reglas condicionales para el registrador
             if ($registra_otro) {
                 $rules = array_merge($rules, [
                     'registrador_nombre' => 'required|string|max:100',
+                    'registrador_segundo_nombre' => 'nullable|string|max:100',
                     'registrador_apellido' => 'required|string|max:100',
+                    'registrador_segundo_apellido' => 'nullable|string|max:100',
                     'registrador_documento_tipo' => 'required|string',
                     'registrador_documento_numero' => 'required|string',
                     'registrador_correo' => 'required|email',
@@ -57,15 +66,33 @@ class PqrController extends Controller
                 ]);
             }
 
+            // Lógica condicional para 'fecha_inicio_real' y 'fuente'
+            // Esto asume que tienes alguna forma de saber si el usuario está "logeado" en el backend.
+            // Si tu API usa autenticación de Laravel (ej. Sanctum, Passport), Auth::check() funcionará.
+            // Si no, necesitarías otra forma de determinar si el usuario es un "admin" o "logeado".
+            $isLoggedInBackend = Auth::check(); // Verifica si hay un usuario autenticado
+
+            Log::info('Backend Auth Check:', ['isLoggedIn' => $isLoggedInBackend]);
+
+            if ($isLoggedInBackend) {
+                // Si el usuario está logeado, estas reglas se vuelven 'required'
+                $rules['fecha_inicio_real'] = 'required|date_format:Y-m-d H:i';
+                $rules['fuente'] = 'required|string|in:"Formulario de la web","Correo atención al usuario","Correo de Agendamiento NAC","Encuesta de satisfacción IPS","Callcenter","Presencial"';
+            }
+
+            Log::info('Valor de politica_aceptada recibido antes de validación:', ['politica_aceptada_raw' => $request->input('politica_aceptada')]);
+            Log::info('Todos los datos del request antes de validación:', $request->all());
+
+            // Validar la solicitud
             $validated = $request->validate($rules);
+            Log::info('Datos validados:', $validated); // Verifica lo que Laravel realmente valida y devuelve
 
             $uploadedFilesData = [];
-            // Guardar archivo si se envió
-            $uploadedFilesData = []; // Array para almacenar objetos {path, original_name}
+            // Guardar archivos si se enviaron (solo si el Content-Type es multipart/form-data)
             if ($request->hasFile('archivos')) {
                 foreach ($request->file('archivos') as $file) {
-                    $path = $file->store('pqrs_files', 'public'); // Guarda el archivo
-                    $originalName = $file->getClientOriginalName(); // Obtiene el nombre original del archivo
+                    $path = $file->store('pqrs_files', 'public');
+                    $originalName = $file->getClientOriginalName();
 
                     $uploadedFilesData[] = [
                         'path' => $path,
@@ -77,24 +104,24 @@ class PqrController extends Controller
             // Generar el código único de la PQR
             $codigoPqr = $codigoService->generarCodigoPqr($validated['tipo_solicitud'], $validated['documento_numero']);
 
-            // Crear la PQR
-            $pqr = Pqr::create([
+            // Preparar los datos para la creación de la PQR
+            $dataToCreate = [
                 'pqr_codigo' => $codigoPqr,
                 'nombre' => $validated['nombre'],
                 'apellido' => $validated['apellido'],
                 'documento_tipo' => $validated['documento_tipo'],
                 'documento_numero' => $validated['documento_numero'],
                 'correo' => $validated['correo'],
-                'telefono' => $validated['telefono'],
+                'telefono' => $validated['telefono'] ?? null, // Usa null si es nullable y no se envió
                 'sede' => $validated['sede'],
                 'servicio_prestado' => $validated['servicio_prestado'],
                 'eps' => $validated['eps'],
                 'regimen' => $validated['regimen'],
                 'tipo_solicitud' => $validated['tipo_solicitud'],
-                'fuente' => $validated['fuente'] ?? null,
+                'fuente' => $validated['fuente'] ?? null, // Si 'fuente' es nullable y no se envió, será null
                 'descripcion' => $validated['descripcion'],
-                'archivo' => $uploadedFilesData,
-                'registra_otro' => $registra_otro,
+                'archivo' => $uploadedFilesData, // Esto asume que 'archivo' en DB es JSON o TEXT para guardar el array
+                'registra_otro' => $validated['registra_otro'] === 'si', // Guarda como boolean si la columna es boolean
                 'registrador_nombre' => $validated['registrador_nombre'] ?? null,
                 'registrador_apellido' => $validated['registrador_apellido'] ?? null,
                 'registrador_documento_tipo' => $validated['registrador_documento_tipo'] ?? null,
@@ -102,11 +129,17 @@ class PqrController extends Controller
                 'registrador_correo' => $validated['registrador_correo'] ?? null,
                 'registrador_telefono' => $validated['registrador_telefono'] ?? null,
                 'parentesco' => $validated['parentesco'] ?? null,
-            ]);
+                'fecha_inicio_real' => $validated['fecha_inicio_real'] ?? null,
+            ];
 
+            // Crear la PQR
+            $pqr = Pqr::create($dataToCreate);
+
+            // Enviar correo al paciente
             Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
 
-            // Agregar URL del archivo para respuesta
+
+            // Agregar URL del archivo para respuesta (si es necesario en la respuesta JSON)
             $pqr->archivo_urls = collect($pqr->archivo)->map(function ($fileItem) {
                 // Asegúrate de que $fileItem sea un objeto o array asociativo
                 $path = is_array($fileItem) ? $fileItem['path'] : $fileItem->path;
@@ -117,8 +150,16 @@ class PqrController extends Controller
                 'message' => 'PQR creada con éxito',
                 'pqr' => $pqr,
             ], 201);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Error de validación de PQR:', $e->errors());
             return response()->json([
+                'message' => 'Los datos proporcionados no son válidos.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error al crear PQR:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'message' => 'Error interno del servidor al crear la PQR.',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -269,11 +310,98 @@ class PqrController extends Controller
     }
 
 
+    // public function update(Request $request, $pqr_codigo, PqrTiempoService $tiempoService)
+    // {
+    //     try {
+    //         $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+
+    //         $data = $request->only([
+    //             'nombre',
+    //             'apellido',
+    //             'documento_tipo',
+    //             'documento_numero',
+    //             'correo',
+    //             'telefono',
+    //             'sede',
+    //             'servicio_prestado',
+    //             'eps',
+    //             'tipo_solicitud',
+    //             'descripcion',
+    //             'archivo',
+    //         ]);
+
+    //         if ($request->user()->hasRole(['Administrador', 'Supervisor'])) {
+    //             $request->validate([
+    //                 'atributo_calidad' => 'nullable|in:Accesibilidad,Continuidad,Oportunidad,Pertinencia,Satisfacción del usuario,Seguridad',
+    //                 'fuente'           => 'nullable|in:Formulario de la web,Correo atención al usuario,Correo de Agendamiento NAC,Encuesta de satisfacción IPS,Callcenter,Presencial',
+    //                 'asignado_a'       => 'nullable|exists:users,id',
+    //                 'prioridad'        => 'required|in:Vital,Priorizado,Simple,Solicitud',
+    //             ]);
+
+    //             $data['atributo_calidad'] = $request->atributo_calidad;
+    //             $data['fuente'] = $request->fuente;
+    //             $data['asignado_a'] = $request->asignado_a;
+
+    //             // Cambiar estado si se asigna por primera vez
+    //             if (!$pqr->asignado_a && $request->filled('asignado_a')) {
+    //                 $data['estado_respuesta'] = 'Asignado';
+    //             }
+
+    //             // Asignar deadlines solo si aún no existen
+    //             if ($request->filled('prioridad') && !$pqr->deadline_ciudadano && !$pqr->deadline_interno) {
+    //                 $prioridad = $request->prioridad;
+
+    //                 // Plazos para el ciudadano
+    //                 $ciudadanoHoras = match ($prioridad) {
+    //                     'Vital'      => 24,
+    //                     'Priorizado' => 48,
+    //                     'Simple'     => 72,
+    //                     'Solicitud'  => 48,
+    //                 };
+
+    //                 // Plazos internos
+    //                 $internoHoras = match ($prioridad) {
+    //                     'Vital'      => 6,
+    //                     'Priorizado' => 24,
+    //                     'Simple'     => 24,
+    //                     'Solicitud'  => 24,
+    //                 };
+
+
+    //                 $data['prioridad'] = $prioridad;
+    //                 $fechaCreacion = Carbon::parse($pqr->created_at);
+
+    //                 $data['deadline_ciudadano'] = $fechaCreacion->copy()->addHours($ciudadanoHoras);
+    //                 $data['deadline_interno'] = $fechaCreacion->copy()->addHours($internoHoras);
+    //             }
+    //         }
+
+    //         // Actualiza y recalcula estado de tiempo
+    //         $pqr->update($data);
+    //         $estadoTiempo = $tiempoService->calcularEstadoTiempo($pqr);
+    //         $pqr->estado_tiempo = $estadoTiempo['estado'];
+    //         $pqr->save();
+
+    //         // Enviar correo al asignado si hay uno nuevo
+    //         if ($request->filled('asignado_a')) {
+    //             $asignado = \App\Models\User::find($request->asignado_a);
+    //             if ($asignado && $asignado->email) {
+    //                 Mail::to($asignado->email)->send(new PqrAsignada($pqr));
+    //             }
+    //         }
+
+    //         return response()->json(['message' => 'PQR actualizada correctamente.', 'data' => $pqr]);
+    //     } catch (\Exception $e) {
+    //         return response()->json(['message' => 'Error al actualizar', 'error' => $e->getMessage()], 500);
+    //     }
+    // }
+
     public function update(Request $request, $pqr_codigo, PqrTiempoService $tiempoService)
     {
         try {
             $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
 
+            // Primero tomamos todos los campos comunes, incluida fecha_inicio_real
             $data = $request->only([
                 'nombre',
                 'apellido',
@@ -287,6 +415,7 @@ class PqrController extends Controller
                 'tipo_solicitud',
                 'descripcion',
                 'archivo',
+                'fecha_inicio_real',
             ]);
 
             if ($request->user()->hasRole(['Administrador', 'Supervisor'])) {
@@ -300,48 +429,55 @@ class PqrController extends Controller
                 $data['atributo_calidad'] = $request->atributo_calidad;
                 $data['fuente'] = $request->fuente;
                 $data['asignado_a'] = $request->asignado_a;
+            }
+            // 👉 1️⃣ Guardar cambios generales primero, incluida fecha_inicio_real
+            $asignadoAntes = $pqr->asignado_a;
+            $pqr->update($data);
 
-                // Cambiar estado si se asigna por primera vez
-                if (!$pqr->asignado_a && $request->filled('asignado_a')) {
-                    $data['estado_respuesta'] = 'Asignado';
-                }
+            // 👉 2️⃣ Refrescar el modelo para asegurar datos actualizados
+            $pqr->refresh();
 
-                // Asignar deadlines solo si aún no existen
-                if ($request->filled('prioridad') && !$pqr->deadline_ciudadano && !$pqr->deadline_interno) {
-                    $prioridad = $request->prioridad;
-
-                    // Plazos para el ciudadano
-                    $ciudadanoHoras = match ($prioridad) {
-                        'Vital'      => 24,
-                        'Priorizado' => 48,
-                        'Simple'     => 72,
-                        'Solicitud'  => 48,
-                    };
-
-                    // Plazos internos
-                    $internoHoras = match ($prioridad) {
-                        'Vital'      => 6,
-                        'Priorizado' => 24,
-                        'Simple'     => 24,
-                        'Solicitud'  => 24,
-                    };
-
-
-                    $data['prioridad'] = $prioridad;
-                    $fechaCreacion = Carbon::parse($pqr->created_at);
-
-                    $data['deadline_ciudadano'] = $fechaCreacion->copy()->addHours($ciudadanoHoras);
-                    $data['deadline_interno'] = $fechaCreacion->copy()->addHours($internoHoras);
-                }
+            // 👉 Cambiar estado_respuesta si se asignó por primera vez
+            if (!$asignadoAntes && $pqr->asignado_a) {
+                $pqr->estado_respuesta = 'Asignado';
+                $pqr->save();
             }
 
-            // Actualiza y recalcula estado de tiempo
-            $pqr->update($data);
+            if ($request->user()->hasRole(['Administrador', 'Supervisor']) && $request->filled('prioridad')) {
+                $prioridad = $request->prioridad;
+
+                $ciudadanoHoras = match ($prioridad) {
+                    'Vital'      => 24,
+                    'Priorizado' => 48,
+                    'Simple'     => 72,
+                    'Solicitud'  => 48,
+                };
+
+                $internoHoras = match ($prioridad) {
+                    'Vital'      => 6,
+                    default      => 24,
+                };
+
+                $pqr->prioridad = $prioridad;
+
+                // 👉 3️⃣ Definir fecha base para deadlines (ahora sí con fecha_inicio_real actualizada)
+                $fechaBase = $pqr->fecha_inicio_real
+                    ? Carbon::parse($pqr->fecha_inicio_real)
+                    : Carbon::parse($pqr->created_at);
+
+                // 👉 4️⃣ Calcular deadlines
+                $pqr->deadline_ciudadano = $fechaBase->copy()->addHours($ciudadanoHoras);
+                $pqr->deadline_interno = $fechaBase->copy()->addHours($internoHoras);
+
+                $pqr->save();
+            }
+
+            // 👉 5️⃣ Calcular y guardar estado de tiempo
             $estadoTiempo = $tiempoService->calcularEstadoTiempo($pqr);
             $pqr->estado_tiempo = $estadoTiempo['estado'];
             $pqr->save();
 
-            // Enviar correo al asignado si hay uno nuevo
+            // 👉 6️⃣ Enviar correo al asignado si hay uno nuevo
             if ($request->filled('asignado_a')) {
                 $asignado = \App\Models\User::find($request->asignado_a);
                 if ($asignado && $asignado->email) {
@@ -354,6 +490,8 @@ class PqrController extends Controller
             return response()->json(['message' => 'Error al actualizar', 'error' => $e->getMessage()], 500);
         }
     }
+
+
 
 
     public function asignadas()
@@ -373,13 +511,17 @@ class PqrController extends Controller
         }
     }
 
-
     public function consultarRadicado(Request $request)
     {
-        $codigo = $request->input('pqr_codigo');
+        $request->validate([
+            'pqr_codigo' => 'required|string'
+        ]);
+
+        $codigo = trim($request->input('pqr_codigo'));
         Log::info('Código recibido en API:', ['codigo' => $codigo]);
 
-        $pqr = Pqr::with('estados')->where('pqr_codigo', $codigo)->first();
+        $pqr = Pqr::where('pqr_codigo', $codigo)->first();
+
 
         if (!$pqr) {
             Log::warning('PQR no encontrada:', ['codigo' => $codigo]);
@@ -390,6 +532,7 @@ class PqrController extends Controller
             Mail::to($pqr->correo)->send(new ConsultaRadicadoInfo($pqr));
             return response()->json([
                 'message' => 'Correo enviado con la información del radicado',
+                'correo' => $pqr->correo
             ], 200);
         } catch (\Exception $e) {
             Log::error('Error al enviar correo:', ['error' => $e->getMessage()]);
@@ -397,24 +540,27 @@ class PqrController extends Controller
         }
     }
 
-    public function registrarSeguimiento(Request $request, $pqr_codigo)
-    {
-        $request->validate([
-            'descripcion' => 'required|string|max:1000',
-        ]);
+   public function registrarSeguimiento(Request $request, $pqr_codigo)
+{
+    $request->validate([
+        'descripcion' => 'required|string|max:1000',
+        'tipo_seguimiento' => 'required|string|max:255', // Nuevo campo
+    ]);
 
-        $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+    $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
 
-        $seguimiento = $pqr->seguimientos()->create([
-            'user_id'     => $request->user()->id,
-            'descripcion' => $request->descripcion,
-        ]);
+    $seguimiento = $pqr->seguimientos()->create([
+        'user_id'          => $request->user()->id,
+        'descripcion'      => $request->descripcion,
+        'tipo_seguimiento' => $request->tipo_seguimiento,
+    ]);
 
-        return response()->json([
-            'message' => 'Seguimiento registrado',
-            'data'    => $seguimiento
-        ]);
-    }
+    return response()->json([
+        'message' => 'Seguimiento registrado',
+        'data'    => $seguimiento
+    ]);
+}
+
 
 
     public function obtenerSeguimientos($pqr_codigo)

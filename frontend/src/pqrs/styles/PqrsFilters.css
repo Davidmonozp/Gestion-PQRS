@@ -2,10 +2,10 @@
   width: 237px;
   height: 30px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid #00933f ;
   border-radius: 2px;
-  color: #ffffff;
-  font-family: 'Exo', sans-serif;
+  color: #0087cd;
+  /* font-family: 'Exo', sans-serif; */
   font-size: 16px;
   font-weight: 400;
   padding: 0px 2px 0px 3px;
@@ -15,5 +15,31 @@
 
 .input-placeholder option {
   color: #ffffff;
-  background: #007aa1;
+  background: #0087cd;
+}
+.filtros-busqueda {
+    margin-bottom: 0px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.filtros-busqueda input {
+    background: transparent;
+    width: 206px;
+    height: 30px;
+    border: 1px solid #00933f ;
+    border-radius: 2px;
+    color: #000000;
+    /* font-family: 'Exo', sans-serif; */
+    font-size: 16px;
+    font-weight: 400;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.input-placeholder::placeholder {
+  color: #0087cd!important; 
+  opacity: 1; 
 }

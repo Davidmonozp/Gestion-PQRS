@@ -79,7 +79,7 @@ export const Register = () => {
           {({ isSubmitting, errors }) => (
             <Form>
               <div>
-                <Field type="text" name="name" placeholder="Nombre" />
+                <Field type="text" name="name" placeholder="Nombre completo" />
                 <ErrorMessage
                   name="name"
                   component="div"

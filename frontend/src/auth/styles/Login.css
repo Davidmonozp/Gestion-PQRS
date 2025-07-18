@@ -12,21 +12,20 @@
 
 .header div {
     float: left;
-    color: #fff;
+    color: #00933f;
     font-family: 'Exo', sans-serif;
     font-size: 42px;
     font-weight: 200;
 }
 
 .header div span {
-    color: #8dd9ff;
+    color: #0087cd;
 }
 
 .logo-img {
     display: block;
-    margin: 0 55px 20px;
-    width: 150px;
-    filter: brightness(0) invert(1);
+    margin: 0 61px 20px;
+    width: 187px;
     height: auto;
 }
 
@@ -44,10 +43,10 @@
     width: 300px;
     height: 50px;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid #00933f;
     border-radius: 2px;
-    color: #fff;
-    font-family: 'Exo', sans-serif;
+    color: #000000;
+    /* font-family: 'Exo', sans-serif; */
     font-size: 16px;
     font-weight: 400;
     padding: 4px;
@@ -57,10 +56,10 @@
     width: 300px;
     height: 50px;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid #00933f;
     border-radius: 2px;
-    color: #fff;
-    font-family: 'Exo', sans-serif;
+    color: #000000;
+    /* font-family: 'Exo', sans-serif; */
     font-size: 16px;
     font-weight: 400;
     padding: 4px;
@@ -70,12 +69,12 @@
 .login input[type=submit] {
     width: 310px;
     height: 40px;
-    background: #fff;
+    background: #00933f;
     border: 1px solid #fff;
     cursor: pointer;
     border-radius: 2px;
-    color: #a18d6c;
-    font-family: 'Exo', sans-serif;
+    color: #ffffff;
+    /* font-family: 'Exo', sans-serif; */
     font-size: 16px;
     font-weight: 400;
     padding: 6px;
@@ -83,7 +82,7 @@
 }
 
 .login input[type=submit]:hover {
-    opacity: 0.8;
+    background: #0087cd;
 }
 
 .login input[type=submit]:active {
@@ -92,12 +91,12 @@
 
 .login input[type=text]:focus {
     outline: none;
-    border: 1px solid rgba(255, 255, 255, 0.9);
+    border: 1px solid #0087cd ;
 }
 
 .login input[type=password]:focus {
     outline: none;
-    border: 1px solid rgba(255, 255, 255, 0.9);
+    border: 1px solid #0087cd;
 }
 
 .login input[type=submit]:focus {
@@ -105,7 +104,7 @@
 }
 
 ::-webkit-input-placeholder {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(0, 0, 0, 0.6);
 }
 
 ::-moz-input-placeholder {
@@ -113,10 +112,10 @@
 }
 
 .error-message {
-    color: #1fecb9;
+    color: #f33535;
     font-size: 14px;
     margin-top: 5px;
-    font-family: 'Exo', sans-serif;
+    /* font-family: 'Exo', sans-serif; */
 }
 
 @media (max-width: 767px) {

@@ -1,11 +1,11 @@
 .pqr-card-container {
     width: 80%;
     margin: 210px auto;
-    background: transparent;
+    background: #f7f7f7;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    font-family: 'Arial', sans-serif;
+    /* font-family: 'Exo', sans-serif; */
     color: white;
     font-size: 20px;
     backdrop-filter: blur(170px);
@@ -18,7 +18,7 @@
 .pqr-card-container h2 {
     text-align: center;
     margin-bottom: 20px;
-    color: white;
+    color: #0087cd;
 }
 
 .pqr-card-columns {
@@ -35,6 +35,7 @@
 .pqr-card-col p {
     margin: 10px 0;
     line-height: 1.4;
+    color: black;
 }
 
 .pqr-description-text {
@@ -49,22 +50,23 @@
 }
 
 .pqr-card-col strong {
-    color: rgb(49, 189, 224);
+    color: rgb(4, 61, 126);
 }
 
 .pqr-card-container button {
     display: block;
     margin: 30px auto 0;
     padding: 10px 20px;
-    background-color: #030f54;
+    background-color: #00933f;
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    /* font-family: 'Exo', sans-serif; */
 }
 
 .pqr-card-container button:hover {
-    background-color: #084cdf;
+    background-color: #0087cd;
 }
 
 .pqr-card-section {
@@ -80,39 +82,39 @@
 }
 
 .pqr-card-description-full strong {
-    color: rgb(49, 189, 224);
+    color: rgb(4, 61, 126);
 }
 
 .pqr-description-text {
-    background-color: transparent;
+    background-color: #ffffff;
     padding: 1rem;
-    border-radius: 6px;
+    border-radius: 0px;
     white-space: pre-line;
-    color: rgb(255, 255, 255);
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    color: rgb(0, 0, 0);
+    border: 1px solid rgba(151, 151, 151, 0.6);
 }
 
 .pqr-card-section h3 {
     margin-bottom: 1rem;
-    color: rgb(255, 255, 255);
+    color: rgb(4, 61, 126);
 }
 
 .pqr-card-section strong {
     margin-bottom: 1rem;
-    color: rgb(49, 189, 224);
+    color: rgb(4, 61, 126);
 }
 
 .styled-input {
-    width: 310px;
+    width: 352px;
     height: 34px;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid #00933f;
     border-radius: 2px;
-    color: #fff;
-    font-family: 'Exo', sans-serif;
+    color: #525252;
+    /* font-family: 'Exo', sans-serif; */
     font-size: 16px;
     font-weight: 400;
-    padding: 0px 10px;
+    padding: 4px 10px;
     margin-top: 0px;
     margin-bottom: 12px;
     box-sizing: border-box;
@@ -121,33 +123,38 @@
 .respuesta-final {
     width: 100%;
     height: auto;
+    margin-bottom: -34px;
 }
 
 form input {
     display: block;
+    color: black;
 }
 
 label {
     display: block;
-    font-family: 'Arial', sans-serif;
+    /* font-family: 'Arial', sans-serif; */
     font-size: 20px;
-    color: rgb(49, 189, 224);
+    color: rgb(4, 61, 126);
     font-weight: 700;
 }
 
 .styled-input option:first-child {
-    color: rgb(104, 243, 213);
+    color: #005a86;
 }
 
 select option {
-    background-color: #076e9d;
+    background-color: #0087cd;
     color: white;
+}
+
+h4 {
+    color: rgb(4, 61, 126);
 }
 
 .pqr-card-section-respuesta {
     width: 100%;
     flex-basis: 100%;
-    /* Esto rompe la línea en Flexbox */
     margin-top: 1rem;
 }
 
@@ -201,7 +208,7 @@ select option {
 
 .pqr-card-container .boton-enviar-respuesta {
     display: block;
-    margin: -30px auto 0;
+    margin: 4px auto 0;
     padding: 10px 20px;
     background-color: #030f54;
     color: white;
@@ -210,10 +217,63 @@ select option {
     cursor: pointer;
 }
 
+.detalle-respuesta-final {
+    overflow: hidden;
+    height: auto;
+    padding: 10px;
+}
+
+.styled-input.respuesta-final {
+    min-height: 187px;
+    overflow: auto;
+    resize: both;
+    margin-bottom: 0px;
+}
+
+.adjunto-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.pqr-card-container .remove-adjunto-button {
+    font-size: 9px;
+    height: 16px;
+    width: 16px;
+    margin-top: 4px;
+    margin-left: 27px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 4px 2px 4px 1px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.pqr-card-container .remove-adjunto-button:hover {
+    background-color: #c0392b;
+}
+
+.adjunto-item a {
+    color: rgb(7, 139, 148);
+}
+
+
 
 @media (min-width: 300px) and (max-width: 475px) {
+
+    .header-details-user div {
+        margin-top: -61px;
+    }
+
     .pqr-card-container {
         width: 80%;
-        top: 78%;
+        top: -18%;
+    }
+
+    .pqr-card-container h2 {
+        font-size: 25px;
     }
 }

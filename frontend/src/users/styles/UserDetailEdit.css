@@ -7,19 +7,19 @@
 
 .header-details-user div {
     float: left;
-    color: #fff;
+    color: #00933f;
     font-family: 'Exo', sans-serif;
     font-size: 42px;
     font-weight: 200;
 }
 
 .header-details-user div span {
-    color: #8dd9ff;
+    color: #0087cd;
 }
 
 .details-user {
     position: absolute;
-    top: calc(44% - 139px);
+    top: calc(35% - 139px);
     left: calc(50% - 50px);
     width: 350px;
     padding: 10px;
@@ -35,7 +35,7 @@
 /* Etiquetas (labels) */
 .details-user label {
     margin-bottom: 6px;
-    color: #fff;
+    color: #000000;
     font-family: 'Exo', sans-serif;
     font-size: 14px;
     font-weight: 400;
@@ -48,11 +48,11 @@
 .details-user select,
 .details-user p {
     width: 310px;
-    height: 50px;
+    height: auto;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid #00933f;
     border-radius: 2px;
-    color: #fff;
+    color: #020202;
     font-family: 'Exo', sans-serif;
     font-size: 16px;
     font-weight: 400;
@@ -67,23 +67,26 @@
 }
 
 .select-role option {
-    background-color: #076e9d;
+    background-color: #0087cd;
     color: white;
 }
+
 .select-role option[disabled] {
-  color: rgb(104, 243, 213); /* blanco */
-  opacity: 0.7; /* opcional, para que se vea deshabilitado */
+    color: rgb(104, 243, 213);
+    /* blanco */
+    opacity: 0.7;
+    /* opcional, para que se vea deshabilitado */
 }
 
 /* Botones */
 .details-user button {
     width: 310px;
     height: 40px;
-    background: #fff;
-    border: 1px solid #fff;
+    background: #00933f;
+    border: none;
     cursor: pointer;
     border-radius: 2px;
-    color: #a18d6c;
+    color: #ffffff;
     font-family: 'Exo', sans-serif;
     font-size: 16px;
     font-weight: 400;
@@ -93,6 +96,7 @@
 }
 
 .details-user button:hover {
+    background: #0087cd;
     opacity: 0.8;
 }
 
@@ -106,12 +110,12 @@
 .details-user select:focus,
 .details-user button:focus {
     outline: none;
-    border: 1px solid rgba(255, 255, 255, 0.9);
+    border: 1px solid #0087cd;
 }
 
 /* Errores */
 .error-message {
-    color: #1fecb9;
+    color: #f33535;
     font-size: 14px;
     margin-top: 5px;
     font-family: 'Exo', sans-serif;
@@ -133,5 +137,16 @@
         top: calc(58% - 139px);
         left: 50%;
         transform: translateX(-45%);
+    }
+}
+
+@media (min-width: 1366px) and (max-width: 1600px) {
+    .details-user {
+        position: absolute;
+        top: calc(42% - 139px);
+        left: calc(50% - 50px);
+        width: 350px;
+        padding: 10px;
+        z-index: 2;
     }
 }

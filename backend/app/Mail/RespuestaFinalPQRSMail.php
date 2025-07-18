@@ -7,6 +7,8 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Pqr;
 use App\Models\Respuesta;
+use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Envelope;
 
 class RespuestaFinalPQRSMail extends Mailable
 {
@@ -23,22 +25,28 @@ class RespuestaFinalPQRSMail extends Mailable
         $this->adjuntos = $adjuntos;
     }
 
-  public function build()
-{
-    $email = $this->subject('Respuesta a su PQRS')
-                  ->view('emails.respuesta_final_pqrs');
+    public function build()
+    {
+        $email = $this->subject('Respuesta a su PQRS')
+            ->view('emails.respuesta_final_pqrs');
 
-    foreach ($this->adjuntos as $adjunto) {
-        $storagePath = storage_path('app/public/' . $adjunto['path']);
+        foreach ($this->adjuntos as $adjunto) {
+            $storagePath = storage_path('app/public/' . $adjunto['path']);
 
-        if (file_exists($storagePath)) {
-            $email->attach($storagePath, [
-                'as'   => $adjunto['original_name'],
-                'mime' => mime_content_type($storagePath),
-            ]);
+            if (file_exists($storagePath)) {
+                $email->attach($storagePath, [
+                    'as'   => $adjunto['original_name'],
+                    'mime' => mime_content_type($storagePath),
+                ]);
+            }
         }
-    }
 
-    return $email;
-}
+        return $email;
+    }
+     public function envelope(): Envelope
+    {
+       return new Envelope(
+            from: new Address('info@passusips.com', 'Passus IPS'), // <-- ¡ESTA ES LA LÍNEA CLAVE!
+        );
+    }
 }

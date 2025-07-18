@@ -1,0 +1,449 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600&display=swap');
+
+
+/* -------------
+Main sidebar container
+----------------*/
+.pqrs-sidebar {
+    width: 21em;
+    /* Fixed width for the sidebar */
+    flex-shrink: 0;
+    /* Crucial to prevent shrinking in flexbox layouts */
+    height: auto;
+    /* Occupies full screen height (assuming parent .app-layout is 100vh) */
+    background-color: transparent;
+    backdrop-filter: blur(10px);
+    box-sizing: border-box;
+    /* Includes padding and border in the width/height */
+    color: rgba(255, 255, 255, 0.9);
+    overflow: hidden;
+    /* Prevents content from overflowing the main sidebar */
+    display: flex;
+    /* Uses flexbox to organize header and navigation */
+    flex-direction: column;
+    /* Stacks header and nav vertically */
+}
+
+.pqrs-sidebar header {
+    background-color: #00933f;
+    width: 100%;
+    padding: 0.75em 1em;
+    color: white;
+    font-weight: 600;
+    font-size: 1.5em;
+    text-align: center;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+}
+
+/* -------------
+Main navigation (menu container)
+----------------*/
+.sidebar-nav {
+    height: 100%;
+    /* O el alto que necesites */
+    background-color: #f5f5f5;
+    backdrop-filter: blur(2px);
+    /* Mismo desenfoque que el ejemplo */
+    -webkit-backdrop-filter: blur(2px);
+
+    border-right: 1px solid #00933f;
+    /* Borde tipo cristal */
+
+    position: relative;
+    z-index: 10;
+    /* font-family: 'Exo', sans-serif; */
+
+    overflow-y: auto;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Sombra similar */
+
+    flex-grow: 1;
+    font-weight: 600;
+    font-size: 1.2em;
+    padding-bottom: 1em;
+    scrollbar-width: thin;
+    scrollbar-color: #0087cd #19222a;
+    box-sizing: border-box;
+    color: white;
+    /* Asegura contraste sobre fondo translúcido */
+}
+
+
+
+/* Scrollbar style for Webkit (Chrome, Safari) */
+.sidebar-nav::-webkit-scrollbar {
+    width: 8px;
+    /* Scrollbar width */
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: #19222a;
+    /* Scrollbar track color */
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background-color: #0087cd;
+    /* Scrollbar thumb color */
+    border-radius: 10px;
+    border: 2px solid #19222a;
+    /* Small border to separate from track */
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav ul li {
+    width: 100%;
+    position: relative;
+}
+
+.sidebar-nav ul li a,
+.sidebar-nav ul li a:link,
+.sidebar-nav ul li a:visited {
+    color: rgba(0, 0, 0, 0.9);
+    font-size: 0.85em;
+    padding: 1em 1em;
+    display: flex;
+    align-items: center;
+    gap: 0.75em;
+    white-space: nowrap;
+    transition: all 0.2s ease-in-out;
+    box-sizing: border-box;
+    text-decoration: none;
+    margin-top: 14px;
+    background: #ffffff;
+    border: 1px solid #dfdfdf;
+    /* <- Borde sutil blanco translúcido */
+    border-radius: 6px;
+    /* Bordes redondeados */
+}
+
+.sidebar-nav ul li a:hover {
+    background-color: rgb(3, 66, 109);
+    color: #fff;
+}
+
+/* -------------
+Icons (Font Awesome / Ionicons)
+----------------*/
+.sidebar-nav ul li i {
+    font-size: 1.5em;
+    flex-shrink: 0;
+    color: #ff0000;
+}
+
+/* Styles for status names and counts */
+.sidebar-nav .status-name,
+.sidebar-nav .tiempo-status-name {
+    flex-grow: 1;
+    /* Allows the name to occupy available space */
+}
+
+.sidebar-nav .status-count,
+.sidebar-nav .tiempo-status-count {
+    font-weight: 700;
+    color: rgb(255, 255, 255);
+    background-color: rgba(245, 144, 13, 0.945);
+    padding: 0.2em 0.6em;
+    border-radius: 12px;
+    font-size: 0.8em;
+    min-width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+    margin-left: 0.5em;
+}
+
+.tiempo-status-item.vencida-sin-respuesta .tiempo-status-count {
+    color: #ffffff;
+    background-color: rgb(201, 2, 2);
+}
+
+/* Adjust to prevent count from overlapping arrow */
+.sidebar-nav>ul>li>a .status-count,
+.sidebar-nav>ul>li>a .tiempo-status-count {
+    margin-right: 20px;
+    /* Leave space for the arrow */
+}
+
+/* -------------
+Arrows for submenus (Font Awesome)
+----------------*/
+.sidebar-nav ul li a {
+    position: relative;
+}
+
+.sidebar-nav>ul>li>a:after {
+    content: '\f105';
+      /* font-family: Arial, Helvetica, sans-serif; */
+    font-weight: 900;
+    font-size: 0.8em;
+    color: rgba(255, 255, 255, 0.6);
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.2s ease-in-out;
+    line-height: 1;
+    /* asegura altura estable */
+    pointer-events: none;
+}
+
+
+.sidebar-nav ul>li:hover>a:after {
+    transform: translateY(-50%) rotate(90deg);
+    /* Rota la flecha hacia abajo */
+}
+
+.pqrs-sidebar:not(:hover) .sidebar-nav>ul>li>a:after {
+    display: none;
+}
+
+/* -------------
+Dropdown Submenus (Nav-Flyout)
+----------------*/
+.sidebar-nav .nav-flyout {
+    /* --- KEY CHANGES FOR DROPDOWN --- */
+    position: relative;
+    /* Position relative to parent list item */
+    left: 0;
+    /* Align to the left of the parent */
+    top: 0;
+    /* Position below the parent item (adjust with margin-top if needed) */
+    width: 100%;
+    /* Take full width of the parent menu item */
+    max-height: 0;
+    /* Start hidden */
+    overflow: hidden;
+    /* Hide content that overflows */
+    transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+    /* Smooth transition */
+    padding: 0;
+    /* No padding when collapsed */
+
+    background-color: #085e5e27;
+    /* Darker background for the submenu */
+    z-index: 100;
+    /* Ensure it's above other content */
+    box-shadow: none;
+    /* No side shadow for dropdown */
+    box-sizing: border-box;
+    /* Includes padding in the width/height */
+}
+
+/* Style of scrollbar for Webkit in submenus (only appears if max-height is not 0 and content overflows) */
+.sidebar-nav .nav-flyout::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar-nav .nav-flyout::-webkit-scrollbar-track {
+    background: #110808;
+}
+
+.sidebar-nav .nav-flyout::-webkit-scrollbar-thumb {
+    background-color: #0087cd;
+    border-radius: 10px;
+    border: 2px solid #080D11;
+}
+
+.sidebar-nav .nav-flyout a {
+    padding: 0.7em 1em;
+    /* More compact padding for submenu items */
+    font-size: 0.8em;
+    /* Slightly smaller text in the submenu */
+    color: rgba(255, 255, 255, 0.7);
+    /* More subdued text color */
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    /* Reduced space between icon and text */
+}
+
+.sidebar-nav .nav-flyout a:hover {
+    background-color: rgb(3, 66, 109);
+    /* More noticeable hover */
+    color: #fff;
+}
+
+.sidebar-nav .nav-flyout a i {
+    font-size: 1em;
+    /* Smaller icons in the submenu */
+    color: rgba(255, 255, 255, 0.5);
+    /* More subdued icon color */
+}
+
+/* -------------
+Hover: Show the Nav-Flyout (Dropdown)
+----------------*/
+.sidebar-nav ul>li:hover>.nav-flyout {
+    max-height: none;
+    padding: 0.5em 0;
+    overflow-y: visible;
+}
+
+
+.tiempo-status-item.a-tiempo .tiempo-status-count {
+    color: #00ff00;
+    /* Green for "A tiempo" */
+    background-color: rgba(0, 255, 0, 0.2);
+}
+
+.tiempo-status-item.vencido .tiempo-status-count {
+    color: #ff0000;
+    /* Red for "Vencido" */
+    background-color: rgba(255, 0, 0, 0.2);
+}
+
+
+
+.pqrs-sidebar {
+    width: 4.5em;
+    /* Sidebar reducido para mostrar solo iconos */
+    transition: width 0.3s ease;
+    overflow-x: hidden;
+    /* Oculta el contenido horizontal cuando está cerrado */
+}
+
+.pqrs-sidebar:hover {
+    width: 21em;
+    /* Ancho completo al pasar mouse */
+    overflow-x: visible;
+}
+
+/* Ocultar texto en el sidebar reducido */
+.pqrs-sidebar:not(:hover) .status-name,
+.pqrs-sidebar:not(:hover) .tiempo-status-name,
+.pqrs-sidebar:not(:hover) header span,
+.pqrs-sidebar:not(:hover) .sidebar-nav ul li a span:not(.status-count):not(.tiempo-status-count) {
+    display: none;
+}
+
+.pqrs-sidebar:not(:hover) .header-text {
+    display: none;
+}
+
+/* Ajustar padding y centrar iconos en sidebar cerrado */
+.pqrs-sidebar:not(:hover) .sidebar-nav ul li a {
+    justify-content: center;
+    padding: 1em 0;
+}
+
+/* Asegurarse que los iconos estén centrados en el sidebar reducido */
+.pqrs-sidebar:not(:hover) .sidebar-nav ul li i {
+    margin: 0 auto;
+}
+
+/* Ajustar posición de los counts en sidebar cerrado */
+.pqrs-sidebar:not(:hover) .tiempo-status-count {
+    position: absolute;
+    top: 34px;
+    right: -6px;
+    font-size: 9px;
+    padding: 0.1em 0.4em;
+    height: 12px;
+}
+
+/* Opcional: Ajustar header para que no muestre texto cuando está cerrado */
+.pqrs-sidebar:not(:hover) header span {
+    display: none;
+}
+
+
+/* Media Queries (adjustments for smaller screens) */
+@media (max-width: 768px) {
+    .pqrs-sidebar {
+        width: 65px;
+        height: auto;
+    }
+
+    .pqrs-sidebar header {
+        padding: 0.5em 0.2em;
+        font-size: 1.1em;
+    }
+
+    /* .pqrs-sidebar header span {
+        display: none;
+    } */
+
+    /* .sidebar-nav ul li span:not(.status-count):not(.tiempo-status-count) {
+        display: none;
+    } */
+    .sidebar-nav .nav-flyout a {
+        margin-right: 61px;
+    }
+
+    .sidebar-nav ul li i {
+        padding-right: 0;
+        display: block;
+        text-align: center;
+        margin: 0 auto;
+    }
+
+    .sidebar-nav ul li a {
+        padding: 1em 0.2em;
+        /* Adjusted padding */
+        justify-content: center;
+        /* Center icons */
+    }
+
+    .sidebar-nav .status-count,
+    .sidebar-nav .tiempo-status-count {
+        position: absolute;
+        top: 13px;
+        right: 5px;
+        font-size: 10px;
+        padding: 0.1em 0.4em;
+    }
+
+    .sidebar-nav>ul>li>a:after {
+        display: none;
+        /* Hide submenu arrows on mobile */
+    }
+
+    .sidebar-nav .nav-flyout {
+        /* --- KEY CHANGES FOR DROPDOWN IN MOBILE --- */
+        position: relative;
+        /* Still relative */
+        left: 0;
+        /* Stay aligned to the left of the parent */
+        max-width: 100%;
+        /* Take full width of the parent (now 65px) */
+        height: auto;
+        /* Let content define height */
+        top: auto;
+        /* Don't force top: 0 */
+        box-shadow: none;
+        /* No side shadow */
+        transition: max-height 0.3s ease-in-out;
+        /* Transition for height */
+    }
+
+    .sidebar-nav ul>li:hover>.nav-flyout {
+        transform: none;
+        /* No horizontal transform */
+        max-height: 200px;
+        /* Adjust as needed */
+        padding: 0.5em 0;
+        /* Apply padding when open */
+    }
+}
+
+/* Adjustments for even smaller screens (e.g., smartphones) */
+@media (max-width: 480px) {
+    .pqrs-sidebar {
+        width: 55px;
+        height: auto;
+    }
+
+    .sidebar-nav .nav-flyout {
+        max-width: 100%;
+        /* Still full width of parent */
+    }
+}

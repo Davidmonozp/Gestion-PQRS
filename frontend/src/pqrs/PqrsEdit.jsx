@@ -14,10 +14,10 @@ const atributos = [
 
 const fuentes = [
   "Formulario de la web",
-  "correo atención al usuario",
+  "Correo atención al usuario",
   "Correo de Agendamiento NAC",
   "Encuesta de satisfacción IPS",
-  "callcenter",
+  "Callcenter",
   "Presencial",
 ];
 

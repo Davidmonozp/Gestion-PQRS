@@ -1,0 +1,124 @@
+.pqrs-container-pqrs {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.inicio-container {
+    text-align: center;
+    padding: 40px;
+    background-color: #f9f9f9;
+}
+
+.inicio-title {
+    margin-bottom: 30px;
+    font-size: 2rem;
+    color: #8dd9ff;
+}
+
+.card-icon {
+    font-size: 3.5rem;
+    color: #24dfec;
+    margin-bottom: 10px;
+}
+
+.card-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.card-inicio-pqr {
+    background-color: rgb(2, 49, 110);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    width: 280px;
+    height: 197px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-inicio-pqr:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    background-color: rgb(2, 29, 65);
+}
+
+
+.card h2 {
+    color: #2c3e50;
+}
+
+.card p {
+    color: #666;
+    margin: 15px 0;
+}
+
+.card-button {
+    text-decoration: none;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.card-button:hover {
+    background-color: #0056b3;
+}
+
+.card-inicio-radicado {
+    background-color: rgb(2, 49, 110);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    width: 697px;
+    height: 250px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 77px;
+}
+
+.card-inicio-radicado:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    background-color: rgb(2, 29, 65);
+}
+
+.card-inicio-radicado p{
+    font-size: 15px;
+}
+
+.card-input {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    padding: 8px 12px;
+    width: 80%;
+    border: 1px solid #1e84be;
+    border-radius: 4px;
+    background-color: rgba(12, 100, 96, 0);
+    color: white;
+    /* font-family: 'Exo', sans-serif; */
+    font-size: 15px;
+}

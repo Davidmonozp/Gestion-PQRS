@@ -14,7 +14,9 @@ class Pqr extends Model
         // 📌 Datos del solicitante
         'pqr_codigo',
         'nombre',
+        'segundo_nombre',
         'apellido',
+        'segundo_apellido',
         'documento_tipo',
         'documento_numero',
         'correo',
@@ -29,11 +31,14 @@ class Pqr extends Model
         'atributo_calidad',
         'fuente',
         'asignado_a',
+        'fecha_inicio_real',
 
         // ✅ Datos del registrador
         'registra_otro',
         'registrador_nombre',
+        'registrador_segundo_nombre',
         'registrador_apellido',
+        'registrador_segundo_apellido',
         'registrador_documento_tipo',
         'registrador_documento_numero',
         'registrador_correo',
@@ -101,25 +106,32 @@ class Pqr extends Model
 
     public function getDeadlineCiudadanoAttribute()
     {
-        if (!$this->created_at || !$this->prioridad) return null;
+        if (!$this->prioridad) {
+            return null;
+        }
 
-        $created = Carbon::parse($this->created_at);
+        // Usar fecha_inicio_real si existe, sino created_at
+        $base = $this->fecha_inicio_real
+            ? Carbon::parse($this->fecha_inicio_real)
+            : Carbon::parse($this->created_at);
+
         $hours = match ($this->prioridad) {
-            'Vital' => 24,
+            'Vital'      => 24,
             'Priorizado' => 48,
-            'Simple' => 72,
-            'Solicitud' => 48,
-            default => 24
+            'Simple'     => 72,
+            'Solicitud'  => 48,
+            default      => 24,
         };
 
-        return $created->copy()->addHours($hours)->toDateTimeString();
+        return $base->copy()->addHours($hours)->toDateTimeString();
     }
+
 
     protected $appends = [
         'deadline_ciudadano',
     ];
 
-     public function seguimientos()
+    public function seguimientos()
     {
         return $this->hasMany(PqrSeguimiento::class);
     }

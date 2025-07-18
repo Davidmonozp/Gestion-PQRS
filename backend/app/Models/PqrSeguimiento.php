@@ -9,7 +9,7 @@ class PqrSeguimiento extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['pqr_id', 'user_id', 'descripcion'];
+    protected $fillable = ['pqr_id', 'user_id', 'descripcion', 'tipo_seguimiento'];
 
     public function pqr()
     {

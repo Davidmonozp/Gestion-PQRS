@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react"; // Ensure useMemo is imported
 import { useParams, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -13,9 +13,10 @@ const UserDetailEdit = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-  // Nuevo estado para controlar la visibilidad de los campos de contraseña
   const [showPasswordFields, setShowPasswordFields] = useState(false);
 
+  // --- Constants for roles, areas, cargos, sedes ---
+  // These can be defined at the top of the component as they don't depend on formik.
   const availableRoles = [
     { id: 1, name: "Administrador" },
     { id: 2, name: "Consultor" },
@@ -23,20 +24,134 @@ const UserDetailEdit = () => {
     { id: 4, name: "Gestor" },
     { id: 5, name: "Digitador" },
   ];
+  const areas = [
+    { id: 1, name: "Bienestar" },
+    { id: 2, name: "Administrativa" },
+    { id: 3, name: "Financiera" },
+    { id: 4, name: "Automatización Y Desarrollo Tecnológico" },
+    { id: 5, name: "Calidad Y Mejoramiento Continuo" },
+    { id: 7, name: "Prestación De Servicio" },
+    { id: 8, name: "Prestación De Servicio - Aseguramiento Misional" },
+    { id: 10, name: "Gestión Del Riesgo - Operaciones Misionales" },
+    { id: 12, name: "Gestión Del Riesgo - Atención Al Usuario" },
+    { id: 13, name: "Gestión Del Riesgo - Agendamiento" },
+    { id: 16, name: "Gestión Del Riesgo - Supervisores" },
+    { id: 18, name: "Administrativa - Servicios Y Compras" },
+    { id: 19, name: "Administrativa - Infraestructura" },
+    { id: 20, name: "Administrativa - Oficios Varios" },
+    { id: 21, name: "Financiera - Contabilidad" },
+    { id: 24, name: "Prestación De Servicio - Analista De Modelo" },
+    { id: 25, name: "Prestación De Servicio - Gestores" },
+    { id: 26, name: "Auxiliar De Enfermería De Agencia Nivel 2" },
+    { id: 26, name: "Auxiliar De Enfermería De Agencia Nivel 1" },
+    { id: 27, name: "Educador Especial" },
+    { id: 27, name: "Fisioterapeuta" },
+    { id: 27, name: "Fonoaudiologa" },
+    { id: 27, name: "Terapia Ocupacional" },
+    { id: 27, name: "Psicologo" },
+    { id: 27, name: "Especialista En Pediatria" },
+    { id: 27, name: "Fisiatria" },
+    { id: 28, name: "Auxiliar De Apoyo Básico" },
+    {
+      id: 29,
+      name: "Profesional Junior En Gestión Documental Y Mapa De Procesos",
+    },
+  ];
+  const cargos = [
+    { areaId: 1, name: "Anfitrión Salvavidas" },
+    { areaId: 1, name: "Profesional En Bienestar" },
+    { areaId: 1, name: "Salvavidas" },
+    { areaId: 1, name: "Instructor De Natacion" },
+    { areaId: 2, name: "Asistente Gestión Talento Humano Y SST" },
+    { areaId: 2, name: "Director De Gestión Administrativa Y Contable" },
+    { areaId: 2, name: "Profesional En Gestión Del Talento Humano Y SST" },
+    { areaId: 2, name: "Profesional Junior En Mercadeo Y Publicidad" },
+    { areaId: 3, name: "Analista De Admisiones Y Prefacturación" },
+    { areaId: 3, name: "Auxiliar Gestión Facturación Y Cartera" },
+    { areaId: 3, name: "Profesional Analista En Facturación Y Cartera" },
+    { areaId: 4, name: "Director De Automatización Y Desarrollo Tecnológico" },
+    {
+      areaId: 4,
+      name: "Profesional Especializado En Automatización Y Análisis De Datos",
+    },
+    {
+      areaId: 4,
+      name: "Profesional Junior En Automatización Y Desarrollo Tecnológico",
+    },
+    { areaId: 4, name: "Auxiliar De Automatización Y Desarrollo Tecnologico" },
+    {
+      areaId: 5,
+      name: "Profesional De Aseguramiento De La Calidad En Salud Y PAMEC",
+    },
+    {
+      areaId: 7,
+      name: "Subgerente Relacionamiento Y Fidelización Del Paciente",
+    },
+    { areaId: 7, name: "Aprendiz Sena En Entrenamiento Deportivo" },
+    { areaId: 7, name: "Aprendiz Sena En Atencion A La Primera Infancia" },
+    {
+      areaId: 8,
+      name: "Gerente De Prestación De Servicios Y Aseguramiento Misional",
+    },
+    { areaId: 10, name: "Subgerente Operaciones Misionales" },
+    { areaId: 12, name: "Auxiliar De Admisiones Y Caja Nivel 1" },
+    { areaId: 12, name: "Auxiliar De Admisiones Y Caja Nivel 2" },
+    { areaId: 12, name: "Auxiliar De Admisiones Y Caja Nivel 3" },
+    { areaId: 13, name: "Auxiliar Operativo Y Soporte Misional" },
+    { areaId: 16, name: "Supervisor Administrativo De Agencia" },
+    {
+      areaId: 18,
+      name: "Profesional En Gestión Logística, Compras E Inventarios",
+    },
+    { areaId: 19, name: "Auxiliar De Mantenimiento Y Oficios Varios" },
+    {
+      areaId: 19,
+      name: "Profesional De Infraestructura Y Ambiente Físico Junior",
+    },
+    { areaId: 20, name: "Auxiliar De Apoyo Oficios Varios" },
+    { areaId: 21, name: "Auxiliar Gestión Contable" },
+    {
+      areaId: 24,
+      name: "Profesional Analista De Modelo De Atención Y Seguridad Del Paciente",
+    },
+    { areaId: 25, name: "Gestor Administrativo De Agencia" },
+    { areaId: 26, name: "Auxiliar De Enfermería De Agencia Nivel 2" },
+    { areaId: 26, name: "Auxiliar De Enfermería De Agencia Nivel 1" },
+    { areaId: 27, name: "Educador Especial" },
+    { areaId: 27, name: "Fisioterapeuta" },
+    { areaId: 27, name: "Fonoaudiologa" },
+    { areaId: 27, name: "Terapia Ocupacional" },
+    { areaId: 27, name: "Psicologo" },
+    { areaId: 27, name: "Especialista En Pediatria" },
+    { areaId: 27, name: "Fisiatria" },
+    { areaId: 28, name: "Auxiliar De Apoyo Básico" },
+    {
+      areaId: 29,
+      name: "Profesional Junior En Gestión Documental Y Mapa De Procesos",
+    },
+  ];
+  const sedes = [
+    { id: 1, name: "Bogota-Sur-Occidente-Rehabilitación" },
+    { id: 2, name: "Bogota-Sur-Occidente-Hidroterapia" },
+    { id: 3, name: "Bogota-Norte-Hidroterapia" },
+    { id: 4, name: "Bogota-Centro-Hidroterapia" },
+    { id: 5, name: "Chia-Rehabilitacion" },
+    { id: 6, name: "Florencia-Hidroterapia-Rehabilitacion" },
+    { id: 7, name: "Ibague-Hidroterapia-Rehabilitacion" },
+  ];
 
+  // --- Formik Definition (MUST come before useMemo hooks that depend on it) ---
   const formik = useFormik({
     initialValues: {
       name: "",
       email: "",
       role: "",
-      password: "", // Añadir campos de contraseña
-      confirmPassword: "", // Añadir campos de contraseña
+      password: "",
+      confirmPassword: "",
       cargo: "",
       area: "",
       sede: "",
     },
-    // enableReinitialize: true es útil aquí para que el formulario se actualice
-    // cuando el usuario se carga inicialmente.
     enableReinitialize: true,
     validationSchema: Yup.object({
       name: Yup.string().required("El nombre es obligatorio"),
@@ -44,16 +159,15 @@ const UserDetailEdit = () => {
         .email("Correo inválido")
         .required("El correo es obligatorio"),
       role: Yup.string().required("El rol es obligatorio"),
-      // Validación condicional para contraseña
       password: Yup.string()
         .min(6, "La contraseña debe tener al menos 6 caracteres")
-        .nullable(), // Permite que sea nulo si no se va a cambiar
+        .nullable(),
       confirmPassword: Yup.string().when("password", {
-        is: (val) => !!val, // Si hay un valor en 'password'...
+        is: (val) => !!val,
         then: (schema) =>
           schema
-            .required("Confirma la contraseña") // ...entonces 'confirmPassword' es requerido
-            .oneOf([Yup.ref("password")], "Las contraseñas no coinciden"), // y debe coincidir con 'password'
+            .required("Confirma la contraseña")
+            .oneOf([Yup.ref("password")], "Las contraseñas no coinciden"),
       }),
       cargo: Yup.string().required("El cargo es obligatorio"),
       area: Yup.string().required("El área es obligatoria"),
@@ -102,15 +216,34 @@ const UserDetailEdit = () => {
           showConfirmButton: false,
         });
       } catch (error) {
-        console.error("Error al actualizar:", error);
+        console.error(
+          "Error al actualizar:",
+          error.response?.data || error.message
+        );
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: "No se pudo actualizar el usuario",
+          text: `No se pudo actualizar el usuario: ${
+            error.response?.data?.message || error.message
+          }`,
         });
       }
     },
   });
+
+  // --- useMemo Hooks (MUST come AFTER formik definition) ---
+  const selectedAreaObject = useMemo(() => {
+    // This now safely accesses formik.values.area because formik is defined.
+    return areas.find((area) => area.name === formik.values.area);
+  }, [formik.values.area, areas]); // Dependencies are correct
+
+  const filteredCargos = useMemo(() => {
+    if (selectedAreaObject) {
+      return cargos.filter((cargo) => cargo.areaId === selectedAreaObject.id);
+    }
+    return [];
+  }, [selectedAreaObject, cargos]); // Dependencies are correct
+  // --- End of useMemo hooks ---
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -122,9 +255,9 @@ const UserDetailEdit = () => {
         formik.setValues({
           name: data.name,
           email: data.email,
-          role: data.roles[0]?.name || "", // Asumiendo un solo rol
-          password: "", // Asegurarse de que estos campos estén vacíos al cargar
-          confirmPassword: "", // Asegurarse de que estos campos estén vacíos al cargar
+          role: data.roles[0]?.name || "",
+          password: "",
+          confirmPassword: "",
           cargo: data.cargo || "",
           area: data.area || "",
           sede: data.sede || "",
@@ -141,11 +274,8 @@ const UserDetailEdit = () => {
       }
     };
 
-    // Llamamos a fetchUser al montar y cuando el ID cambia
-    // Incluir formik.setValues en las dependencias para evitar advertencias de React Hook
-    // aunque en este caso específico, el ID es la dependencia principal para la recarga de datos.
     fetchUser();
-  }, [id, navigate, formik.setValues]);
+  }, [id, navigate, formik.setValues]); // formik.setValues is a stable function provided by Formik, so it's safe here.
 
   if (loading) return <p>Cargando...</p>;
   if (!user) return <p>Usuario no encontrado</p>;
@@ -231,38 +361,31 @@ const UserDetailEdit = () => {
               <div className="text-danger">{formik.errors.role}</div>
             )}
           </div>
-          {/* Campo Cargo */}
-          <div>
-            <label htmlFor="cargo">Cargo:</label>
-            {editMode ? (
-              <input
-                type="text"
-                id="cargo"
-                name="cargo"
-                value={formik.values.cargo}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-              />
-            ) : (
-              <p>{user.cargo}</p>
-            )}
-            {formik.touched.cargo && formik.errors.cargo && (
-              <div className="text-danger">{formik.errors.cargo}</div>
-            )}
-          </div>
 
           {/* Campo Área */}
           <div>
             <label htmlFor="area">Área:</label>
             {editMode ? (
-              <input
-                type="text"
+              <select
                 id="area"
                 name="area"
                 value={formik.values.area}
-                onChange={formik.handleChange}
+                onChange={(e) => {
+                  formik.handleChange(e);
+                  formik.setFieldValue("cargo", ""); // Reset cargo when area changes
+                }}
                 onBlur={formik.handleBlur}
-              />
+                className="select-role"
+              >
+                <option value="" disabled>
+                  Selecciona un área
+                </option>
+                {areas.map((area) => (
+                  <option key={area.id} value={area.name}>
+                    {area.name}
+                  </option>
+                ))}
+              </select>
             ) : (
               <p>{user.area}</p>
             )}
@@ -271,18 +394,59 @@ const UserDetailEdit = () => {
             )}
           </div>
 
+          {/* Campo Cargo */}
+          <div>
+            <label htmlFor="cargo">Cargo:</label>
+            {editMode ? (
+              <select
+                id="cargo"
+                name="cargo"
+                value={formik.values.cargo}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                className="select-role"
+                disabled={!formik.values.area}
+              >
+                <option value="" disabled>
+                  {formik.values.area
+                    ? "Selecciona un cargo"
+                    : "Selecciona un área primero"}
+                </option>
+                {filteredCargos.map((cargo) => (
+                  <option key={cargo.name} value={cargo.name}>
+                    {cargo.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p>{user.cargo}</p>
+            )}
+            {formik.touched.cargo && formik.errors.cargo && (
+              <div className="text-danger">{formik.errors.cargo}</div>
+            )}
+          </div>
+
           {/* Campo Sede */}
           <div>
             <label htmlFor="sede">Sede:</label>
             {editMode ? (
-              <input
-                type="text"
+              <select
                 id="sede"
                 name="sede"
                 value={formik.values.sede}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-              />
+                className="select-role"
+              >
+                <option value="" disabled>
+                  Selecciona una sede
+                </option>
+                {sedes.map((sede) => (
+                  <option key={sede.id} value={sede.name}>
+                    {sede.name}
+                  </option>
+                ))}
+              </select>
             ) : (
               <p>{user.sede}</p>
             )}
@@ -291,7 +455,9 @@ const UserDetailEdit = () => {
             )}
           </div>
 
-          {/* Botón para cambiar contraseña (visible en modo edición, si los campos no están visibles) */}
+          {/* ... (rest of your component remains the same) ... */}
+
+          {/* Botón para cambiar contraseña (visible en modo edición, si los campos no están visible) */}
           {editMode && !showPasswordFields && (
             <div>
               <button
@@ -352,19 +518,18 @@ const UserDetailEdit = () => {
                 type="button"
                 className="btn btn-secondary"
                 onClick={() => {
-                  // Al cancelar, restablece los valores del formulario a los datos originales
                   formik.setValues({
                     name: user.name,
                     email: user.email,
                     role: user.roles[0]?.name || "",
-                    password: "", // Asegurarse de limpiar las contraseñas al cancelar
-                    confirmPassword: "", // Asegurarse de limpiar las contraseñas al cancelar
+                    password: "",
+                    confirmPassword: "",
                     cargo: user.cargo || "",
                     area: user.area || "",
                     sede: user.sede || "",
                   });
-                  setEditMode(false); // Sale del modo de edición
-                  setShowPasswordFields(false); // Oculta los campos de contraseña
+                  setEditMode(false);
+                  setShowPasswordFields(false);
                 }}
               >
                 Cancelar
