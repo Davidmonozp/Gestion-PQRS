@@ -15,9 +15,12 @@
     margin-bottom: 20px;
 }
 
+.header-top h2 {
+    font-size: 25px;
+}
+
 h2 {
     color: #0087cd;
-    font-size: 30px;
 }
 
 .container-table {
@@ -38,7 +41,7 @@ table {
     border-collapse: collapse;
     overflow: hidden;
     box-shadow: 0 0 20px transparent;
-    /* border: 1px solid #0087cd */
+    border: 1px solid #0087cd
 }
 
 th,
@@ -77,7 +80,7 @@ tbody td:hover::before {
 
 .icono-ver {
     color: #0087cd;
-    margin-left: 8px;
+    /* margin-left: 8px; */
 }
 
 .icono-ver:hover {
@@ -100,7 +103,7 @@ tbody td:hover::before {
     border: 1px solid rgba(0, 0, 0, 0.6);
     border-radius: 2px;
     color: #000000;
-    /* font-family: 'Exo', sans-serif; */
+    font-family: 'Exo', sans-serif;
     font-size: 16px;
     font-weight: 400;
     padding: 8px;
@@ -109,23 +112,21 @@ tbody td:hover::before {
 
 
 .filtros-busqueda button {
-    height: 30px;
-    padding: 6px 12px;
-    /* font-family: 'Exo', sans-serif; */
-    background-color: #00933f;
+    height: 42px;
+    padding: 6px 6px;
+    font-family: 'Exo', sans-serif;
+    background-color: #0087cd;
     color: white;
     border: none;
     cursor: pointer;
-    border-radius: 5px;
-
-    width: 100%;
-    max-width: 200px;
-    margin-top: 10px;
+    width: 3%;
+    /* max-width: 155px; */
+    margin-top: -10px;
     align-self: center;
 }
 
 .filtros-busqueda button:hover {
-    background: #0087cd;
+    background: #006091;
 }
 
 
@@ -153,25 +154,30 @@ tbody td:hover::before {
 
 /* FIN PAGINACION */
 
-@media (max-width: 834px) {
-
-    th,
-    td {
-        padding: 8px 10px;
-        font-size: 14px;
-    }
+.cabecera {
+    height: auto;
 }
 
-@media (min-width: 671px) and (max-width: 893px) {
-    .filtros-busqueda button {
-        margin-top: 1px;
-    }
+.cabecera h2 {
+    font-size: 25px;
 }
 
+/* ESTILOS ICONO RESPUESTA PRELIMINAR */
 
 
+.pqr-status-icon {
+    font-size: 1.5em;
+}
 
+.process-icon {
+    color: #05994fff;
+}
 
+.not-process-icon {
+    color: #ec1111ff;
+}
+
+/* FIN ESTILOS ICONO RESPUESTA PRELIMINAR */
 
 
 
@@ -208,15 +214,17 @@ tbody td:hover::before {
     min-width: 600px;
     border-collapse: collapse;
     background: #dbedf8fb;
+    border: 1px solid #00933f;
 }
 
 .container-table th,
 .container-table td {
-    /* border: 1px solid #e2e2e2; */
+    border: 1px solid #00933f;
     /* Bordes internos de celdas */
     padding: 8px;
-    text-align: left;
+    text-align: center;
 }
+
 
 .table-wrapper {
     width: 100%;
@@ -229,7 +237,7 @@ table {
     border-collapse: collapse;
     overflow: hidden;
     box-shadow: 0 0 20px transparent;
-    /* border: 1px solid white; */
+    border: 1px solid white;
 }
 
 th,
@@ -292,7 +300,7 @@ tbody td:hover::before {
     display: block;
     text-decoration: none;
     color: #ffffff;
-    margin-top: -1px;
+    margin-top: -3px;
 }
 
 .numero:hover,

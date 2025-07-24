@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ClasificacionController;
 use App\Http\Controllers\Api\PlantillaRespuestaController;
 use App\Http\Controllers\Api\PqrController;
 use App\Http\Controllers\Api\RespuestaController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UsuarioRespuestaController;
 use App\Http\Controllers\Api\FelicitacionController;
 use App\Http\Controllers\Api\PqrAlertaController;
+use App\Http\Controllers\EncuestaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +28,8 @@ Route::post('/respuesta-usuario/{token}', [UsuarioRespuestaController::class, 'g
 Route::post('/felicitaciones', [FelicitacionController::class, 'store']);
 Route::get('/pqrs/alertas-tiempo', [PqrAlertaController::class, 'alertas']);
 Route::post('/pqrs/consultar-radicado', [PqrController::class, 'consultarRadicado']);
+Route::post('/encuesta', [EncuestaController::class, 'store']);
+
 
 
 
@@ -41,11 +45,14 @@ Route::middleware(['auth:api', 'check.role:Administrador,Supervisor,Gestor,Consu
     // Rutas de visualización de PQRS (solo roles autorizados pueden ver la lista o detalles)
     Route::get('pqrs', [PqrController::class, 'index']);
     Route::get('pqrs/codigo/{pqr_codigo}', [PqrController::class, 'show']);
+    Route::get('/clasificaciones', [ClasificacionController::class, 'index']);
+    Route::get('/pqrs/estado', [PqrController::class, 'filtros_estado_respuesta'])->middleware('auth:api');
 });
 
 // RUTAS PROTEGIDAS QUE ACTUALIZAN LA PQRS
 Route::middleware(['auth:api', 'check.role:Administrador,Gestor,Supervisor'])->group(function () {
     Route::put('pqrs/codigo/{pqr_codigo}', [PqrController::class, 'update']);
+    Route::post('/pqrs/{pqr}/agregar-clasificacion', [ClasificacionController::class, 'agregarClasificacion']);
 });
 
 

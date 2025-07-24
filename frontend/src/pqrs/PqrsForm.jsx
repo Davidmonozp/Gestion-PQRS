@@ -76,8 +76,11 @@ const serviciosPorSede = {
     "Psiquiatría",
     "Fisiatría",
   ],
-  "Bogota-Sur-Occidente-Hidroterapia": ["Hidroterapia", "Valoración por fisioterapia telemedicina"],
-  "Ibague": [
+  "Bogota-Sur-Occidente-Hidroterapia": [
+    "Hidroterapia",
+    "Valoración por fisioterapia telemedicina",
+  ],
+  Ibague: [
     "Hidroterapia",
     "Valoración por fisioterapia telemedicina ",
     "Programa de Rehabilitación",
@@ -85,8 +88,8 @@ const serviciosPorSede = {
     "Psiquiatría",
     "Fisiatría",
   ],
-  "Chia": ["Programa de Rehabilitación", "Neuropediatría", "Psiquiatría"],
-  "Florencia": [
+  Chia: ["Programa de Rehabilitación", "Neuropediatría", "Psiquiatría"],
+  Florencia: [
     "Programa de Rehabilitación",
     "Hidroterapía",
     "Valoración por fisioterapia telemedicina",
@@ -119,17 +122,17 @@ const tipoSolicitudDescriptions = {
   Peticion: {
     title: "Petición",
     description:
-      " Recuerde que una petición es una solicitud de información o servicio. Por ejemplo, es el derecho que tiene todo usuario a solicitar información, documentos, servicios o atención en salud. También puede ser una solicitud para que se tomen decisiones o se actúe frente a un asunto específico.",
+      "Requerimiento a través de la cual una persona por motivos de interés general o particular solicita la intervención de la entidad para la resolución de una situación, la prestación de un servicio, la información o requerimiento de copia de documentos, entre otros. (Derecho de Petición).",
   },
   Queja: {
     title: "Queja",
     description:
-      "Recuerde que una queja es la manifestación de su inconformidad o malestar frente a algo que ocurrió durante su atención, como el trato del personal, demoras, mal servicio o cualquier situación que no le pareció adecuada.",
+      "Es la manifestación de una inconformidad presentada respecto a los servicios recibidos tales como el trato por parte de los trabajadores y profesionales de la salud, condiciones físicas del entorno, o deficiencias en la atención.",
   },
   Reclamo: {
     title: "Reclamo",
     description:
-      "Recuerde que un reclamo es cuando usted desea que se corrija una situación o se dé una solución concreta. Por ejemplo, si considera que hubo un cobro indebido, no recibió el servicio como se acordó o hubo un incumplimiento por parte de la IPS. ",
+      "Es la exigencia formal que se presenta ante una irregularidad, incumplimiento o afectación directa en la prestación del servicio de salud, que requiere respuesta, corrección, o compensación.",
   },
 };
 
@@ -429,7 +432,8 @@ function PqrsForm({
         Swal.fire({
           icon: "success",
           title: "¡PQR enviada!",
-          text: "Tu PQRS ha sido enviada con éxito.",
+          html: `Tu PQRS ha sido enviada con éxito.<br />
+          El número de radicado será enviado al correo <strong>${form.correo}</strong>.`,
           confirmButtonColor: "#3085d6",
         });
       }
@@ -727,7 +731,7 @@ function PqrsForm({
               onBlur={handleBlur}
               required
             />
-            <label htmlFor="nombre">Nombre</label>
+            <label htmlFor="nombre">Primer nombre</label>
             {errors.nombre && <p className="error">{errors.nombre}</p>}
           </div>
 
@@ -755,7 +759,7 @@ function PqrsForm({
               onBlur={handleBlur}
               required
             />
-            <label htmlFor="apellido">Apellido</label>
+            <label htmlFor="apellido">Primer apellido</label>
             {errors.apellido && <p className="error">{errors.apellido}</p>}
           </div>
 
@@ -952,7 +956,7 @@ function PqrsForm({
                 </option>
               ))}
             </select>
-            <label htmlFor="eps">Entidad</label>
+            <label htmlFor="eps">Asegurador (EPS-ARL)</label>
             {errors.eps && <p className="error">{errors.eps}</p>}
           </div>
 

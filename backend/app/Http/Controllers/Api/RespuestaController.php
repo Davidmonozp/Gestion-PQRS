@@ -237,6 +237,8 @@ class RespuestaController extends Controller
 
         // Pasa los adjuntos al Mailable
         Mail::to($pqr->correo)->send(new RespuestaFinalPQRSMail($pqr, $respuesta, $adjuntosRespuesta));
+        Mail::to($pqr->registrador_correo)->send(new RespuestaFinalPQRSMail($pqr, $respuesta, $adjuntosRespuesta));
+
 
         $fechaRespuesta = Carbon::parse($respuesta->created_at, 'America/Bogota');
 

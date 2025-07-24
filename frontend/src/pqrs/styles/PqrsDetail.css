@@ -6,7 +6,7 @@
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     /* font-family: 'Exo', sans-serif; */
-    color: white;
+    color: rgb(7, 139, 148);
     font-size: 20px;
     backdrop-filter: blur(170px);
     position: absolute;
@@ -258,6 +258,13 @@ h4 {
 
 .adjunto-item a {
     color: rgb(7, 139, 148);
+}
+
+.solicitante {
+    padding: 10px;
+    background-color: rgb(194, 222, 241);
+    border-radius: 10px;
+    width: 477px;
 }
 
 

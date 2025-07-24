@@ -54,7 +54,7 @@ function CountdownTimer({ targetDate }) {
   }, [targetDate]);
 
   // 🎨 Lógica de color según horas restantes o expirado
-  let color = "white";
+  let color = "#515151";
   if (!timeLeft.expired) {
     if (timeLeft.totalHours <= 6) {
       color = "red";

@@ -137,6 +137,8 @@ class PqrController extends Controller
 
             // Enviar correo al paciente
             Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
+            Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+
 
 
             // Agregar URL del archivo para respuesta (si es necesario en la respuesta JSON)
@@ -199,22 +201,63 @@ class PqrController extends Controller
                 $request->filled('pqr_codigo') ||
                 $request->filled('documento_numero') ||
                 $request->filled('servicio_prestado') ||
-                $request->filled('tipo_solicitud')
+                $request->filled('tipo_solicitud') ||
+                $request->filled('sede') ||
+                $request->filled('eps') ||
+                 $request->filled('fecha_inicio') ||  
+            $request->filled('fecha_fin') 
             ) {
                 $query->where(function ($q) use ($request) {
-                    if ($request->filled('pqr_codigo')) {
-                        $q->orWhere('pqr_codigo', 'like', '%' . $request->pqr_codigo . '%');
-                    }
-                    if ($request->filled('documento_numero')) {
-                        $q->orWhere('documento_numero', 'like', '%' . $request->documento_numero . '%');
-                    }
-                    if ($request->filled('servicio_prestado')) {
-                        $q->orWhere('servicio_prestado', 'like', '%' . $request->servicio_prestado . '%');
-                    }
-                    if ($request->filled('tipo_solicitud')) {
-                        $q->orWhere('tipo_solicitud', 'like', '%' . $request->tipo_solicitud . '%');
-                    }
-                });
+    if ($request->filled('pqr_codigo')) {
+        $q->orWhere('pqr_codigo', 'like', '%' . $request->pqr_codigo . '%');
+    }
+
+    if ($request->filled('documento_numero')) {
+        $q->orWhere('documento_numero', 'like', '%' . $request->documento_numero . '%');
+    }
+
+    if ($request->has('servicio_prestado')) {
+        $servicios = $request->input('servicio_prestado');
+        if (is_array($servicios)) {
+            $q->orWhereIn('servicio_prestado', $servicios);
+        } else {
+            $q->orWhere('servicio_prestado', 'like', '%' . $servicios . '%');
+        }
+    }
+
+    if ($request->has('tipo_solicitud')) {
+        $tipos = $request->input('tipo_solicitud');
+        if (is_array($tipos)) {
+            $q->orWhereIn('tipo_solicitud', $tipos);
+        } else {
+            $q->orWhere('tipo_solicitud', 'like', '%' . $tipos . '%');
+        }
+    }
+
+    if ($request->filled('sede')) {
+        $q->orWhereIn('sede', (array) $request->sede);
+    }
+
+    if ($request->has('eps')) {
+        $epsOptions = $request->input('eps');
+        if (is_array($epsOptions)) {
+            $q->orWhereIn('eps', $epsOptions);
+        } else {
+            $q->orWhere('eps', 'like', '%' . $epsOptions . '%');
+        }
+    }
+
+    if ($request->filled('fecha_inicio') || $request->filled('fecha_fin')) {
+        $q->orWhere(function ($qDate) use ($request) {
+            if ($request->filled('fecha_inicio')) {
+                $qDate->whereDate('created_at', '>=', $request->fecha_inicio);
+            }
+            if ($request->filled('fecha_fin')) {
+                $qDate->whereDate('created_at', '<=', $request->fecha_fin);
+            }
+        });
+    }
+});
             }
 
             // Ordenar por fecha más reciente
@@ -238,39 +281,6 @@ class PqrController extends Controller
 
 
 
-    // public function show($pqr_codigo)
-    // {
-    //     try {
-    //         $user = JWTAuth::parseToken()->authenticate();
-
-    //         $pqr = Pqr::with(['asignado', 'respuestas'])->where('pqr_codigo', $pqr_codigo)->firstOrFail();
-
-    //         // Calcular tiempo_respondido usando Carbon (asegúrate de importar Carbon)
-    //         $tiempoRespondido = null;
-    //         if ($pqr->respondido_en) {
-    //             $createdAt = Carbon::parse($pqr->created_at);
-    //             $respondidoEn = Carbon::parse($pqr->respondido_en);
-
-    //             // Diferencia total en minutos
-    //             $diffInMinutes = $createdAt->diffInMinutes($respondidoEn);
-
-    //             // Convertir a horas enteras (redondeando hacia abajo)
-    //             $diffInHours = intdiv($diffInMinutes, 60);
-
-    //             $tiempoRespondido = $diffInHours . ' horas';
-    //         }
-
-    //         // Adjuntar al objeto pqr (como atributo dinámico)
-    //         $pqr->tiempo_respondido = $tiempoRespondido;
-
-    //         return response()->json(['pqr' => $pqr->load('respuestas')]);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'error' => 'Error al obtener la PQR: ' . $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
     public function show($pqr_codigo)
     {
         try {
@@ -280,8 +290,9 @@ class PqrController extends Controller
 
             $pqr = Pqr::where('pqr_codigo', $pqr_codigo)
                 ->with([
-                    'asignado',          // Carga el usuario asignado a la PQR
-                    'respuestas.autor'   // ¡Esto es lo crucial! Carga las respuestas Y el autor de cada respuesta
+                    'asignado',          
+                    'respuestas.autor',
+                    'clasificaciones'   
                 ])
                 ->firstOrFail();
 
@@ -310,92 +321,6 @@ class PqrController extends Controller
     }
 
 
-    // public function update(Request $request, $pqr_codigo, PqrTiempoService $tiempoService)
-    // {
-    //     try {
-    //         $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
-
-    //         $data = $request->only([
-    //             'nombre',
-    //             'apellido',
-    //             'documento_tipo',
-    //             'documento_numero',
-    //             'correo',
-    //             'telefono',
-    //             'sede',
-    //             'servicio_prestado',
-    //             'eps',
-    //             'tipo_solicitud',
-    //             'descripcion',
-    //             'archivo',
-    //         ]);
-
-    //         if ($request->user()->hasRole(['Administrador', 'Supervisor'])) {
-    //             $request->validate([
-    //                 'atributo_calidad' => 'nullable|in:Accesibilidad,Continuidad,Oportunidad,Pertinencia,Satisfacción del usuario,Seguridad',
-    //                 'fuente'           => 'nullable|in:Formulario de la web,Correo atención al usuario,Correo de Agendamiento NAC,Encuesta de satisfacción IPS,Callcenter,Presencial',
-    //                 'asignado_a'       => 'nullable|exists:users,id',
-    //                 'prioridad'        => 'required|in:Vital,Priorizado,Simple,Solicitud',
-    //             ]);
-
-    //             $data['atributo_calidad'] = $request->atributo_calidad;
-    //             $data['fuente'] = $request->fuente;
-    //             $data['asignado_a'] = $request->asignado_a;
-
-    //             // Cambiar estado si se asigna por primera vez
-    //             if (!$pqr->asignado_a && $request->filled('asignado_a')) {
-    //                 $data['estado_respuesta'] = 'Asignado';
-    //             }
-
-    //             // Asignar deadlines solo si aún no existen
-    //             if ($request->filled('prioridad') && !$pqr->deadline_ciudadano && !$pqr->deadline_interno) {
-    //                 $prioridad = $request->prioridad;
-
-    //                 // Plazos para el ciudadano
-    //                 $ciudadanoHoras = match ($prioridad) {
-    //                     'Vital'      => 24,
-    //                     'Priorizado' => 48,
-    //                     'Simple'     => 72,
-    //                     'Solicitud'  => 48,
-    //                 };
-
-    //                 // Plazos internos
-    //                 $internoHoras = match ($prioridad) {
-    //                     'Vital'      => 6,
-    //                     'Priorizado' => 24,
-    //                     'Simple'     => 24,
-    //                     'Solicitud'  => 24,
-    //                 };
-
-
-    //                 $data['prioridad'] = $prioridad;
-    //                 $fechaCreacion = Carbon::parse($pqr->created_at);
-
-    //                 $data['deadline_ciudadano'] = $fechaCreacion->copy()->addHours($ciudadanoHoras);
-    //                 $data['deadline_interno'] = $fechaCreacion->copy()->addHours($internoHoras);
-    //             }
-    //         }
-
-    //         // Actualiza y recalcula estado de tiempo
-    //         $pqr->update($data);
-    //         $estadoTiempo = $tiempoService->calcularEstadoTiempo($pqr);
-    //         $pqr->estado_tiempo = $estadoTiempo['estado'];
-    //         $pqr->save();
-
-    //         // Enviar correo al asignado si hay uno nuevo
-    //         if ($request->filled('asignado_a')) {
-    //             $asignado = \App\Models\User::find($request->asignado_a);
-    //             if ($asignado && $asignado->email) {
-    //                 Mail::to($asignado->email)->send(new PqrAsignada($pqr));
-    //             }
-    //         }
-
-    //         return response()->json(['message' => 'PQR actualizada correctamente.', 'data' => $pqr]);
-    //     } catch (\Exception $e) {
-    //         return response()->json(['message' => 'Error al actualizar', 'error' => $e->getMessage()], 500);
-    //     }
-    // }
-
     public function update(Request $request, $pqr_codigo, PqrTiempoService $tiempoService)
     {
         try {
@@ -421,6 +346,8 @@ class PqrController extends Controller
             if ($request->user()->hasRole(['Administrador', 'Supervisor'])) {
                 $request->validate([
                     'atributo_calidad' => 'nullable|in:Accesibilidad,Continuidad,Oportunidad,Pertinencia,Satisfacción del usuario,Seguridad',
+                    'clasificaciones' => 'nullable|array',
+                    'clasificaciones.*' => 'exists:clasificacions,id',
                     'fuente'           => 'nullable|in:Formulario de la web,Correo atención al usuario,Correo de Agendamiento NAC,Encuesta de satisfacción IPS,Callcenter,Presencial',
                     'asignado_a'       => 'nullable|exists:users,id',
                     'prioridad'        => 'required|in:Vital,Priorizado,Simple,Solicitud',
@@ -442,6 +369,11 @@ class PqrController extends Controller
                 $pqr->estado_respuesta = 'Asignado';
                 $pqr->save();
             }
+            // ASIGNAR LA CLASIFICACION DE LAS PQRS
+            if ($request->has('clasificaciones')) {
+                $pqr->clasificaciones()->sync($request->clasificaciones);
+            }
+
 
             if ($request->user()->hasRole(['Administrador', 'Supervisor']) && $request->filled('prioridad')) {
                 $prioridad = $request->prioridad;
@@ -540,26 +472,26 @@ class PqrController extends Controller
         }
     }
 
-   public function registrarSeguimiento(Request $request, $pqr_codigo)
-{
-    $request->validate([
-        'descripcion' => 'required|string|max:1000',
-        'tipo_seguimiento' => 'required|string|max:255', // Nuevo campo
-    ]);
+    public function registrarSeguimiento(Request $request, $pqr_codigo)
+    {
+        $request->validate([
+            'descripcion' => 'required|string|max:2000',
+            'tipo_seguimiento' => 'required|string|max:255', // Nuevo campo
+        ]);
 
-    $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+        $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
 
-    $seguimiento = $pqr->seguimientos()->create([
-        'user_id'          => $request->user()->id,
-        'descripcion'      => $request->descripcion,
-        'tipo_seguimiento' => $request->tipo_seguimiento,
-    ]);
+        $seguimiento = $pqr->seguimientos()->create([
+            'user_id'          => $request->user()->id,
+            'descripcion'      => $request->descripcion,
+            'tipo_seguimiento' => $request->tipo_seguimiento,
+        ]);
 
-    return response()->json([
-        'message' => 'Seguimiento registrado',
-        'data'    => $seguimiento
-    ]);
-}
+        return response()->json([
+            'message' => 'Seguimiento registrado',
+            'data'    => $seguimiento
+        ]);
+    }
 
 
 
@@ -573,5 +505,39 @@ class PqrController extends Controller
             'pqr_codigo'  => $pqr->pqr_codigo,
             'seguimientos' => $pqr->seguimientos
         ]);
+    }
+
+    public function filtros_estado_respuesta(Request $request)
+    {
+        try {
+            // dd($request->all()); // Para depuración
+
+            $user = JWTAuth::parseToken()->authenticate();
+
+            $query = Pqr::query();
+       
+
+            if ($request->filled('estado_respuesta')) {
+                $query->where('estado_respuesta', $request->estado_respuesta);
+            }
+
+
+            $pqrs = $query->orderBy('created_at', 'desc')
+                ->with('asignado:id,name')
+                ->paginate(15);
+
+            return response()->json([
+                'pqrs' => $pqrs->items(),
+                'current_page' => $pqrs->currentPage(),
+                'last_page' => $pqrs->lastPage(),
+                'total' => $pqrs->total(),
+                'per_page' => $pqrs->perPage(),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener las PQRS por estado: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

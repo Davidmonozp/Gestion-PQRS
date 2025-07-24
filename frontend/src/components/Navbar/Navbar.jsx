@@ -27,7 +27,7 @@ const Navbar = () => {
                 to="/Pqr"
                 className={({ isActive }) => (isActive ? "active-link" : "")}
               >
-                PQR
+                Tablero General
               </NavLink>
             </li>
             <li>
@@ -35,7 +35,7 @@ const Navbar = () => {
                 to="/pqrs/asignadas"
                 className={({ isActive }) => (isActive ? "active-link" : "")}
               >
-                Mis PQRS asignadas
+                Mis Casos Asignados
               </NavLink>
             </li>
 
@@ -46,7 +46,7 @@ const Navbar = () => {
                 onClick={() => setPqrsDropdownOpen(!pqrsDropdownOpen)}
               >
                 <span className="profile-link">
-                  Registrar PQR-S-F <i className="fas fa-caret-down"></i>
+                  Nuevo Registro <i className="fas fa-caret-down"></i>
                 </span>
                 {pqrsDropdownOpen && (
                   <ul className="dropdown-menu-pqrs">
@@ -112,7 +112,7 @@ const Navbar = () => {
                 onClick={() => setProfileOpen(!profileOpen)}
               >
                 <span className="profile-link">
-                  Perfil <i className="fas fa-caret-down"></i>
+                  Mi Perfil <i className="fas fa-caret-down"></i>
                 </span>
                 {profileOpen && (
                   <ul className="dropdown-menu">
@@ -146,7 +146,7 @@ const Navbar = () => {
                 to="/users"
                 className={({ isActive }) => (isActive ? "active-link" : "")}
               >
-                Usuarios
+                Administración de Usuarios
               </NavLink>
             </li>
           </ul>

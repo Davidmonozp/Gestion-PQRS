@@ -1,0 +1,34 @@
+/* src/pages/styles/PqrsList.css (o tu archivo CSS) */
+
+.status-filter-buttons {
+  display: flex; 
+  flex-wrap: nowrap; 
+  gap: 10px; 
+  margin-bottom: 20px; 
+ 
+}
+
+.status-filter-buttons button {
+  padding: 8px 15px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #d0def5;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  font-size: 14px;
+  color: #333;
+  /* IMPORTANTE: Si los botones se están estirando, añade esto: */
+  flex-shrink: 0; /* Evita que los botones se encojan si no hay suficiente espacio */
+}
+
+.status-filter-buttons button:hover {
+  background-color: #e0e0e0;
+  border-color: #aaa;
+}
+
+.status-filter-buttons button.active {
+  background-color: #0153ac; /* Color de fondo para el botón activo */
+  color: white; /* Color de texto para el botón activo */
+  border-color: #007bff;
+  font-weight: bold;
+}

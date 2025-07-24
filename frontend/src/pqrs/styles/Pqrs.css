@@ -9,14 +9,14 @@
 
 .header-pqrs div {
     float: left;
-    color: #fff;
+    color: #00933f;
     /* font-family: 'Exo', sans-serif; */
     font-size: 42px;
     font-weight: 200;
 }
 
 .header-pqrs div span {
-    color: #8dd9ff;
+    color: #0087cd;
 }
 
 .pqrs-container {
@@ -67,9 +67,9 @@
     width: 100%;
     height: 57px;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid #00933f;
     border-radius: 2px;
-    color: #ffffff;
+    color: #333;
     /* font-family: 'Exo', sans-serif; */
     font-size: 16px;
     font-weight: 400;
@@ -101,11 +101,11 @@
     grid-column: 1 / -1;
     width: 100%;
     height: 40px;
-    background: #fff;
+    background: #0087cd;
     border: 1px solid #fff;
     cursor: pointer;
     border-radius: 2px;
-    color: #111b6e;
+    color: #ffffff;
     /* font-family: 'Exo', sans-serif; */
     font-size: 16px;
     font-weight: 400;
@@ -115,6 +115,7 @@
 
 .pqrs button:hover {
     opacity: 0.8;
+    background: #00933f;
 }
 
 .pqrs button:active {
@@ -128,7 +129,7 @@
 .pqrs textarea:focus,
 .pqrs button:focus {
     outline: none;
-    border: 1px solid rgba(255, 255, 255, 0.9);
+    border: 1px solid #0087cd;
 }
 
 /* .error{
@@ -138,7 +139,7 @@
     font-family: 'Exo', sans-serif;
 } */
 .error {
-    color: #1fecb9;
+    color: #f13d3d;
     font-size: 12px;
     margin-top: -5px;
     margin-bottom: 10px;
@@ -153,7 +154,8 @@
 .titulo-form {
     /* font-family: 'Exo', sans-serif; */
     font-size: 20px;
-    font-weight: 500;
+    font-weight: 600;
+    color: rgb(4, 61, 126);
 }
 
 
@@ -180,7 +182,7 @@
     -webkit-appearance: none;
     width: 18px;
     height: 18px;
-    border: 2px solid #ffffff;
+    border: 2px solid #0087cd;
     border-radius: 50%;
     margin-right: 8px;
     position: relative;
@@ -217,7 +219,7 @@
 /* POLITICA TRATAMIENTO DE DATOS */
 .politica-box {
     grid-column: span 1;
-    border: 1px solid #c7c7c7;
+    border: 1px solid #00933f;
     padding: 15px 20px;
     background-color: transparent;
     margin-top: 20px;
@@ -244,7 +246,7 @@
 
 .politica-texto {
     font-size: 14px;
-    color: #ffffff;
+    color: #000000;
     text-align: justify;
     /* font-family: 'Exo', sans-serif; */
     font-weight: 400;
@@ -278,17 +280,18 @@
     width: 100%;
     padding: 12px 12px 12px 12px;
     border: none;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid #00933f;
     font-size: 16px;
     background: transparent;
     outline: none;
+    color: #333;
 }
 
 .floating-label label {
     position: absolute;
     top: 19px;
     left: 15px;
-    color: #f7e4e4b5;
+    color: #a5a5a5;
     font-size: 16px;
     pointer-events: none;
     transition: 0.2s ease all;
@@ -305,7 +308,7 @@
 .floating-label input:valid+label {
     top: -19px;
     font-size: 14px;
-    color: #ffffff;
+    color: #0087cd;
 }
 
 /* Optional: cambia el borde cuando se enfoca */
@@ -318,16 +321,16 @@
     width: 100%;
     padding: 12px 12px 12px 12px;
     border: none;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    border: 1px solid #00933f;
     font-size: 16px;
     background: transparent;
     outline: none;
     appearance: none;
     background-color: transparent;
-
     appearance: menulist;
     -webkit-appearance: menulist;
     -moz-appearance: menulist;
+    color: #333;
 }
 
 
@@ -335,7 +338,7 @@
     position: absolute;
     top: 19px;
     left: 15px;
-    color: #aaa;
+    color: #a5a5a5;
     font-size: 16px;
     pointer-events: none;
     transition: 0.2s ease all;
@@ -345,7 +348,7 @@
 .floating-label select:valid+label {
     top: -19px;
     font-size: 14px;
-    color: #ffffff;
+    color: #0087cd;
 }
 
 /* Pqrs.css */

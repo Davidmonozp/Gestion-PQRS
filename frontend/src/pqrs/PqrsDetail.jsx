@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 import Navbar from "../components/Navbar/Navbar";
 import CountdownTimer from "./components/CountDownTimer";
 import SeguimientoPqrs from "./components/SeguimientoPqrs";
+import ClasificacionesPqrs from "./components/ClasificacionesPqrs";
 
 function PqrsDetail() {
   const { pqr_codigo } = useParams();
@@ -24,6 +25,8 @@ function PqrsDetail() {
   const [editandoRespuestaFinal, setEditandoRespuestaFinal] = useState(false);
   const [finalAnswerAuthorName, setFinalAnswerAuthorName] = useState(null);
   const [finalAnswerCreatedAt, setFinalAnswerCreatedAt] = useState(null);
+
+  const [isSavingForm, setIsSavingForm] = useState(false);
 
   // NUEVOS ESTADOS PARA ADJUNTOS DE RESPUESTA FINAL
   const [adjuntosRespuestaFinal, setAdjuntosRespuestaFinal] = useState([]);
@@ -183,80 +186,102 @@ function PqrsDetail() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
 
-    // Validaciones obligatorias
-    if (!formData.prioridad) {
-      Swal.fire(
-        "Debe seleccionar una prioridad",
-        "El campo prioridad es obligatorio",
-        "warning"
-      );
-      return;
-    }
-
-    if (!formData.asignado_a) {
-      Swal.fire(
-        "Debe seleccionar a quién se asigna",
-        "El campo asignado_a es obligatorio",
-        "warning"
-      );
-      return;
-    }
-
-    if (!formData.fuente) {
-      Swal.fire(
-        "Debe seleccionar una fuente",
-        "El campo fuente es obligatorio",
-        "warning"
-      );
-      return;
-    }
-
-    // Solo validar atributo_calidad si tipo_solicitud !== "Solicitud"
-    if (formData.tipo_solicitud !== "Solicitud" && !formData.atributo_calidad) {
-      Swal.fire(
-        "Debe seleccionar un atributo de calidad",
-        "El campo atributo_calidad es obligatorio",
-        "warning"
-      );
-      return;
-    }
-
-    // Limpiar datos
-    const cleanedData = {};
-    for (const key in formData) {
-      if (formData[key] !== "") cleanedData[key] = formData[key];
-    }
-
-    try {
-      const response = await api.put(`/pqrs/codigo/${pqr_codigo}`, cleanedData);
-
-      setPqr(response.data.data);
-      setPrioridadBloqueada(!!response.data.data.prioridad);
-      setAtributoCalidadBloqueado(!!response.data.data.atributo_calidad);
-      setFuenteBloqueada(!!response.data.data.fuente);
-      setAsignadoABloqueado(!!response.data.data.asignado_a);
-
-      Swal.fire("Actualizado", "PQRS actualizada correctamente", "success");
-    } catch (err) {
-      let errorMessage = "No se pudo actualizar";
-
-      if (err.response) {
-        errorMessage =
-          err.response.data?.error ||
-          err.response.data?.message ||
-          errorMessage;
-      } else if (err.request) {
-        errorMessage =
-          "No se recibió respuesta del servidor. Inténtalo de nuevo.";
-      } else {
-        errorMessage = err.message;
+      if (!pqr || !pqr.id) {
+        Swal.fire(
+          "Advertencia",
+          "No hay PQRS cargada o su ID no está disponible para guardar.",
+          "warning"
+        );
+        return;
       }
-      Swal.fire("Error", errorMessage, "error");
-    }
-  };
+
+      setIsSavingForm(true);
+
+      if (!formData.prioridad) {
+        Swal.fire(
+          "Debe seleccionar una prioridad",
+          "El campo prioridad es obligatorio",
+          "warning"
+        );
+        setIsSavingForm(false);
+        return;
+      }
+
+      if (!formData.asignado_a) {
+        Swal.fire(
+          "Debe seleccionar a quién se asigna",
+          "El campo asignado_a es obligatorio",
+          "warning"
+        );
+        setIsSavingForm(false);
+        return;
+      }
+
+      if (!formData.fuente) {
+        Swal.fire(
+          "Debe seleccionar una fuente",
+          "El campo fuente es obligatorio",
+          "warning"
+        );
+        setIsSavingForm(false);
+        return;
+      }
+
+      const tipoSolicitudActual =
+        pqr?.tipo_solicitud || formData.tipo_solicitud;
+      if (tipoSolicitudActual !== "Solicitud" && !formData.atributo_calidad) {
+        Swal.fire(
+          "Debe seleccionar un atributo de calidad",
+          "El campo atributo_calidad es obligatorio",
+          "warning"
+        );
+        setIsSavingForm(false);
+        return;
+      }
+
+      const dataToUpdatePqr = { ...formData };
+
+      const cleanedDataPqr = {};
+      for (const key in dataToUpdatePqr) {
+        if (dataToUpdatePqr[key] !== "") {
+          cleanedDataPqr[key] = dataToUpdatePqr[key];
+        } else if (key === "asignado_a" && dataToUpdatePqr[key] === "") {
+          cleanedDataPqr[key] = null;
+        }
+      }
+
+      try {
+        let successMessage = "PQRS actualizada correctamente";
+
+        const pqrUpdateResponse = await api.put(
+          `/pqrs/codigo/${pqr.pqr_codigo}`,
+          cleanedDataPqr
+        );
+        setPqr(pqrUpdateResponse.data.data);
+        successMessage += " y ";
+
+        if (err.response) {
+          errorMessage =
+            err.response.data?.error ||
+            err.response.data?.message ||
+            errorMessage;
+        } else if (err.request) {
+          errorMessage =
+            "No se recibió respuesta del servidor. Inténtalo de nuevo.";
+        } else {
+          errorMessage = err.message;
+        }
+        Swal.fire("Error", errorMessage, "error");
+      } finally {
+        setIsSavingForm(false);
+      }
+    },
+    [pqr, formData]
+  );
 
   // Función para registrar (POST) o actualizar (PUT) la respuesta final CON ADJUNTOS
   const handleFinalAnswerAction = async () => {
@@ -437,6 +462,32 @@ function PqrsDetail() {
         <div className="pqr-card-columns">
           {/* Columna de datos simples (izquierda) */}
           <div className="pqr-card-col">
+            {/* SI SOLICITANTE EXISTE MOSTRAR SUS DATOS */}
+            {pqr.registrador_nombre && (
+              <div className="solicitante">
+                <p>
+                  <strong>Nombre Solicitante:</strong> {pqr.registrador_nombre}{" "}
+                  {pqr.registrador_apellido}
+                </p>
+                <p>
+                  <strong>Tipo Doc. Solicitante:</strong>{" "}
+                  {pqr.registrador_documento_tipo}
+                </p>
+                <p>
+                  <strong>No. Doc. Solicitante:</strong>{" "}
+                  {pqr.registrador_documento_numero}
+                </p>
+                <p>
+                  <strong>Correo del solicitante:</strong>{" "}
+                  {pqr.registrador_correo}
+                </p>
+                <p>
+                  <strong>Teléfono del solicitante:</strong>{" "}
+                  {pqr.registrador_telefono || "No proporcionado"}
+                </p>
+              </div>
+            )}
+            {/* FIN DE LOS DATOS DEL SOLICITANTE */}
             <p>
               <strong>Nombre:</strong> {pqr.nombre} {pqr.apellido}
             </p>
@@ -513,6 +564,10 @@ function PqrsDetail() {
                 <strong>Tiempo de respuesta:</strong> {pqr.estado_tiempo}
               </p>
             )}
+            <ClasificacionesPqrs
+              pqrId={pqr.id}
+              useIdInUrl={true} 
+            />
           </div>
 
           {/* Columna editable (centro) */}
@@ -739,6 +794,16 @@ function PqrsDetail() {
 
           {/* Nueva Columna para Historial de Respuestas y Formulario de Respuesta Final */}
           <div className="pqr-card-section pqr-card-col">
+            {/* SEGUIMIENTO DE LA PQRS */}
+            <section className="seccion-seguimiento">
+              <SeguimientoPqrs
+                pqr_codigo={pqr_codigo}
+                formData={formData}
+                estado_respuesta={pqr.estado_respuesta}
+              />
+            </section>
+            {/* FIN DEL SEGUIMIENTO DE LA PQRS */}
+
             {/* --- Sección para mostrar TODAS las respuestas (Historial) --- */}
             {pqr.respuestas && pqr.respuestas.length > 0 && (
               <div className="preliminary-responses-section">
@@ -809,17 +874,9 @@ function PqrsDetail() {
             )}
             {/* --- FIN Sección para mostrar TODAS las respuestas --- */}
 
-            {/* SEGUIMIENTO DE LA PQRS */}
-            <section className="seccion-seguimiento">
-              <SeguimientoPqrs
-                pqr_codigo={pqr_codigo}
-                formData={formData}
-                estado_respuesta={pqr.estado_respuesta}
-              />
-            </section>
-            {/* FIN DEL SEGUIMIENTO DE LA PQRS */}
-
-            {["Asignado", "En proceso"].includes(pqr?.estado_respuesta) && (
+            {["Asignado", "En proceso", "Cerrado"].includes(
+              pqr?.estado_respuesta
+            ) && (
               <div className="respuesta-final">
                 <h2>Respuesta Final</h2>
 

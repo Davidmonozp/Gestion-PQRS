@@ -177,14 +177,14 @@
 
                     <tr>
                         <td class="body-content">
-                            <h1>Confirmación de Registro de PQR</h1>
+                            <h1>Confirmación de Registro de {{ $pqr->tipo_solicitud }}</h1>
 
                             <p>Estimado(a) <strong>{{ $pqr->nombre }} {{ $pqr->apellido }}</strong>,</p>
 
-                            <p>Gracias por contactarnos. Le confirmamos que su PQR ha sido registrada exitosamente con la siguiente información:</p>
+                            <p>Gracias por contactarnos. Le confirmamos que su {{ $pqr->tipo_solicitud }} ha sido registrado/a exitosamente con la siguiente información:</p>
 
                             <div class="pqr-summary-box">
-                                <p><strong>Código de PQR:</strong> <span style="font-size: 1.1em; color: #007bff; font-weight: bold;">{{ $pqr->pqr_codigo }}</span></p>
+                                <p><strong>Radicado:</strong> <span style="font-size: 1.1em; color: #007bff; font-weight: bold;">{{ $pqr->pqr_codigo }}</span></p>
                                 <p><strong>Tipo de Solicitud:</strong> {{ $pqr->tipo_solicitud }}</p>
                                 <p><strong>Descripción de la Solicitud:</strong></p>
                                 <p class="pqr-description-text">{{ $pqr->descripcion }}</p>
@@ -198,7 +198,7 @@
                             <p>Puede hacer seguimiento al estado de su PQR ingresando el código de radicado en nuestra página web:</p>
 
                             <div class="button-container">
-                                <a href="{{ url('http://localhost:5173/inicio-pqrs') }}" target="_blank">Consultar Estado de PQR</a> {{-- Asegúrate de que esta URL sea la correcta --}}
+                                <a href="{{ url('http://localhost:5173/inicio-pqrs') }}" target="_blank">Consultar Estado de PQR</a> 
                             </div>
 
                             <hr class="divider">

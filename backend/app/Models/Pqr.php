@@ -135,4 +135,8 @@ class Pqr extends Model
     {
         return $this->hasMany(PqrSeguimiento::class);
     }
+    public function clasificaciones()
+    {
+        return $this->belongsToMany(Clasificacion::class, 'clasificacion_pqr', 'pqr_id', 'clasificacion_id');
+    }
 }

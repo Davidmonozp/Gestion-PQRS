@@ -35,9 +35,9 @@
   width: 300px;
   height: 50px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid #00933f;
   border-radius: 2px;
-  color: #fff;
+  color: #000000;
   font-family: 'Exo', sans-serif;
   font-size: 16px;
   font-weight: 400;
@@ -45,13 +45,14 @@
   margin-top: 10px;
 }
 
+
 .register-user select {
   width: 310px;
   height: 50px;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid #00933f;
   border-radius: 2px;
-  color: #fff;
+  color: #707070;
   font-family: 'Exo', sans-serif;
   font-size: 16px;
   font-weight: 400;
@@ -60,7 +61,7 @@
 }
 
 .register-user select option {
-  background-color: #076e9d;
+  background-color: #0087cd;
   color: white;
 }
 
@@ -68,11 +69,11 @@
 .register-user button {
   width: 310px;
   height: 40px;
-  background: #fff;
+  background: #0087cd;
   border: 1px solid #fff;
   cursor: pointer;
   border-radius: 2px;
-  color: #a18d6c;
+  color: #ffffff;
   font-family: 'Exo', sans-serif;
   font-size: 16px;
   font-weight: 400;
@@ -82,6 +83,7 @@
 
 .register-user button:hover {
   opacity: 0.8;
+  background: #00933f;
 }
 
 .register-user button:active {

@@ -132,7 +132,7 @@
                             <p>Estimado(a) {{ $pqr->nombre }} {{ $pqr->apellido }},</p>
                             <p>Reciba un cordial saludo de parte de Passus IPS.</p>
 
-                            <p>Hemos recibido con gran satisfacción su mensaje y le confirmamos que ha sido registrado con el siguiente código:</p>
+                            <p>Hemos recibido con gran satisfacción su mensaje y le confirmamos que ha sido registrado con el siguiente radicado:</p>
 
                             <div style="text-align: center; font-size: 20px; font-weight: bold; color: #007bff; margin: 20px 0;">
                                 {{ $pqr->pqr_codigo }}

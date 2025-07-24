@@ -1,14 +1,20 @@
 // src/validation/pqrsValidation.js
 import * as Yup from "yup";
-
+// Mensaje de error si empieza con espacio
 const commonContactFields = {
   nombre: Yup.string()
+    .matches(
+      /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/,
+      "El nombre no puede contener espacios en blanco al inicio"
+    )
+    // .trim("El nombre no puede consistir solo en espacios en blanco")
     .required("El nombre es obligatorio")
     .min(2, "El nombre debe tener al menos 2 caracteres")
     .max(50, "El nombre no puede exceder los 50 caracteres"),
 
   segundo_nombre: Yup.string()
     .notRequired()
+    .trim("El segundo nombre no puede consistir solo en espacios en blanco")
     .test(
       'longitud del nombre',
       'El segundo nombre debe tener entre 2 y 50 caracteres',
@@ -16,6 +22,11 @@ const commonContactFields = {
     ),
 
   apellido: Yup.string()
+    .matches(
+      /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/,
+      "El apellido solo puede contener espacios en blanco al inicio"
+    )
+    // .trim("El apellido no puede consistir solo en espacios en blanco")
     .required("El apellido es obligatorio")
     .min(2, "El apellido debe tener al menos 2 caracteres")
     .max(50, "El apellido no puede exceder los 50 caracteres"),
@@ -34,7 +45,7 @@ const commonContactFields = {
     .required("El número de documento es obligatorio")
     .matches(
       /^[a-zA-Z0-9-]+$/,
-      "El número de documento solo puede contener letras, números y guiones"
+      "El número de documento solo puede contener letras, números y guiones, sin espacios en blanco"
     )
     .min(5, "El número de documento debe tener al menos 5 dígitos")
     .max(15, "El número de documento no puede exceder los 15 dígitos"),
@@ -134,11 +145,16 @@ export const pqrsSchema = Yup.object().shape({
     is: "si",
     then: (schema) =>
       schema
-        .required("El nombre del registrador es obligatorio")
-        .min(2, "El nombre del registrador debe tener al menos 2 caracteres")
+        .matches(
+          /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/,
+          "El nombre no puede contener espacios en blanco al inicio"
+        )
+        // .trim("El nombre no puede consistir solo en espacios en blanco")
+        .required("El nombre del solicitante es obligatorio")
+        .min(2, "El nombre del solicitante debe tener al menos 2 caracteres")
         .max(
           50,
-          "El nombre del registrador no puede exceder los 50 caracteres"
+          "El nombre del solicitante no puede exceder los 50 caracteres"
         ),
     otherwise: (schema) =>
       schema
@@ -155,7 +171,7 @@ export const pqrsSchema = Yup.object().shape({
     )
     .test(
       'valid-length',
-      'El segundo nombre del registrador debe tener entre 2 y 50 caracteres',
+      'El segundo nombre del solicitante debe tener entre 2 y 50 caracteres',
       (value) => !value || (value.length >= 2 && value.length <= 50)
     ),
 
@@ -163,11 +179,15 @@ export const pqrsSchema = Yup.object().shape({
     is: "si",
     then: (schema) =>
       schema
-        .required("El apellido del registrador es obligatorio")
-        .min(2, "El apellido del registrador debe tener al menos 2 caracteres")
+        .matches(
+          /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/,
+          "El apellido solo puede contener espacios en blanco al inicio"
+        )
+        .required("El apellido del solicitante es obligatorio")
+        .min(2, "El apellido del solicitante debe tener al menos 2 caracteres")
         .max(
           50,
-          "El apellido del registrador no puede exceder los 50 caracteres"
+          "El apellido del solicitante no puede exceder los 50 caracteres"
         ),
     otherwise: (schema) =>
       schema
@@ -184,7 +204,7 @@ export const pqrsSchema = Yup.object().shape({
     )
     .test(
       'valid-length',
-      'El segundo apellido del registrador debe tener entre 2 y 50 caracteres',
+      'El segundo apellido del solicitante debe tener entre 2 y 50 caracteres',
       (value) => !value || (value.length >= 2 && value.length <= 50)
     ),
 
@@ -206,7 +226,7 @@ export const pqrsSchema = Yup.object().shape({
   registrador_documento_tipo: Yup.string().when("registra_otro", {
     is: "si",
     then: (schema) =>
-      schema.required("Selecciona el tipo de documento del registrador"),
+      schema.required("Selecciona el tipo de documento del solicitante"),
     otherwise: (schema) =>
       schema
         .notRequired()
@@ -219,18 +239,18 @@ export const pqrsSchema = Yup.object().shape({
     is: "si",
     then: (schema) =>
       schema
-        .required("El número de documento del registrador es obligatorio")
+        .required("El número de documento del solicitante es obligatorio")
         .matches(
           /^[a-zA-Z0-9-]+$/,
-          "El número de documento solo puede contener letras, números y guiones"
+          "El número de documento solo puede contener letras, números y guiones, sin espacios en blanco"
         )
         .min(
           5,
-          "El número de documento del registrador debe tener al menos 5 dígitos"
+          "El número de documento del solicitante debe tener al menos 5 dígitos"
         )
         .max(
           15,
-          "El número de documento del registrador no puede exceder los 15 dígitos"
+          "El número de documento del solicitante no puede exceder los 15 dígitos"
         ),
     otherwise: (schema) =>
       schema
@@ -244,8 +264,8 @@ export const pqrsSchema = Yup.object().shape({
     is: "si",
     then: (schema) =>
       schema
-        .email("Formato de correo electrónico del registrador inválido")
-        .required("El correo electrónico del registrador es obligatorio"),
+        .email("Formato de correo electrónico del solicitante inválido")
+        .required("El correo electrónico del solicitante es obligatorio"),
     otherwise: (schema) =>
       schema
         .notRequired()
@@ -258,10 +278,10 @@ export const pqrsSchema = Yup.object().shape({
     is: "si",
     then: (schema) =>
       schema
-        .required("El teléfono del registrador es obligatorio")
+        .required("El teléfono del solicitante es obligatorio")
         .matches(
           /^\d{7,10}$/,
-          "El teléfono del registrador debe tener entre 7 y 10 dígitos numéricos"
+          "El teléfono del solicitante debe tener entre 7 y 10 dígitos numéricos"
         ),
     otherwise: (schema) =>
       schema
