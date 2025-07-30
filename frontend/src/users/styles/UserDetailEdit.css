@@ -29,7 +29,7 @@
 .details-user>div {
     display: flex;
     flex-direction: column;
-    margin-bottom: 15px;
+    margin-bottom: 100px;
 }
 
 /* Etiquetas (labels) */
@@ -121,6 +121,79 @@
     font-family: 'Exo', sans-serif;
 }
 
+
+/* ESTILOS INPUT SEDES */
+
+.custom-multiselect-sedes {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+
+.custom-select-box-sedes {
+    width: 294px;
+    min-height: 26px;
+    height: auto;
+    padding: 6px 0px 6px 15px;
+    border: 1px solid #00933f;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+    font-size: 16px;
+    border-radius: 2px;
+    color: #525252
+}
+
+.custom-select-box-sedes::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    width: 5px;
+    height: 5px;
+    border: solid #525252;
+    border-width: 0 2px 2px 0;
+    transform: translateY(-50%) rotate(45deg);
+    /* flecha hacia abajo */
+    pointer-events: none;
+}
+
+.checkbox-options-sedes {
+    position: absolute;
+    top: 89%;
+    left: 0;
+    width: 309px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #0087cd;
+    border: 1px solid #ccc;
+    z-index: 1000;
+    margin-top: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.checkbox-item-sedes {
+    display: flex;
+    padding: 2px 12px;
+    cursor: pointer;
+    color: white !important;
+    font-family: 'Oxygen';
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.checkbox-item-sedes:hover {
+    background-color: #2669cc;
+}
+
+.checkbox-item input {
+    margin-right: 8px;
+}
+
+/* FIN ESTILOS INPUT SEDES */
+
+
+
 /* Responsive */
 @media (max-width: 767px) {
     .logo-img {
@@ -140,10 +213,10 @@
     }
 }
 
-@media (min-width: 1366px) and (max-width: 1600px) {
+@media (min-width: 1365px) and (max-width: 1600px) {
     .details-user {
         position: absolute;
-        top: calc(42% - 139px);
+        top: calc(41% - 139px);
         left: calc(50% - 50px);
         width: 350px;
         padding: 10px;

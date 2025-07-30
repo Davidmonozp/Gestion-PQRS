@@ -25,8 +25,11 @@ function PqrsDetail() {
   const [editandoRespuestaFinal, setEditandoRespuestaFinal] = useState(false);
   const [finalAnswerAuthorName, setFinalAnswerAuthorName] = useState(null);
   const [finalAnswerCreatedAt, setFinalAnswerCreatedAt] = useState(null);
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
 
   const [isSavingForm, setIsSavingForm] = useState(false);
+  const [yaClasificada, setYaClasificada] = useState(false);
+  const estaCerrada = pqr?.estado_respuesta === "Cerrado";
 
   // NUEVOS ESTADOS PARA ADJUNTOS DE RESPUESTA FINAL
   const [adjuntosRespuestaFinal, setAdjuntosRespuestaFinal] = useState([]);
@@ -57,7 +60,7 @@ function PqrsDetail() {
   const [formData, setFormData] = useState({
     atributo_calidad: "",
     fuente: "",
-    asignado_a: "",
+    asignados: [],
     prioridad: "",
   });
 
@@ -74,6 +77,23 @@ function PqrsDetail() {
   useEffect(() => {
     adjustTextareaHeight();
   }, [respuestaFinal, editandoRespuestaFinal, loading]);
+
+  useEffect(() => {
+    const verificarClasificada = async () => {
+      try {
+        const res = await api.get(`/pqrs/${pqr?.id}/clasificaciones`);
+        if (res.data.length > 0) {
+          setYaClasificada(true);
+        }
+      } catch (err) {
+        console.error("Error al verificar clasificación:", err);
+      }
+    };
+
+    if (pqr?.id) {
+      verificarClasificada();
+    }
+  }, [pqr?.id]);
 
   // Función para cargar usuarios y detalle de PQRS (Memoizada con useCallback)
   const fetchPqr = useCallback(async () => {
@@ -129,7 +149,7 @@ function PqrsDetail() {
       setFormData({
         atributo_calidad: p.atributo_calidad || "",
         fuente: p.fuente || "",
-        asignado_a: p?.asignado?.id || "",
+        asignados: p?.asignados?.map((u) => u.id) || [],
         prioridad: p.prioridad || "",
         tipo_solicitud: p.tipo_solicitud || "",
       });
@@ -138,7 +158,7 @@ function PqrsDetail() {
       setPrioridadBloqueada(!!p.prioridad);
       setAtributoCalidadBloqueado(!!p.atributo_calidad);
       setFuenteBloqueada(!!p.fuente);
-      setAsignadoABloqueado(!!p.asignado?.id);
+      setAsignadoABloqueado((p?.asignados?.length || 0) > 0);
     } catch (err) {
       setError("Error cargando la PQRS");
     } finally {
@@ -178,17 +198,63 @@ function PqrsDetail() {
     cargarPlantillas();
   }, [pqr_codigo, navigate, fetchPqr]);
 
+  const handleCheckboxChange = (e) => {
+    const id = parseInt(e.target.value);
+    const isChecked = e.target.checked;
+
+    setFormData((prev) => {
+      const current = prev.asignados || [];
+      return {
+        ...prev,
+        asignados: isChecked
+          ? [...current, id]
+          : current.filter((uid) => uid !== id),
+      };
+    });
+  };
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, multiple, options } = e.target;
+    let newValue = value;
+
+    if (multiple) {
+      newValue = Array.from(options)
+        .filter((o) => o.selected)
+        .map((o) => Number(o.value));
+    } else if (name === "asignados") {
+      newValue = Number(value);
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "asignado_a" ? Number(value) : value,
+      [name]: newValue,
     }));
   };
 
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
+
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "¿Deseas guardar los cambios realizados?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, guardar",
+        cancelButtonText: "Cancelar",
+      });
+
+      if (!result.isConfirmed) return;
+      Swal.fire({
+        title: "Guardando...",
+        text: "Por favor espera",
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
 
       if (!pqr || !pqr.id) {
         Swal.fire(
@@ -211,10 +277,10 @@ function PqrsDetail() {
         return;
       }
 
-      if (!formData.asignado_a) {
+      if (!formData.asignados || formData.asignados.length === 0) {
         Swal.fire(
           "Debe seleccionar a quién se asigna",
-          "El campo asignado_a es obligatorio",
+          "Debe seleccionar al menos un asignado",
           "warning"
         );
         setIsSavingForm(false);
@@ -243,27 +309,27 @@ function PqrsDetail() {
         return;
       }
 
-      const dataToUpdatePqr = { ...formData };
-
+      // Prepara los datos para actualizar
       const cleanedDataPqr = {};
-      for (const key in dataToUpdatePqr) {
-        if (dataToUpdatePqr[key] !== "") {
-          cleanedDataPqr[key] = dataToUpdatePqr[key];
-        } else if (key === "asignado_a" && dataToUpdatePqr[key] === "") {
-          cleanedDataPqr[key] = null;
+      for (const key in formData) {
+        const value = formData[key];
+        if (key === "asignados") {
+          cleanedDataPqr[key] = Array.isArray(value) ? value : [];
+        } else if (value !== "" && value !== null) {
+          cleanedDataPqr[key] = value;
         }
       }
 
       try {
-        let successMessage = "PQRS actualizada correctamente";
-
         const pqrUpdateResponse = await api.put(
           `/pqrs/codigo/${pqr.pqr_codigo}`,
           cleanedDataPqr
         );
         setPqr(pqrUpdateResponse.data.data);
-        successMessage += " y ";
 
+        Swal.fire("Éxito", "PQRS actualizada correctamente", "success");
+      } catch (err) {
+        let errorMessage = "Error al actualizar la PQRS";
         if (err.response) {
           errorMessage =
             err.response.data?.error ||
@@ -406,6 +472,16 @@ function PqrsDetail() {
     });
 
     if (result.isConfirmed) {
+      // Mostrar loading mientras se hace la petición
+      Swal.fire({
+        title: "Enviando correo...",
+        text: "Por favor espera mientras se envía la respuesta al ciudadano.",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
       try {
         await api.post(`/pqrs/codigo/${pqr_codigo}/enviar-respuesta-correo`);
 
@@ -416,7 +492,7 @@ function PqrsDetail() {
         ).then(() => {
           setPqr((prevPqr) => ({ ...prevPqr, respuesta_enviada: 1 }));
           setMailEnviado(true);
-          fetchPqr(); // Y luego re-fetch para una actualización completa y consistente
+          fetchPqr();
         });
       } catch (err) {
         Swal.fire(
@@ -465,18 +541,32 @@ function PqrsDetail() {
             {/* SI SOLICITANTE EXISTE MOSTRAR SUS DATOS */}
             {pqr.registrador_nombre && (
               <div className="solicitante">
+                {pqr.nombre_entidad && (
+                  <p>
+                    <strong>Nombre de la entidad:</strong> {pqr.nombre_entidad}
+                  </p>
+                )}
+
                 <p>
                   <strong>Nombre Solicitante:</strong> {pqr.registrador_nombre}{" "}
-                  {pqr.registrador_apellido}
+                  {pqr.registrador_segundo_nombre} {pqr.registrador_apellido}{" "}
+                  {pqr.registrador_segundo_apellido}
                 </p>
-                <p>
-                  <strong>Tipo Doc. Solicitante:</strong>{" "}
-                  {pqr.registrador_documento_tipo}
-                </p>
-                <p>
-                  <strong>No. Doc. Solicitante:</strong>{" "}
-                  {pqr.registrador_documento_numero}
-                </p>
+
+                {pqr.registrador_documento_numero && (
+                  <p>
+                    <strong>Tipo Doc. Solicitante:</strong>{" "}
+                    {pqr.registrador_documento_tipo}
+                  </p>
+                )}
+
+                {pqr.registrador_documento_numero && (
+                  <p>
+                    <strong>No. Doc. Solicitante:</strong>{" "}
+                    {pqr.registrador_documento_numero}
+                  </p>
+                )}
+
                 <p>
                   <strong>Correo del solicitante:</strong>{" "}
                   {pqr.registrador_correo}
@@ -485,11 +575,18 @@ function PqrsDetail() {
                   <strong>Teléfono del solicitante:</strong>{" "}
                   {pqr.registrador_telefono || "No proporcionado"}
                 </p>
+
+                {pqr.registrador_cargo && (
+                  <p>
+                    <strong>Cargo:</strong> {pqr.registrador_cargo}
+                  </p>
+                )}
               </div>
             )}
             {/* FIN DE LOS DATOS DEL SOLICITANTE */}
             <p>
-              <strong>Nombre:</strong> {pqr.nombre} {pqr.apellido}
+              <strong>Nombre:</strong> {pqr.nombre} {pqr.segundo_nombre}{" "}
+              {pqr.apellido} {pqr.segundo_apellido}
             </p>
             <p>
               <strong>Tipo Doc:</strong> {pqr.documento_tipo}
@@ -566,7 +663,9 @@ function PqrsDetail() {
             )}
             <ClasificacionesPqrs
               pqrId={pqr.id}
-              useIdInUrl={true} 
+              useIdInUrl={true}
+              deshabilitado={pqr?.estado_respuesta === "Cerrado"}
+              onClasificacionesActualizadas={() => setYaClasificada(true)}
             />
           </div>
 
@@ -611,7 +710,9 @@ function PqrsDetail() {
                 </p>
                 <p>
                   <strong>Asignado a:</strong>{" "}
-                  {pqr.asignado ? pqr.asignado.name : "Sin asignar"}
+                  {pqr.asignados && pqr.asignados.length > 0
+                    ? pqr.asignados.map((u) => u.name).join(", ")
+                    : "Sin asignar"}
                 </p>
               </>
             )}
@@ -619,113 +720,134 @@ function PqrsDetail() {
             {/* Formulario de edición para roles específicos */}
             {!["Consultor", "Digitador", "Gestor"].includes(
               localStorage.getItem("role")
-            ) && (
-              <form onSubmit={handleSubmit}>
-                {pqr.tipo_solicitud !== "Solicitud" && (
-                  <>
-                    <label>Atributo de Calidad:</label>
-                    <select
-                      name="atributo_calidad"
-                      value={formData.atributo_calidad}
-                      onChange={handleChange}
-                      className="styled-input"
-                      disabled={
-                        (atributoCalidadBloqueado &&
-                          currentUserRole !== "Administrador") ||
-                        pqr.estado_respuesta === "Cerrado"
-                      }
-                    >
-                      <option value="" disabled>
-                        Seleccione
+            ) &&
+              yaClasificada && (
+                <form onSubmit={handleSubmit}>
+                  {pqr.tipo_solicitud !== "Solicitud" && (
+                    <>
+                      <label>Atributo de Calidad:</label>
+                      <select
+                        name="atributo_calidad"
+                        value={formData.atributo_calidad}
+                        onChange={handleChange}
+                        className="styled-input"
+                        disabled={
+                          (atributoCalidadBloqueado &&
+                            currentUserRole !== "Administrador") ||
+                          pqr.estado_respuesta === "Cerrado"
+                        }
+                      >
+                        <option value="" disabled>
+                          Seleccione
+                        </option>
+                        {[
+                          "Accesibilidad",
+                          "Continuidad",
+                          "Oportunidad",
+                          "Pertinencia",
+                          "Satisfacción del usuario",
+                          "Seguridad",
+                        ].map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  )}
+
+                  <label>Fuente:</label>
+                  <select
+                    name="fuente"
+                    value={formData.fuente}
+                    onChange={handleChange}
+                    className="styled-input"
+                    disabled={
+                      (fuenteBloqueada &&
+                        currentUserRole !== "Administrador") ||
+                      pqr.estado_respuesta === "Cerrado"
+                    }
+                  >
+                    <option value="" disabled>
+                      Seleccione
+                    </option>
+                    {[
+                      "Formulario de la web",
+                      "Correo atención al usuario",
+                      "Correo de Agendamiento NAC",
+                      "Encuesta de satisfacción IPS",
+                      "Callcenter",
+                      "Presencial",
+                    ].map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
                       </option>
-                      {[
-                        "Accesibilidad",
-                        "Continuidad",
-                        "Oportunidad",
-                        "Pertinencia",
-                        "Satisfacción del usuario",
-                        "Seguridad",
-                      ].map((opt) => (
+                    ))}
+                  </select>
+
+                  <label>Asignado a:</label>
+                  <div className="custom-multiselect">
+                    <div
+                      className={`custom-select-box ${
+                        estaCerrada ? "disabled" : ""
+                      }`}
+                      onClick={() => {
+                        if (!estaCerrada) setShowCheckboxes(!showCheckboxes);
+                      }}
+                    >
+                      {formData.asignados.length > 0
+                        ? usuarios
+                            .filter((u) => formData.asignados.includes(u.id))
+                            .map((u) => `${u.name} ${u.primer_apellido}`)
+                            .join(", ")
+                        : "Seleccione asignados..."}
+                    </div>
+
+                    {showCheckboxes && !estaCerrada && (
+                      <div className="checkbox-options">
+                        {usuarios.map((u) => (
+                          <label key={u.id} className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              value={u.id}
+                              checked={formData.asignados.includes(u.id)}
+                              onChange={handleCheckboxChange}
+                              disabled={estaCerrada}
+                            />
+                            {u.name} {u.primer_apellido}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <label>Prioridad:</label>
+                  <select
+                    name="prioridad"
+                    value={formData.prioridad}
+                    onChange={handleChange}
+                    className="styled-input"
+                    disabled={
+                      prioridadBloqueada || pqr.estado_respuesta === "Cerrado"
+                    }
+                  >
+                    <option value="" disabled>
+                      Seleccione prioridad
+                    </option>
+                    {["Vital", "Priorizado", "Simple", "Solicitud"].map(
+                      (opt) => (
                         <option key={opt} value={opt}>
                           {opt}
                         </option>
-                      ))}
-                    </select>
-                  </>
-                )}
+                      )
+                    )}
+                  </select>
 
-                <label>Fuente:</label>
-                <select
-                  name="fuente"
-                  value={formData.fuente}
-                  onChange={handleChange}
-                  className="styled-input"
-                  disabled={
-                    (fuenteBloqueada && currentUserRole !== "Administrador") ||
-                    pqr.estado_respuesta === "Cerrado"
-                  }
-                >
-                  <option value="" disabled>
-                    Seleccione
-                  </option>
-                  {[
-                    "Formulario de la web",
-                    "Correo atención al usuario",
-                    "Correo de Agendamiento NAC",
-                    "Encuesta de satisfacción IPS",
-                    "Callcenter",
-                    "Presencial",
-                  ].map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-
-                <label>Asignado a:</label>
-                <select
-                  name="asignado_a"
-                  value={formData.asignado_a}
-                  onChange={handleChange}
-                  className="styled-input"
-                  disabled={
-                    (asignadoABloqueado &&
-                      currentUserRole !== "Administrador") ||
-                    pqr.estado_respuesta === "Cerrado"
-                  }
-                >
-                  <option value="" disabled>
-                    Seleccione
-                  </option>
-                  {usuarios.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  ))}
-                </select>
-                <label>Prioridad:</label>
-                <select
-                  name="prioridad"
-                  value={formData.prioridad}
-                  onChange={handleChange}
-                  className="styled-input"
-                  disabled={
-                    prioridadBloqueada || pqr.estado_respuesta === "Cerrado"
-                  }
-                >
-                  <option value="" disabled>
-                    Seleccione prioridad
-                  </option>
-                  {["Vital", "Priorizado", "Simple", "Solicitud"].map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-
-                <button type="submit">Guardar Cambios</button>
-              </form>
-            )}
+                  <button type="submit" disabled={isSavingForm || estaCerrada}>
+                    {isSavingForm ? "Guardando..." : "Guardar Cambios"}
+                  </button>
+                </form>
+              )}
           </div>
 
           {/* Descripción larga y adjuntos de la PQRS original (columna derecha) */}
@@ -808,6 +930,24 @@ function PqrsDetail() {
             {pqr.respuestas && pqr.respuestas.length > 0 && (
               <div className="preliminary-responses-section">
                 <h2>Respuestas Preliminares</h2>
+                {pqr.asignados && (
+                  <div className="pendientes-respuesta mb-2 text-sm text-gray-700">
+                    <strong>Pendientes por responder:</strong>{" "}
+                    {pqr.asignados
+                      .filter(
+                        (usuario) =>
+                          !pqr.respuestas?.some(
+                            (r) =>
+                              r.user_id === usuario.id &&
+                              !r.es_final && // respuesta preliminar
+                              r.es_respuesta_usuario === 0
+                          )
+                      )
+                      .map((u) => u.name)
+                      .join(", ") || "Ninguno"}
+                  </div>
+                )}
+                <hr />
                 {/* Filtra las respuestas para incluir solo las que NO son finales */}
                 {pqr.respuestas
                   .filter((respuesta) => !respuesta.es_final)
@@ -876,242 +1016,258 @@ function PqrsDetail() {
 
             {["Asignado", "En proceso", "Cerrado"].includes(
               pqr?.estado_respuesta
-            ) && (
-              <div className="respuesta-final">
-                <h2>Respuesta Final</h2>
+            ) &&
+              // Mostrar siempre para Supervisor y Administrador
+              (tienePermiso(["Supervisor", "Administrador"]) ||
+                // Para Gestor, Consultor y Digitador, solo si ya hay respuesta final
+                (tienePermiso(["Gestor", "Consultor", "Digitador"]) &&
+                  yaTieneFinal)) && (
+                <div className="respuesta-final">
+                  <h2>Respuesta Final</h2>
 
-                {yaTieneFinal &&
-                finalAnswerAuthorName &&
-                finalAnswerCreatedAt ? (
-                  <div className="respuesta-item-card">
-                    <p>
-                      <strong>Autor:</strong> {finalAnswerAuthorName}
-                    </p>
-                    <p>
-                      <strong>Fecha:</strong>{" "}
-                      {new Date(finalAnswerCreatedAt).toLocaleString("es-CO", {
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                    <p>
-                      <strong>Tipo:</strong>{" "}
-                      <span className="tag-interna">Respuesta Final</span>
-                    </p>
-                  </div>
-                ) : (
-                  <h3>Registrar Respuesta Final</h3>
-                )}
-                {/* Dropdown de plantillas */}
-                <select
-                  className="styled-input"
-                  value={plantillaSeleccionada}
-                  onChange={(e) => {
-                    const idSeleccionado = e.target.value;
-                    setPlantillaSeleccionada(idSeleccionado);
+                  {yaTieneFinal &&
+                  finalAnswerAuthorName &&
+                  finalAnswerCreatedAt ? (
+                    <div className="respuesta-item-card">
+                      <p>
+                        <strong>Autor:</strong> {finalAnswerAuthorName}
+                      </p>
+                      <p>
+                        <strong>Fecha:</strong>{" "}
+                        {new Date(finalAnswerCreatedAt).toLocaleString(
+                          "es-CO",
+                          {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
+                      </p>
+                      <p>
+                        <strong>Tipo:</strong>{" "}
+                        <span className="tag-interna">Respuesta Final</span>
+                      </p>
+                    </div>
+                  ) : (
+                    <h3>Registrar Respuesta Final</h3>
+                  )}
 
-                    const plantilla = plantillas.find(
-                      (p) => p.id.toString() === idSeleccionado
-                    );
+                  {/* Dropdown de plantillas */}
+                  <select
+                    className="styled-input"
+                    value={plantillaSeleccionada}
+                    onChange={(e) => {
+                      const idSeleccionado = e.target.value;
+                      setPlantillaSeleccionada(idSeleccionado);
 
-                    if (plantilla && pqr) {
-                      let contenido = plantilla.contenido;
+                      const plantilla = plantillas.find(
+                        (p) => p.id.toString() === idSeleccionado
+                      );
 
-                      const fechaPqrCreada = new Date(
-                        pqr.created_at
-                      ).toLocaleDateString("es-CO", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      });
+                      if (plantilla && pqr) {
+                        let contenido = plantilla.contenido;
 
-                      // Reemplazo dinámico de placeholders
-                      const placeholders = {
-                        "[NOMBRE]": `${pqr.nombre || ""} ${
-                          pqr.apellido || ""
-                        }`.trim(),
-                        "[CIUDAD]": pqr.sede || "Ciudad",
-                        "[CORREO]": pqr.correo || "",
-                        "[TIPO_DOC]": pqr.documento_tipo || "",
-                        "[NUMERO_DOC]": pqr.documento_numero || "",
-                        "[TELEFONO]": pqr.telefono || "",
-                        "[FECHA]": new Date().toLocaleDateString("es-CO", {
+                        const fechaPqrCreada = new Date(
+                          pqr.created_at
+                        ).toLocaleDateString("es-CO", {
                           day: "numeric",
                           month: "long",
                           year: "numeric",
-                        }),
-                        "[PQR_CREADA]": fechaPqrCreada,
-                        "[PACIENTE]": `${pqr.nombre || ""} ${
-                          pqr.apellido || ""
-                        }`.trim(),
-                        "[CC]": pqr.documento_tipo || "",
-                      };
+                        });
 
-                      for (const clave in placeholders) {
-                        const valor = placeholders[clave];
-                        contenido = contenido.replaceAll(clave, valor);
-                      }
+                        // Reemplazo dinámico de placeholders
+                        const placeholders = {
+                          "[NOMBRE]": `${pqr.nombre || ""} ${
+                            pqr.apellido || ""
+                          }`.trim(),
+                          "[CIUDAD]": pqr.sede || "Ciudad",
+                          "[CORREO]": pqr.correo || "",
+                          "[TIPO_DOC]": pqr.documento_tipo || "",
+                          "[NUMERO_DOC]": pqr.documento_numero || "",
+                          "[TELEFONO]": pqr.telefono || "",
+                          "[FECHA]": new Date().toLocaleDateString("es-CO", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          }),
+                          "[PQR_CREADA]": fechaPqrCreada,
+                          "[PACIENTE]": `${pqr.nombre || ""} ${
+                            pqr.apellido || ""
+                          }`.trim(),
+                          "[CC]": pqr.documento_tipo || "",
+                        };
 
-                      setRespuestaFinal(contenido);
-                    }
-                  }}
-                  disabled={yaTieneFinal && !editandoRespuestaFinal}
-                >
-                  <option value="">-- Selecciona una plantilla --</option>
-                  {plantillas.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nombre}
-                    </option>
-                  ))}
-                </select>
-                {/* Área de texto editable */}
-                <textarea
-                  ref={respuestaFinalTextareaRef}
-                  value={respuestaFinal}
-                  onChange={(e) => setRespuestaFinal(e.target.value)}
-                  rows="1"
-                  placeholder="Escribe la respuesta final..."
-                  className="styled-input respuesta-final"
-                  disabled={yaTieneFinal && !editandoRespuestaFinal}
-                />
-                {/* NUEVO: Sección para adjuntar y mostrar archivos para la RESPUESTA FINAL */}
-                {/* Visible solo si tiene permiso y no está cerrada O si está en modo edición */}
-                {tienePermiso(["Supervisor", "Administrador"]) &&
-                  (!yaTieneFinal || editandoRespuestaFinal) && (
-                    <div className="adjuntos-final-respuesta-container">
-                      {/* <label htmlFor="adjuntos-final-respuesta">Adjuntar archivos (Respuesta Final):</label> */}
-                      <input
-                        type="file"
-                        id="adjuntos-final-respuesta"
-                        multiple
-                        onChange={(e) =>
-                          setAdjuntosRespuestaFinal(Array.from(e.target.files))
+                        for (const clave in placeholders) {
+                          const valor = placeholders[clave];
+                          contenido = contenido.replaceAll(clave, valor);
                         }
-                        className="styled-input"
-                        style={{ marginTop: "10px" }}
-                      />
-                      <div className="lista-adjuntos-nuevos">
-                        {adjuntosRespuestaFinal.length > 0 && (
-                          <p>
-                            <strong>Archivos nuevos a subir:</strong>
-                          </p>
-                        )}
-                        {adjuntosRespuestaFinal.map((file, index) => (
-                          <div
-                            key={`new-adj-${index}`}
-                            className="adjunto-item"
-                          >
-                            <span>{file.name}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveNewAttachment(index)}
-                              className="remove-adjunto-button"
-                            >
-                              X
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                {/* Mostrar adjuntos existentes de la RESPUESTA FINAL (si hay) */}
-                {adjuntosExistentesRespuestaFinal.length > 0 && (
-                  <div className="adjuntos-final-respuesta-existentes">
-                    <h3>🗂️ Archivos adjuntos actuales de la respuesta:</h3>
-                    <ul>
-                      {adjuntosExistentesRespuestaFinal.map(
-                        (fileItem, index) => (
-                          <div
-                            key={`existing-adj-${index}`}
-                            className="adjunto-item"
-                          >
-                            <a
-                              // href={`http://127.0.0.1:8000/storage/${fileItem.path}`}
-                              href={`http://192.168.1.30:8000/storage/${fileItem.path}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {fileItem.original_name ||
-                                `Archivo ${fileIndex + 1}`}
-                            </a>
-                            {/* Permitir eliminar adjuntos existentes solo en modo edición y con permiso */}
-                            {editandoRespuestaFinal &&
-                              tienePermiso(["Supervisor", "Administrador"]) && (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleRemoveExistingAttachment(index)
-                                  }
-                                  className="remove-adjunto-button"
-                                >
-                                  X
-                                </button>
-                              )}
-                          </div>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                )}
-                {tienePermiso(["Supervisor", "Administrador"]) && (
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      marginTop: "10px",
+
+                        setRespuestaFinal(contenido);
+                      }
                     }}
+                    disabled={yaTieneFinal && !editandoRespuestaFinal}
                   >
-                    {!yaTieneFinal && (
-                      <button onClick={handleFinalAnswerAction}>
-                        Registrar Respuesta Final
-                      </button>
+                    <option value="">-- Selecciona una plantilla --</option>
+                    {plantillas.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.nombre}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Área de texto editable */}
+                  <textarea
+                    ref={respuestaFinalTextareaRef}
+                    value={respuestaFinal}
+                    onChange={(e) => setRespuestaFinal(e.target.value)}
+                    rows="1"
+                    placeholder="Escribe la respuesta final..."
+                    className="styled-input respuesta-final"
+                    disabled={yaTieneFinal && !editandoRespuestaFinal}
+                  />
+
+                  {/* NUEVO: Sección para adjuntar y mostrar archivos para la RESPUESTA FINAL */}
+                  {tienePermiso(["Supervisor", "Administrador"]) &&
+                    (!yaTieneFinal || editandoRespuestaFinal) && (
+                      <div className="adjuntos-final-respuesta-container">
+                        <input
+                          type="file"
+                          id="adjuntos-final-respuesta"
+                          multiple
+                          onChange={(e) =>
+                            setAdjuntosRespuestaFinal(
+                              Array.from(e.target.files)
+                            )
+                          }
+                          className="styled-input"
+                          style={{ marginTop: "10px" }}
+                        />
+                        <div className="lista-adjuntos-nuevos">
+                          {adjuntosRespuestaFinal.length > 0 && (
+                            <p>
+                              <strong>Archivos nuevos a subir:</strong>
+                            </p>
+                          )}
+                          {adjuntosRespuestaFinal.map((file, index) => (
+                            <div
+                              key={`new-adj-${index}`}
+                              className="adjunto-item"
+                            >
+                              <span>{file.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveNewAttachment(index)}
+                                className="remove-adjunto-button"
+                              >
+                                X
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
 
-                    {yaTieneFinal &&
-                      !editandoRespuestaFinal &&
-                      pqr &&
-                      !mailEnviado && (
-                        <button onClick={() => setEditandoRespuestaFinal(true)}>
-                          Editar Respuesta Final
+                  {/* Mostrar adjuntos existentes de la RESPUESTA FINAL */}
+                  {adjuntosExistentesRespuestaFinal.length > 0 && (
+                    <div className="adjuntos-final-respuesta-existentes">
+                      <h3>🗂️ Archivos adjuntos actuales de la respuesta:</h3>
+                      <ul>
+                        {adjuntosExistentesRespuestaFinal.map(
+                          (fileItem, index) => (
+                            <div
+                              key={`existing-adj-${index}`}
+                              className="adjunto-item"
+                            >
+                              <a
+                                href={`http://192.168.1.30:8000/storage/${fileItem.path}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {fileItem.original_name ||
+                                  `Archivo ${index + 1}`}
+                              </a>
+                              {editandoRespuestaFinal &&
+                                tienePermiso([
+                                  "Supervisor",
+                                  "Administrador",
+                                ]) && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleRemoveExistingAttachment(index)
+                                    }
+                                    className="remove-adjunto-button"
+                                  >
+                                    X
+                                  </button>
+                                )}
+                            </div>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
+                  {tienePermiso(["Supervisor", "Administrador"]) && (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "10px",
+                        marginTop: "10px",
+                      }}
+                    >
+                      {!yaTieneFinal && (
+                        <button onClick={handleFinalAnswerAction}>
+                          Registrar Respuesta Final
                         </button>
                       )}
 
-                    {yaTieneFinal && editandoRespuestaFinal && (
-                      <>
-                        <button onClick={handleFinalAnswerAction}>
-                          Guardar Cambios (Respuesta Final)
-                        </button>
-                        <button
-                          className="boton-cancelar-edicion"
-                          onClick={() => {
-                            setEditandoRespuestaFinal(false);
-                            fetchPqr(); // Re-fetch para restablecer los valores originales y los adjuntos
-                          }}
-                        >
-                          Cancelar edición
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
-                {/* Botón para enviar al ciudadano, visible solo si ya hay respuesta final y no ha sido enviada */}
-                {tienePermiso(["Supervisor", "Administrador"]) &&
-                  yaTieneFinal &&
-                  !mailEnviado && (
-                    <div style={{ marginTop: "20px" }}>
-                      <button
-                        onClick={enviarAlCiudadano}
-                        className="boton-enviar-respuesta"
-                      >
-                        ✉️ Enviar Respuesta Final al Usuario
-                      </button>
+                      {yaTieneFinal &&
+                        !editandoRespuestaFinal &&
+                        pqr &&
+                        !mailEnviado && (
+                          <button
+                            onClick={() => setEditandoRespuestaFinal(true)}
+                          >
+                            Editar Respuesta Final
+                          </button>
+                        )}
+
+                      {yaTieneFinal && editandoRespuestaFinal && (
+                        <>
+                          <button onClick={handleFinalAnswerAction}>
+                            Guardar Cambios (Respuesta Final)
+                          </button>
+                          <button
+                            className="boton-cancelar-edicion"
+                            onClick={() => {
+                              setEditandoRespuestaFinal(false);
+                              fetchPqr(); // Re-fetch para restablecer los valores originales y los adjuntos
+                            }}
+                          >
+                            Cancelar edición
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
-              </div>
-            )}
+
+                  {tienePermiso(["Supervisor", "Administrador"]) &&
+                    yaTieneFinal &&
+                    !mailEnviado && (
+                      <div style={{ marginTop: "20px" }}>
+                        <button
+                          onClick={enviarAlCiudadano}
+                          className="boton-enviar-respuesta"
+                        >
+                          ✉️ Enviar Respuesta Final al Usuario
+                        </button>
+                      </div>
+                    )}
+                </div>
+              )}
           </div>
         </div>
       </div>
@@ -1129,7 +1285,8 @@ export default PqrsDetail;
 // import Swal from "sweetalert2";
 // import Navbar from "../components/Navbar/Navbar";
 // import CountdownTimer from "./components/CountDownTimer";
-// import SeguimientoPqrs from "./SeguimientoPqrs";
+// import SeguimientoPqrs from "./components/SeguimientoPqrs";
+// import ClasificacionesPqrs from "./components/ClasificacionesPqrs";
 
 // function PqrsDetail() {
 //   const { pqr_codigo } = useParams();
@@ -1146,6 +1303,9 @@ export default PqrsDetail;
 //   const [mailEnviado, setMailEnviado] = useState(false);
 //   const [editandoRespuestaFinal, setEditandoRespuestaFinal] = useState(false);
 //   const [finalAnswerAuthorName, setFinalAnswerAuthorName] = useState(null);
+//   const [finalAnswerCreatedAt, setFinalAnswerCreatedAt] = useState(null);
+
+//   const [isSavingForm, setIsSavingForm] = useState(false);
 
 //   // NUEVOS ESTADOS PARA ADJUNTOS DE RESPUESTA FINAL
 //   const [adjuntosRespuestaFinal, setAdjuntosRespuestaFinal] = useState([]);
@@ -1232,6 +1392,7 @@ export default PqrsDetail;
 //         setRespuestaFinal(finalAnswer.contenido.replace(/<br>/g, "\n"));
 //         setExistingFinalAnswerId(finalAnswer.id);
 //         setFinalAnswerAuthorName(finalAnswer.autor?.name || "Desconocido");
+//         setFinalAnswerCreatedAt(finalAnswer.created_at || null);
 //         // Cargar adjuntos existentes de la respuesta final
 //         setAdjuntosExistentesRespuestaFinal(finalAnswer.adjuntos || []); // Asegúrate de que sea un array
 //       } else {
@@ -1249,6 +1410,7 @@ export default PqrsDetail;
 //         fuente: p.fuente || "",
 //         asignado_a: p?.asignado?.id || "",
 //         prioridad: p.prioridad || "",
+//         tipo_solicitud: p.tipo_solicitud || "",
 //       });
 
 //       // Actualizar el estado de bloqueo basado en si el campo ya tiene un valor
@@ -1303,50 +1465,102 @@ export default PqrsDetail;
 //     }));
 //   };
 
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
+//   const handleSubmit = useCallback(
+//     async (e) => {
+//       e.preventDefault();
 
-//     if (!formData.prioridad) {
-//       Swal.fire(
-//         "Debe seleccionar una prioridad",
-//         "El campo prioridad es obligatorio",
-//         "warning"
-//       );
-//       return;
-//     }
-
-//     const cleanedData = {};
-//     for (const key in formData) {
-//       if (formData[key] !== "") cleanedData[key] = formData[key];
-//     }
-
-//     try {
-//       const response = await api.put(`/pqrs/codigo/${pqr_codigo}`, cleanedData);
-
-//       setPqr(response.data.data);
-//       setPrioridadBloqueada(!!response.data.data.prioridad);
-//       setAtributoCalidadBloqueado(!!response.data.data.atributo_calidad);
-//       setFuenteBloqueada(!!response.data.data.fuente);
-//       setAsignadoABloqueado(!!response.data.data.asignado_a);
-
-//       Swal.fire("Actualizado", "PQRS actualizada correctamente", "success");
-//     } catch (err) {
-//       let errorMessage = "No se pudo actualizar";
-
-//       if (err.response) {
-//         errorMessage =
-//           err.response.data?.error ||
-//           err.response.data?.message ||
-//           errorMessage;
-//       } else if (err.request) {
-//         errorMessage =
-//           "No se recibió respuesta del servidor. Inténtalo de nuevo.";
-//       } else {
-//         errorMessage = err.message;
+//       if (!pqr || !pqr.id) {
+//         Swal.fire(
+//           "Advertencia",
+//           "No hay PQRS cargada o su ID no está disponible para guardar.",
+//           "warning"
+//         );
+//         return;
 //       }
-//       Swal.fire("Error", errorMessage, "error");
-//     }
-//   };
+
+//       setIsSavingForm(true);
+
+//       if (!formData.prioridad) {
+//         Swal.fire(
+//           "Debe seleccionar una prioridad",
+//           "El campo prioridad es obligatorio",
+//           "warning"
+//         );
+//         setIsSavingForm(false);
+//         return;
+//       }
+
+//       if (!formData.asignado_a) {
+//         Swal.fire(
+//           "Debe seleccionar a quién se asigna",
+//           "El campo asignado_a es obligatorio",
+//           "warning"
+//         );
+//         setIsSavingForm(false);
+//         return;
+//       }
+
+//       if (!formData.fuente) {
+//         Swal.fire(
+//           "Debe seleccionar una fuente",
+//           "El campo fuente es obligatorio",
+//           "warning"
+//         );
+//         setIsSavingForm(false);
+//         return;
+//       }
+
+//       const tipoSolicitudActual =
+//         pqr?.tipo_solicitud || formData.tipo_solicitud;
+//       if (tipoSolicitudActual !== "Solicitud" && !formData.atributo_calidad) {
+//         Swal.fire(
+//           "Debe seleccionar un atributo de calidad",
+//           "El campo atributo_calidad es obligatorio",
+//           "warning"
+//         );
+//         setIsSavingForm(false);
+//         return;
+//       }
+
+//       const dataToUpdatePqr = { ...formData };
+
+//       const cleanedDataPqr = {};
+//       for (const key in dataToUpdatePqr) {
+//         if (dataToUpdatePqr[key] !== "") {
+//           cleanedDataPqr[key] = dataToUpdatePqr[key];
+//         } else if (key === "asignado_a" && dataToUpdatePqr[key] === "") {
+//           cleanedDataPqr[key] = null;
+//         }
+//       }
+
+//       try {
+//         let successMessage = "PQRS actualizada correctamente";
+
+//         const pqrUpdateResponse = await api.put(
+//           `/pqrs/codigo/${pqr.pqr_codigo}`,
+//           cleanedDataPqr
+//         );
+//         setPqr(pqrUpdateResponse.data.data);
+//         successMessage += " y ";
+
+//         if (err.response) {
+//           errorMessage =
+//             err.response.data?.error ||
+//             err.response.data?.message ||
+//             errorMessage;
+//         } else if (err.request) {
+//           errorMessage =
+//             "No se recibió respuesta del servidor. Inténtalo de nuevo.";
+//         } else {
+//           errorMessage = err.message;
+//         }
+//         Swal.fire("Error", errorMessage, "error");
+//       } finally {
+//         setIsSavingForm(false);
+//       }
+//     },
+//     [pqr, formData]
+//   );
 
 //   // Función para registrar (POST) o actualizar (PUT) la respuesta final CON ADJUNTOS
 //   const handleFinalAnswerAction = async () => {
@@ -1523,10 +1737,36 @@ export default PqrsDetail;
 //     <>
 //       <Navbar />
 //       <div className="pqr-card-container">
-//         <h2>Detalle y edición de la PQRS # {pqr.pqr_codigo}</h2>
+//         <h2>Descripción y clasificación de la {pqr.pqr_codigo}</h2>
 //         <div className="pqr-card-columns">
 //           {/* Columna de datos simples (izquierda) */}
 //           <div className="pqr-card-col">
+//             {/* SI SOLICITANTE EXISTE MOSTRAR SUS DATOS */}
+//             {pqr.registrador_nombre && (
+//               <div className="solicitante">
+//                 <p>
+//                   <strong>Nombre Solicitante:</strong> {pqr.registrador_nombre}{" "}
+//                   {pqr.registrador_apellido}
+//                 </p>
+//                 <p>
+//                   <strong>Tipo Doc. Solicitante:</strong>{" "}
+//                   {pqr.registrador_documento_tipo}
+//                 </p>
+//                 <p>
+//                   <strong>No. Doc. Solicitante:</strong>{" "}
+//                   {pqr.registrador_documento_numero}
+//                 </p>
+//                 <p>
+//                   <strong>Correo del solicitante:</strong>{" "}
+//                   {pqr.registrador_correo}
+//                 </p>
+//                 <p>
+//                   <strong>Teléfono del solicitante:</strong>{" "}
+//                   {pqr.registrador_telefono || "No proporcionado"}
+//                 </p>
+//               </div>
+//             )}
+//             {/* FIN DE LOS DATOS DEL SOLICITANTE */}
 //             <p>
 //               <strong>Nombre:</strong> {pqr.nombre} {pqr.apellido}
 //             </p>
@@ -1603,6 +1843,10 @@ export default PqrsDetail;
 //                 <strong>Tiempo de respuesta:</strong> {pqr.estado_tiempo}
 //               </p>
 //             )}
+//             <ClasificacionesPqrs
+//               pqrId={pqr.id}
+//               useIdInUrl={true}
+//             />
 //           </div>
 
 //           {/* Columna editable (centro) */}
@@ -1625,7 +1869,9 @@ export default PqrsDetail;
 //             </p>
 //             <p>
 //               <strong>Fecha solicitud real:</strong>{" "}
-//               {new Date(pqr.fecha_inicio_real).toLocaleString()}
+//               {pqr.fecha_inicio_real
+//                 ? new Date(pqr.fecha_inicio_real).toLocaleString()
+//                 : "No registra"}
 //             </p>
 //             <p>
 //               <strong>Estado PQR:</strong> {pqr.estado_tiempo}
@@ -1827,6 +2073,16 @@ export default PqrsDetail;
 
 //           {/* Nueva Columna para Historial de Respuestas y Formulario de Respuesta Final */}
 //           <div className="pqr-card-section pqr-card-col">
+//             {/* SEGUIMIENTO DE LA PQRS */}
+//             <section className="seccion-seguimiento">
+//               <SeguimientoPqrs
+//                 pqr_codigo={pqr_codigo}
+//                 formData={formData}
+//                 estado_respuesta={pqr.estado_respuesta}
+//               />
+//             </section>
+//             {/* FIN DEL SEGUIMIENTO DE LA PQRS */}
+
 //             {/* --- Sección para mostrar TODAS las respuestas (Historial) --- */}
 //             {pqr.respuestas && pqr.respuestas.length > 0 && (
 //               <div className="preliminary-responses-section">
@@ -1897,209 +2153,244 @@ export default PqrsDetail;
 //             )}
 //             {/* --- FIN Sección para mostrar TODAS las respuestas --- */}
 
-//             {/* SEGUIMIENTO DE LA PQRS */}
-//             <section className="seccion-seguimiento">
-//               <SeguimientoPqrs pqr_codigo={pqr_codigo} />
-//             </section>
-//             {/* FIN DEL SEGUIMIENTO DE LA PQRS */}
-
-//             {/* JSX existente para el formulario de Respuesta Final */}
-//             <h3>
-//               {yaTieneFinal && finalAnswerAuthorName
-//                 ? `📝 Respuesta Final registrada por ${finalAnswerAuthorName}`
-//                 : "Registrar Respuesta Final"}
-//             </h3>
-//             {/* Dropdown de plantillas */}
-//             <select
-//               className="styled-input"
-//               value={plantillaSeleccionada}
-//               onChange={(e) => {
-//                 const idSeleccionado = e.target.value;
-//                 setPlantillaSeleccionada(idSeleccionado);
-
-//                 const plantilla = plantillas.find(
-//                   (p) => p.id.toString() === idSeleccionado
-//                 );
-
-//                 if (plantilla && pqr) {
-//                   let contenido = plantilla.contenido;
-
-//                   const fechaPqrCreada = new Date(
-//                     pqr.created_at
-//                   ).toLocaleDateString("es-CO", {
-//                     day: "numeric",
-//                     month: "long",
-//                     year: "numeric",
-//                   });
-
-//                   // Reemplazo dinámico de placeholders
-//                   const placeholders = {
-//                     "[NOMBRE]": `${pqr.nombre || ""} ${
-//                       pqr.apellido || ""
-//                     }`.trim(),
-//                     "[CIUDAD]": pqr.sede || "Ciudad",
-//                     "[CORREO]": pqr.correo || "",
-//                     "[TIPO_DOC]": pqr.documento_tipo || "",
-//                     "[NUMERO_DOC]": pqr.documento_numero || "",
-//                     "[TELEFONO]": pqr.telefono || "",
-//                     "[FECHA]": new Date().toLocaleDateString("es-CO", {
-//                       day: "numeric",
-//                       month: "long",
-//                       year: "numeric",
-//                     }),
-//                     "[PQR_CREADA]": fechaPqrCreada,
-//                     "[PACIENTE]": `${pqr.nombre || ""} ${
-//                       pqr.apellido || ""
-//                     }`.trim(),
-//                     "[CC]": pqr.documento_tipo || "",
-//                   };
-
-//                   for (const clave in placeholders) {
-//                     const valor = placeholders[clave];
-//                     contenido = contenido.replaceAll(clave, valor);
-//                   }
-
-//                   setRespuestaFinal(contenido);
-//                 }
-//               }}
-//               disabled={yaTieneFinal && !editandoRespuestaFinal}
-//             >
-//               <option value="">-- Selecciona una plantilla --</option>
-//               {plantillas.map((p) => (
-//                 <option key={p.id} value={p.id}>
-//                   {p.nombre}
-//                 </option>
-//               ))}
-//             </select>
-//             {/* Área de texto editable */}
-//             <textarea
-//               ref={respuestaFinalTextareaRef}
-//               value={respuestaFinal}
-//               onChange={(e) => setRespuestaFinal(e.target.value)}
-//               rows="1"
-//               placeholder="Escribe la respuesta final..."
-//               className="styled-input respuesta-final"
-//               style={{ overflow: "hidden", resize: "none" }}
-//               disabled={yaTieneFinal && !editandoRespuestaFinal}
-//             />
-//             {/* NUEVO: Sección para adjuntar y mostrar archivos para la RESPUESTA FINAL */}
-//             {/* Visible solo si tiene permiso y no está cerrada O si está en modo edición */}
-//             {tienePermiso(["Supervisor", "Administrador"]) &&
-//               (!yaTieneFinal || editandoRespuestaFinal) && (
-//                 <div className="adjuntos-final-respuesta-container">
-//                   {/* <label htmlFor="adjuntos-final-respuesta">Adjuntar archivos (Respuesta Final):</label> */}
-//                   <input
-//                     type="file"
-//                     id="adjuntos-final-respuesta"
-//                     multiple
-//                     onChange={(e) =>
-//                       setAdjuntosRespuestaFinal(Array.from(e.target.files))
-//                     }
-//                     className="styled-input"
-//                     style={{ marginTop: "10px" }}
-//                   />
-//                   <div className="lista-adjuntos-nuevos">
-//                     {adjuntosRespuestaFinal.length > 0 && (
-//                       <p>
-//                         <strong>Archivos nuevos a subir:</strong>
-//                       </p>
-//                     )}
-//                     {adjuntosRespuestaFinal.map((file, index) => (
-//                       <div key={`new-adj-${index}`} className="adjunto-item">
-//                         <span>{file.name}</span>
-//                         <button
-//                           type="button"
-//                           onClick={() => handleRemoveNewAttachment(index)}
-//                           className="remove-adjunto-button"
-//                         >
-//                           X
-//                         </button>
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </div>
-//               )}
-//             {/* Mostrar adjuntos existentes de la RESPUESTA FINAL (si hay) */}
-//             {adjuntosExistentesRespuestaFinal.length > 0 && (
-//               <div className="adjuntos-final-respuesta-existentes">
-//                 <h3>🗂️ Archivos adjuntos actuales de la respuesta:</h3>
-//                 <ul>
-//                   {adjuntosExistentesRespuestaFinal.map((fileItem, index) => (
-//                     <div key={`existing-adj-${index}`} className="adjunto-item">
-//                       <a
-//                         // href={`http://127.0.0.1:8000/storage/${fileItem.path}`}
-//                         href={`http://192.168.1.30:8000/storage/${fileItem.path}`}
-//                         target="_blank"
-//                         rel="noopener noreferrer"
-//                       >
-//                         {fileItem.original_name || `Archivo ${fileIndex + 1}`}
-//                       </a>
-//                       {/* Permitir eliminar adjuntos existentes solo en modo edición y con permiso */}
-//                       {editandoRespuestaFinal &&
-//                         tienePermiso(["Supervisor", "Administrador"]) && (
-//                           <button
-//                             type="button"
-//                             onClick={() =>
-//                               handleRemoveExistingAttachment(index)
-//                             }
-//                             className="remove-adjunto-button"
-//                           >
-//                             X
-//                           </button>
-//                         )}
-//                     </div>
-//                   ))}
-//                 </ul>
-//               </div>
-//             )}
-//             {tienePermiso(["Supervisor", "Administrador"]) && (
-//               <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-//                 {!yaTieneFinal && (
-//                   <button onClick={handleFinalAnswerAction}>
-//                     Registrar Respuesta Final
-//                   </button>
-//                 )}
+//             {["Asignado", "En proceso", "Cerrado"].includes(
+//               pqr?.estado_respuesta
+//             ) && (
+//               <div className="respuesta-final">
+//                 <h2>Respuesta Final</h2>
 
 //                 {yaTieneFinal &&
-//                   !editandoRespuestaFinal &&
-//                   pqr &&
-//                   !mailEnviado && (
-//                     <button onClick={() => setEditandoRespuestaFinal(true)}>
-//                       Editar Respuesta Final
-//                     </button>
-//                   )}
-
-//                 {yaTieneFinal && editandoRespuestaFinal && (
-//                   <>
-//                     <button onClick={handleFinalAnswerAction}>
-//                       Guardar Cambios (Respuesta Final)
-//                     </button>
-//                     <button
-//                       className="boton-cancelar-edicion"
-//                       onClick={() => {
-//                         setEditandoRespuestaFinal(false);
-//                         fetchPqr(); // Re-fetch para restablecer los valores originales y los adjuntos
-//                       }}
-//                     >
-//                       Cancelar edición
-//                     </button>
-//                   </>
+//                 finalAnswerAuthorName &&
+//                 finalAnswerCreatedAt ? (
+//                   <div className="respuesta-item-card">
+//                     <p>
+//                       <strong>Autor:</strong> {finalAnswerAuthorName}
+//                     </p>
+//                     <p>
+//                       <strong>Fecha:</strong>{" "}
+//                       {new Date(finalAnswerCreatedAt).toLocaleString("es-CO", {
+//                         day: "2-digit",
+//                         month: "long",
+//                         year: "numeric",
+//                         hour: "2-digit",
+//                         minute: "2-digit",
+//                       })}
+//                     </p>
+//                     <p>
+//                       <strong>Tipo:</strong>{" "}
+//                       <span className="tag-interna">Respuesta Final</span>
+//                     </p>
+//                   </div>
+//                 ) : (
+//                   <h3>Registrar Respuesta Final</h3>
 //                 )}
+//                 {/* Dropdown de plantillas */}
+//                 <select
+//                   className="styled-input"
+//                   value={plantillaSeleccionada}
+//                   onChange={(e) => {
+//                     const idSeleccionado = e.target.value;
+//                     setPlantillaSeleccionada(idSeleccionado);
+
+//                     const plantilla = plantillas.find(
+//                       (p) => p.id.toString() === idSeleccionado
+//                     );
+
+//                     if (plantilla && pqr) {
+//                       let contenido = plantilla.contenido;
+
+//                       const fechaPqrCreada = new Date(
+//                         pqr.created_at
+//                       ).toLocaleDateString("es-CO", {
+//                         day: "numeric",
+//                         month: "long",
+//                         year: "numeric",
+//                       });
+
+//                       // Reemplazo dinámico de placeholders
+//                       const placeholders = {
+//                         "[NOMBRE]": `${pqr.nombre || ""} ${
+//                           pqr.apellido || ""
+//                         }`.trim(),
+//                         "[CIUDAD]": pqr.sede || "Ciudad",
+//                         "[CORREO]": pqr.correo || "",
+//                         "[TIPO_DOC]": pqr.documento_tipo || "",
+//                         "[NUMERO_DOC]": pqr.documento_numero || "",
+//                         "[TELEFONO]": pqr.telefono || "",
+//                         "[FECHA]": new Date().toLocaleDateString("es-CO", {
+//                           day: "numeric",
+//                           month: "long",
+//                           year: "numeric",
+//                         }),
+//                         "[PQR_CREADA]": fechaPqrCreada,
+//                         "[PACIENTE]": `${pqr.nombre || ""} ${
+//                           pqr.apellido || ""
+//                         }`.trim(),
+//                         "[CC]": pqr.documento_tipo || "",
+//                       };
+
+//                       for (const clave in placeholders) {
+//                         const valor = placeholders[clave];
+//                         contenido = contenido.replaceAll(clave, valor);
+//                       }
+
+//                       setRespuestaFinal(contenido);
+//                     }
+//                   }}
+//                   disabled={yaTieneFinal && !editandoRespuestaFinal}
+//                 >
+//                   <option value="">-- Selecciona una plantilla --</option>
+//                   {plantillas.map((p) => (
+//                     <option key={p.id} value={p.id}>
+//                       {p.nombre}
+//                     </option>
+//                   ))}
+//                 </select>
+//                 {/* Área de texto editable */}
+//                 <textarea
+//                   ref={respuestaFinalTextareaRef}
+//                   value={respuestaFinal}
+//                   onChange={(e) => setRespuestaFinal(e.target.value)}
+//                   rows="1"
+//                   placeholder="Escribe la respuesta final..."
+//                   className="styled-input respuesta-final"
+//                   disabled={yaTieneFinal && !editandoRespuestaFinal}
+//                 />
+//                 {/* NUEVO: Sección para adjuntar y mostrar archivos para la RESPUESTA FINAL */}
+//                 {/* Visible solo si tiene permiso y no está cerrada O si está en modo edición */}
+//                 {tienePermiso(["Supervisor", "Administrador"]) &&
+//                   (!yaTieneFinal || editandoRespuestaFinal) && (
+//                     <div className="adjuntos-final-respuesta-container">
+//                       {/* <label htmlFor="adjuntos-final-respuesta">Adjuntar archivos (Respuesta Final):</label> */}
+//                       <input
+//                         type="file"
+//                         id="adjuntos-final-respuesta"
+//                         multiple
+//                         onChange={(e) =>
+//                           setAdjuntosRespuestaFinal(Array.from(e.target.files))
+//                         }
+//                         className="styled-input"
+//                         style={{ marginTop: "10px" }}
+//                       />
+//                       <div className="lista-adjuntos-nuevos">
+//                         {adjuntosRespuestaFinal.length > 0 && (
+//                           <p>
+//                             <strong>Archivos nuevos a subir:</strong>
+//                           </p>
+//                         )}
+//                         {adjuntosRespuestaFinal.map((file, index) => (
+//                           <div
+//                             key={`new-adj-${index}`}
+//                             className="adjunto-item"
+//                           >
+//                             <span>{file.name}</span>
+//                             <button
+//                               type="button"
+//                               onClick={() => handleRemoveNewAttachment(index)}
+//                               className="remove-adjunto-button"
+//                             >
+//                               X
+//                             </button>
+//                           </div>
+//                         ))}
+//                       </div>
+//                     </div>
+//                   )}
+//                 {/* Mostrar adjuntos existentes de la RESPUESTA FINAL (si hay) */}
+//                 {adjuntosExistentesRespuestaFinal.length > 0 && (
+//                   <div className="adjuntos-final-respuesta-existentes">
+//                     <h3>🗂️ Archivos adjuntos actuales de la respuesta:</h3>
+//                     <ul>
+//                       {adjuntosExistentesRespuestaFinal.map(
+//                         (fileItem, index) => (
+//                           <div
+//                             key={`existing-adj-${index}`}
+//                             className="adjunto-item"
+//                           >
+//                             <a
+//                               // href={`http://127.0.0.1:8000/storage/${fileItem.path}`}
+//                               href={`http://192.168.1.30:8000/storage/${fileItem.path}`}
+//                               target="_blank"
+//                               rel="noopener noreferrer"
+//                             >
+//                               {fileItem.original_name ||
+//                                 `Archivo ${fileIndex + 1}`}
+//                             </a>
+//                             {/* Permitir eliminar adjuntos existentes solo en modo edición y con permiso */}
+//                             {editandoRespuestaFinal &&
+//                               tienePermiso(["Supervisor", "Administrador"]) && (
+//                                 <button
+//                                   type="button"
+//                                   onClick={() =>
+//                                     handleRemoveExistingAttachment(index)
+//                                   }
+//                                   className="remove-adjunto-button"
+//                                 >
+//                                   X
+//                                 </button>
+//                               )}
+//                           </div>
+//                         )
+//                       )}
+//                     </ul>
+//                   </div>
+//                 )}
+//                 {tienePermiso(["Supervisor", "Administrador"]) && (
+//                   <div
+//                     style={{
+//                       display: "flex",
+//                       gap: "10px",
+//                       marginTop: "10px",
+//                     }}
+//                   >
+//                     {!yaTieneFinal && (
+//                       <button onClick={handleFinalAnswerAction}>
+//                         Registrar Respuesta Final
+//                       </button>
+//                     )}
+
+//                     {yaTieneFinal &&
+//                       !editandoRespuestaFinal &&
+//                       pqr &&
+//                       !mailEnviado && (
+//                         <button onClick={() => setEditandoRespuestaFinal(true)}>
+//                           Editar Respuesta Final
+//                         </button>
+//                       )}
+
+//                     {yaTieneFinal && editandoRespuestaFinal && (
+//                       <>
+//                         <button onClick={handleFinalAnswerAction}>
+//                           Guardar Cambios (Respuesta Final)
+//                         </button>
+//                         <button
+//                           className="boton-cancelar-edicion"
+//                           onClick={() => {
+//                             setEditandoRespuestaFinal(false);
+//                             fetchPqr(); // Re-fetch para restablecer los valores originales y los adjuntos
+//                           }}
+//                         >
+//                           Cancelar edición
+//                         </button>
+//                       </>
+//                     )}
+//                   </div>
+//                 )}
+//                 {/* Botón para enviar al ciudadano, visible solo si ya hay respuesta final y no ha sido enviada */}
+//                 {tienePermiso(["Supervisor", "Administrador"]) &&
+//                   yaTieneFinal &&
+//                   !mailEnviado && (
+//                     <div style={{ marginTop: "20px" }}>
+//                       <button
+//                         onClick={enviarAlCiudadano}
+//                         className="boton-enviar-respuesta"
+//                       >
+//                         ✉️ Enviar Respuesta Final al Usuario
+//                       </button>
+//                     </div>
+//                   )}
 //               </div>
 //             )}
-//             {/* Botón para enviar al ciudadano, visible solo si ya hay respuesta final y no ha sido enviada */}
-//             {tienePermiso(["Supervisor", "Administrador"]) &&
-//               yaTieneFinal &&
-//               !mailEnviado && (
-//                 <div style={{ marginTop: "20px" }}>
-//                   <button
-//                     onClick={enviarAlCiudadano}
-//                     className="boton-enviar-respuesta"
-//                   >
-//                     ✉️ Enviar Respuesta Final al Usuario
-//                   </button>
-//                 </div>
-//               )}
 //           </div>
 //         </div>
 //       </div>

@@ -18,7 +18,7 @@ class PqrSeeder extends Seeder
             'Petición'      => 'PT',
             'Queja'         => 'QJ',
             'Reclamo'       => 'RE',
-            'Sugerencia'    => 'SO', // Asumimos que "Sugerencia" es igual a "Solicitud"
+            'Solicitud'    => 'SO', 
             'Felicitación'  => 'FE',
         ];
 

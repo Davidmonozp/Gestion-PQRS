@@ -47,6 +47,7 @@ Route::middleware(['auth:api', 'check.role:Administrador,Supervisor,Gestor,Consu
     Route::get('pqrs/codigo/{pqr_codigo}', [PqrController::class, 'show']);
     Route::get('/clasificaciones', [ClasificacionController::class, 'index']);
     Route::get('/pqrs/estado', [PqrController::class, 'filtros_estado_respuesta'])->middleware('auth:api');
+    Route::get('/pqrs/{pqr}/clasificaciones', [ClasificacionController::class, 'obtenerClasificacionesPorPqr']);
 });
 
 // RUTAS PROTEGIDAS QUE ACTUALIZAN LA PQRS
@@ -97,6 +98,10 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,
     Route::get('/plantillas-respuesta', [PlantillaRespuestaController::class, 'index']);
     Route::get('/pqrs/{pqr_codigo}/respuestas', [RespuestaController::class, 'listarRespuestas']);
     Route::put('/pqrs/respuestas/{respuesta}', [RespuestaController::class, 'updateRespuestaFinal']);
-    Route::get('/pqrs/{pqr_codigo}/seguimientos', [PqrController::class, 'obtenerSeguimientos']);
+    // Route::get('/pqrs/{pqr_codigo}/seguimientos', [PqrController::class, 'obtenerSeguimientos']);
     Route::post('/pqrs/{pqr_codigo}/seguimientos', [PqrController::class, 'registrarSeguimiento']);
+});
+
+Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,Supervisor,Consultor,Digitador'])->group(function () {
+    Route::get('/pqrs/{pqr_codigo}/seguimientos', [PqrController::class, 'obtenerSeguimientos']);
 });

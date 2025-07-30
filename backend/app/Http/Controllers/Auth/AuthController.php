@@ -17,6 +17,9 @@ class AuthController extends Controller
     {
         $rules = [
             'name' => 'required|string|min:7|max:100',
+            'segundo_nombre' => 'nullable|string|max:100',
+            'primer_apellido' => 'required|string|max:100',
+            'segundo_apellido' => 'nullable|string|max:100',
             'userName' => 'required|string|max:50|unique:users,userName',
             'documento_tipo' => 'required|string|max:5',
             'documento_numero' => 'required|string|max:20|unique:users,documento_numero',
@@ -51,6 +54,9 @@ class AuthController extends Controller
         // Crear el usuario correctamente
         $user = User::create([
             'name' => $request->name,
+            'segundo_nombre' => $request->segundo_nombre,
+            'primer_apellido' => $request->primer_apellido,
+            'segundo_apellido' => $request->segundo_apellido,
             'userName' => $request->userName,
             'email' => $request->email,
             'documento_tipo' => $request->documento_tipo,
@@ -71,7 +77,7 @@ class AuthController extends Controller
             'roles' => $user->getRoleNames(),
         ], 201);
     }
-    
+
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -102,13 +108,20 @@ class AuthController extends Controller
             ], 403);
         }
 
+        $user->load(['sedes:id,name']);
+
         return response()->json([
             'message' => 'Inicio de sesión exitoso',
             'token' => $token,
-            'user' => $user,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'sedes' => $user->sedes,
+            ],
             'roles' => $user->getRoleNames()
         ], 200);
     }
+
     public function logout(Request $request)
     {
         try {

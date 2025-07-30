@@ -47,4 +47,15 @@ class ClasificacionController extends Controller
             return response()->json(['error' => 'Error al actualizar las clasificaciones: ' . $e->getMessage()], 500);
         }
     }
+
+    public function obtenerClasificacionesPorPqr(Pqr $pqr)
+{
+    try {
+        return response()->json($pqr->clasificaciones); // Devuelve las clasificaciones relacionadas con la PQR
+    } catch (\Exception $e) {
+        Log::error("Error al obtener clasificaciones para la PQR {$pqr->id}: " . $e->getMessage());
+        return response()->json(['error' => 'Error al obtener las clasificaciones.'], 500);
+    }
+}
+
 }

@@ -13,7 +13,8 @@ class UserSeeder extends Seeder
         // Crear usuarios con distintos roles
         $usuarios = [
             [
-                'name' => 'Admin',
+                'name' => 'Juan',
+                'primer_apellido' => 'Admin',
                 'userName' => 'admin123',
                 'email' => 'admin@example.com',
                 'password' => Hash::make('password'),
@@ -22,7 +23,8 @@ class UserSeeder extends Seeder
                 'documento_numero' => '1000000001',
             ],
             [
-                'name' => 'Consultor',
+                'name' => 'Pepito',
+                'primer_apellido' => 'Consultor',
                 'userName' => 'consultor123',
                 'email' => 'consultor@example.com',
                 'password' => Hash::make('password'),
@@ -31,7 +33,8 @@ class UserSeeder extends Seeder
                 'documento_numero' => '1000000002',
             ],
             [
-                'name' => 'Supervisor',
+                'name' => 'Fulanito',
+                'primer_apellido' => 'Supervisor',
                 'userName' => 'supervisor123',
                 'email' => 'supervisor@example.com',
                 'password' => Hash::make('password'),
@@ -40,7 +43,8 @@ class UserSeeder extends Seeder
                 'documento_numero' => '1000000003',
             ],
             [
-                'name' => 'Gestor',
+                'name' => 'Chanchito',
+                'primer_apellido' => 'Gestor',
                 'userName' => 'gestor123',
                 'email' => 'gestor@example.com',
                 'password' => Hash::make('password'),
@@ -49,7 +53,8 @@ class UserSeeder extends Seeder
                 'documento_numero' => '1000000004',
             ],
             [
-                'name' => 'Digitador',
+                'name' => 'Batman',
+                'primer_apellido' => 'Digitador',
                 'userName' => 'digitador123',
                 'email' => 'digitador@example.com',
                 'password' => Hash::make('password'),
@@ -64,6 +69,7 @@ class UserSeeder extends Seeder
                 ['email' => $usuario['email']],
                 [
                     'name' => $usuario['name'],
+                    'primer_apellido' => $usuario['primer_apellido'],
                     'userName' => $usuario['userName'],
                     'password' => $usuario['password'],
                     'documento_tipo' => $usuario['documento_tipo'],

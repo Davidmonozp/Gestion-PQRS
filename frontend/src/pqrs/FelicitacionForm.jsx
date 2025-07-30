@@ -8,10 +8,16 @@ const felicitacionSchema = Yup.object().shape({
     .required("El nombre es obligatorio")
     .min(2, "El nombre debe tener al menos 2 caracteres")
     .max(50, "El nombre no puede exceder los 50 caracteres"),
+  segundo_nombre: Yup.string()
+    .max(50, "El segundo nombre no puede exceder los 50 caracteres")
+    .nullable(),
   apellido: Yup.string()
     .required("El apellido es obligatorio")
     .min(2, "El apellido debe tener al menos 2 caracteres")
     .max(50, "El apellido no puede exceder los 50 caracteres"),
+  segundo_apellido: Yup.string()
+    .max(50, "El segundo apellido no puede exceder los 50 caracteres")
+    .nullable(),
   documento_tipo: Yup.string().required("Selecciona un tipo de documento"),
   documento_numero: Yup.string()
     .required("El número de documento es obligatorio")
@@ -41,7 +47,9 @@ const felicitacionSchema = Yup.object().shape({
 export default function FelicitacionForm() {
   const [form, setForm] = useState({
     nombre: "",
+    segundo_nombre: "",
     apellido: "",
+    segundo_apellido: "",
     documento_tipo: "",
     documento_numero: "",
     correo: "",
@@ -107,7 +115,9 @@ export default function FelicitacionForm() {
 
       setForm({
         nombre: "",
+        segundo_nombre: "",
         apellido: "",
+        segundo_apellido: "",
         documento_tipo: "",
         documento_numero: "",
         correo: "",
@@ -127,7 +137,6 @@ export default function FelicitacionForm() {
           text: "Por favor completa todos los campos requeridos.",
           icon: "warning",
         });
-        
       } else {
         Swal.fire({
           title: "Error",
@@ -152,7 +161,7 @@ export default function FelicitacionForm() {
         <input
           type="text"
           name="nombre"
-          placeholder="Nombre/s"
+          placeholder="Primer nombre"
           value={form.nombre}
           onChange={handleChange}
         />
@@ -160,12 +169,34 @@ export default function FelicitacionForm() {
 
         <input
           type="text"
+          name="segundo_nombre"
+          placeholder="Segundo nombre"
+          value={form.segundo_nombre}
+          onChange={handleChange}
+        />
+        {errors.segundo_nombre && (
+          <p className="error">{errors.segundo_nombre}</p>
+        )}
+
+        <input
+          type="text"
           name="apellido"
-          placeholder="Apellido/s"
+          placeholder="Primer apellido"
           value={form.apellido}
           onChange={handleChange}
         />
         {errors.apellido && <p className="error">{errors.apellido}</p>}
+
+        <input
+          type="text"
+          name="segundo_apellido"
+          placeholder="Segundo apellido"
+          value={form.segundo_apellido}
+          onChange={handleChange}
+        />
+        {errors.segundo_apellido && (
+          <p className="error">{errors.segundo_apellido}</p>
+        )}
 
         <select
           name="documento_tipo"
@@ -223,7 +254,6 @@ export default function FelicitacionForm() {
 
         <select name="sede" value={form.sede} onChange={handleChange}>
           <option value="">Selecciona una sede</option>
-          <option value="No he sido atendido">No he sido atendido</option>
           <option value="Bogota-Sur-Occidente-Rehabilitación">
             Bogotá-Sur-Occidente-Rehabilitación
           </option>

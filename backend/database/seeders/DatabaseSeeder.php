@@ -20,5 +20,7 @@ class DatabaseSeeder extends Seeder
         ]);
         $this->call(PqrSeeder::class);
         $this->call(PlantillaRespuestaSeeder::class);
+        $this->call(ClasificacionesTableSeeder::class);
+        $this->call(SedeSeeder::class);
     }
 }

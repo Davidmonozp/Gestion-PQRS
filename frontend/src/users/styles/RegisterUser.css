@@ -1,7 +1,7 @@
 .header-register-user {
   position: absolute;
   top: calc(41% - -35px);
-  left: calc(50% - 255px);
+  left: calc(37% - 255px);
   z-index: 2;
 }
 
@@ -18,10 +18,50 @@
   color: #0087cd;
 }
 
+
+
+
+
+
+
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  align-items: start;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.form-grid div {
+  width: 97%;
+}
+
+button[type="submit"] {
+  grid-column: span 2;
+  /* botón ocupa ambas columnas */
+  width: 200px;
+  margin: 0 auto;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .register-user {
   position: absolute;
   top: calc(37% - 139px);
-  left: calc(50% - 50px);
+  left: calc(37% - 50px);
   height: 320px;
   /* más alto para 4 inputs */
   width: 350px;
@@ -79,6 +119,7 @@
   font-weight: 400;
   padding: 6px;
   margin-top: 10px;
+  margin-bottom: 20px;
 }
 
 .register-user button:hover {
@@ -96,6 +137,93 @@
   margin-top: 5px;
   font-family: 'Exo', sans-serif;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+/* Campo principal igual a un form-control */
+.custom-select-field {
+  cursor: pointer;
+  background-color: #fff;
+  border: 1px solid #198754;
+  /* Borde verde */
+  border-radius: 0.375rem;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+}
+
+/* Dropdown con apariencia de select abierto */
+.custom-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid #198754;
+  border-radius: 0.375rem;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 2px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Cada opción (checkbox) alineada y con padding como un select */
+.checkbox-item-register {
+  cursor: pointer;
+  background: #0087cd;
+  color: white;
+  width: 104%;
+  margin-left: -5px;
+  font-size: 15px;
+  font-weight: 400;
+  position: relative;
+  z-index: 9999;
+  padding: 4px;
+}
+
+.checkbox-item-sedes:hover {
+  background-color: #f8f9fa;
+}
+
+.form-grid div {
+  width: 97%;
+}
+
+.sedes-register {
+  width: 300px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid #00933f;
+  border-radius: 2px;
+  color: #000000;
+  font-family: 'Exo', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  padding: 4px;
+  margin-top: 10px;
+}
+
+form .input {
+  /* display: block; */
+  color: black;
+}
+
+.placeholder-sedes {
+  color: #585858 !important;
+  margin-top: 10px;
+}
+
 
 @media (max-width: 767px) {
   .logo-img {
@@ -117,4 +245,11 @@
   /* .header-register-user div {
     margin-left: -2px;
   } */
+}
+
+@media (min-width: 768px) and (max-width: 1366px) {
+  .register-user {
+    top: calc(44% - 139px);
+    left: calc(37% - 50px);
+  }
 }

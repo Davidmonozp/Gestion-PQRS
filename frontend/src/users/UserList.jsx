@@ -109,6 +109,7 @@ const UserList = () => {
                 ) && (
                   <>
                     <th>Roles</th>
+                    <th>Sedes</th>
                     <th>Estado</th>
                     <th>Acciones</th>
                   </>
@@ -119,7 +120,10 @@ const UserList = () => {
               {usuariosFiltrados.map((user) => (
                 <tr key={user.id}>
                   <td>{user.id}</td>
-                  <td>{user.name}</td>
+                  <td>
+                    {user.name} {user.segundo_nombre} {user.primer_apellido}{" "}
+                    {user.segundo_apellido}
+                  </td>
                   <td>{user.userName}</td>
                   <td>{user.email}</td>
                   {!["Gestor", "Digitador", "Consultor"].includes(
@@ -127,6 +131,13 @@ const UserList = () => {
                   ) && (
                     <>
                       <td>{user.roles.map((role) => role.name).join(", ")}</td>
+                      <td>
+                        <ul className="user-sedes-list">
+                          {user.sedes.map((sede) => (
+                            <li key={sede.id}>{sede.name}</li>
+                          ))}
+                        </ul>
+                      </td>
                       <td>{user.activo ? "Activo" : "Inactivo"}</td>
                       <td>
                         <div className="actions">

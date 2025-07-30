@@ -20,6 +20,9 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $fillable = [
         'name',
+        'segundo_nombre',
+        'primer_apellido',
+        'segundo_apellido',
         'email',
         'documento_tipo',
         'documento_numero',
@@ -69,5 +72,13 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+    public function pqrsAsignadas()
+    {
+        return $this->belongsToMany(Pqr::class, 'pqrs_user');
+    }
+    public function sedes()
+    {
+         return $this->belongsToMany(Sede::class, 'sede_user', 'user_id', 'sede_id');
     }
 }

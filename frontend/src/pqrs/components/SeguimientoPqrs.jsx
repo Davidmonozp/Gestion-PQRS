@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import api from "../../api/api";
 import "../styles/SeguimientoPqrs.css";
 import Swal from "sweetalert2"; // Importa SweetAlert2
+import { tienePermiso } from "../../utils/permisoHelper";
 
 // Puedes definir la función de utilidad de filtrado fuera del componente
 const filterArrayByProperty = (data, property, filterValue) => {
@@ -114,18 +115,19 @@ export default function SeguimientoPqrs({
     );
   };
 
-  const seguimientoDeshabilitado = ![
-    "Asignado",
-    "En proceso",
-  ].includes(estado_respuesta);
+  const seguimientoDeshabilitado = !["Asignado", "En proceso"].includes(
+    estado_respuesta
+  );
 
   // Tipos de seguimiento disponibles (no necesitan useMemo si son estáticos)
-  const tiposDeSeguimientoDisponibles = useMemo(() => [
-    "Comunicación con el asegurador",
-    "Comunicación con asesor Externo de Passus",
-    "Comunicación entre áreas Passus",
-  ], []);
-
+  const tiposDeSeguimientoDisponibles = useMemo(
+    () => [
+      "Comunicación con el asegurador",
+      "Comunicación con asesor Externo de Passus",
+      "Comunicación entre áreas Passus",
+    ],
+    []
+  );
 
   // ***** APLICACIÓN DEL FILTRO EN EL FRONTEND *****
   const seguimientosFiltrados = useMemo(() => {
@@ -245,55 +247,64 @@ export default function SeguimientoPqrs({
             : "Complete todos los campos obligatorios para habilitar el seguimiento."}
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="seguimiento-form">
-          <h3>Registrar Nuevo Seguimiento</h3>
-          <label htmlFor="tipoSeguimiento">Tipo de seguimiento:</label>
-          <select
-            id="tipoSeguimiento"
-            className="styled-input"
-            value={tipoSeguimiento}
-            onChange={(e) => setTipoSeguimiento(e.target.value)}
-            required
-          >
-            <option value="">Seleccione una opción</option>
-            {tiposDeSeguimientoDisponibles.map((tipo) => (
-              <option key={tipo} value={tipo}>
-                {tipo}
-              </option>
-            ))}
-          </select>
+        tienePermiso([
+          "Digitador",
+          "Gestor",
+          "Supervisor",
+          "Administrador",
+        ]) && (
+          <form onSubmit={handleSubmit} className="seguimiento-form">
+            <h3>Registrar Nuevo Seguimiento</h3>
+            <label htmlFor="tipoSeguimiento">Tipo de seguimiento:</label>
+            <select
+              id="tipoSeguimiento"
+              className="styled-input"
+              value={tipoSeguimiento}
+              onChange={(e) => setTipoSeguimiento(e.target.value)}
+              required
+            >
+              <option value="">Seleccione una opción</option>
+              {tiposDeSeguimientoDisponibles.map((tipo) => (
+                <option key={tipo} value={tipo}>
+                  {tipo}
+                </option>
+              ))}
+            </select>
 
-          <label htmlFor="descripcionGestion">
-            Descripción de la gestión realizada:
-          </label>
-          <textarea
-            id="descripcionGestion"
-            value={descripcion}
-            // Usa la nueva función de cambio aquí
-            onChange={handleDescripcionChange}
-            placeholder={`Describe la gestión realizada (máx. ${MAX_CARACTERES_DESCRIPCION} caracteres)...`}
-            required
-            rows={3}
-            maxLength={MAX_CARACTERES_DESCRIPCION} // Añade maxLength para una primera capa de limitación
-          />
-          {/* Opcional: Contador de caracteres */}
-          <small
-            style={{
-              display: "block",
-              textAlign: "right",
-              color:
-                descripcion.length > MAX_CARACTERES_DESCRIPCION * 0.9
-                  ? "red"
-                  : "#555",
-            }}
-          >
-            {descripcion.length} / {MAX_CARACTERES_DESCRIPCION} caracteres
-          </small>
+            <label htmlFor="descripcionGestion">
+              Descripción de la gestión realizada:
+            </label>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Registrando..." : "Agregar seguimiento"}
-          </button>
-        </form>
+            <textarea
+              id="descripcionGestion"
+              value={descripcion}
+              // Usa la nueva función de cambio aquí
+              onChange={handleDescripcionChange}
+              placeholder={`Describe la gestión realizada (máx. ${MAX_CARACTERES_DESCRIPCION} caracteres)...`}
+              required
+              rows={3}
+              maxLength={MAX_CARACTERES_DESCRIPCION} // Añade maxLength para una primera capa de limitación
+            />
+            {/* Opcional: Contador de caracteres */}
+            <small
+              style={{
+                display: "block",
+                textAlign: "right",
+                color:
+                  descripcion.length > MAX_CARACTERES_DESCRIPCION * 0.9
+                    ? "red"
+                    : "#555",
+              }}
+            >
+              {descripcion.length} / {MAX_CARACTERES_DESCRIPCION} caracteres
+            </small>
+
+          
+              <button type="submit" disabled={loading}>
+                {loading ? "Registrando..." : "Agregar seguimiento"}
+              </button>
+          </form>
+        )
       )}
     </div>
   );

@@ -10,50 +10,59 @@ const InicioPQRS = () => {
   const [radicado, setRadicado] = useState("");
 
   // Función para consultar radicado
-  const handleConsultar = async () => {
-    if (!radicado.trim()) {
-      Swal.fire({
-        icon: "warning",
-        title: "Campo vacío",
-        text: "Por favor ingresa el número de radicado.",
-      });
-      return;
-    }
+const handleConsultar = async () => {
+  if (!radicado.trim()) {
+    Swal.fire({
+      icon: "warning",
+      title: "Campo vacío",
+      text: "Por favor ingresa el número de radicado.",
+    });
+    return;
+  }
 
-    try {
-      const response = await api.post("/pqrs/consultar-radicado", {
-        pqr_codigo: radicado.trim(),
-      });
+  Swal.fire({
+    title: "Consultando...",
+    text: "Por favor espera un momento",
+    allowOutsideClick: false,
+    didOpen: () => {
+      Swal.showLoading();
+    },
+  });
 
-      const correoDestino = response.data.correo;
+  try {
+    const response = await api.post("/pqrs/consultar-radicado", {
+      pqr_codigo: radicado.trim(),
+    });
 
-      Swal.fire({
-        icon: "success",
-        title: "Correo enviado",
-        html: `
+    const correoDestino = response.data.correo;
+
+    Swal.fire({
+      icon: "success",
+      title: "Correo enviado",
+      html: `
         <p>El estado de tu PQR fue enviado al correo:</p>
         <strong>${correoDestino}</strong>
       `,
-        confirmButtonText: "Entendido",
-      });
+      confirmButtonText: "Entendido",
+    });
 
-      setRadicado(""); // Opcional: limpiar input
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
-        Swal.fire({
-          icon: "error",
-          title: "No encontrado",
-          text: "No se encontró ningún radicado con ese número.",
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Ocurrió un error al consultar el radicado. Inténtalo más tarde.",
-        });
-      }
+    setRadicado("");
+  } catch (error) {
+    if (error.response && error.response.status === 404) {
+      Swal.fire({
+        icon: "error",
+        title: "No encontrado",
+        text: "No se encontró ningún radicado con ese número.",
+      });
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Ocurrió un error al consultar el radicado. Inténtalo más tarde.",
+      });
     }
-  };
+  }
+};
 
   return (
     <div className="pqrs-container-pqrs">

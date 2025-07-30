@@ -169,6 +169,8 @@ function PqrsForm({
     registrador_correo: "",
     registrador_telefono: "",
     parentesco: "",
+    registrador_cargo: "",
+    nombre_entidad: "",
     fuente: "Formulario de la web",
     fecha_inicio_real: "", // Se inicializa como cadena vacía, se llenará en useEffect
   });
@@ -254,6 +256,8 @@ function PqrsForm({
         registrador_correo: pqrData.registrador_correo || "",
         registrador_telefono: pqrData.registrador_telefono || "",
         parentesco: pqrData.parentesco || "",
+        registrador_cargo: pqrData.registrador_cargo || "",
+        nombre_entidad: pqrData.nombre_entidad || "",
         politica_aceptada: pqrData.politica_aceptada === "true", // O el valor que use tu API
       }));
     }
@@ -380,30 +384,35 @@ function PqrsForm({
 
       // Añadir campos del formulario a formData
       Object.entries(form).forEach(([key, value]) => {
-        // No enviar campos del registrador si registra_otro es 'no'
-        if (key.startsWith("registrador_") && form.registra_otro === "no") {
+        // Evitar campos del registrador si no aplica
+        if (key.startsWith("registrador_") && form.registra_otro === "no")
           return;
-        }
-        if (key === "parentesco" && form.registra_otro === "no") {
-          return; // También omitir parentesco si no se registra a otro
-        }
+        if (key === "parentesco" && form.registra_otro === "no") return;
 
-        // Convertir booleanos a 'true'/'false' strings si el backend lo requiere
+        // 🔹 Solo enviar cargo si el parentesco es Ente de control
+        if (
+          key === "registrador_cargo" &&
+          form.parentesco !== "Ente de control"
+        )
+          return;
+
+        // 🔹 Solo enviar nombre_entidad si el parentesco es Ente de control
+        if (key === "nombre_entidad" && form.parentesco !== "Ente de control")
+          return;
+
+        // Convertir booleanos
         if (key === "politica_aceptada") {
           formData.append(key, value ? "true" : "false");
           return;
         }
 
-        // Manejo específico para fecha_inicio_real
+        // Manejo fecha_inicio_real
         if (key === "fecha_inicio_real") {
-          if (isLoggedIn && value) {
-            // value ya está en YYYY-MM-DD HH:MM:SS gracias a handleChange
-            formData.append(key, value);
-          }
-          return; // Siempre retornar para evitar que se añada dos veces o con valor incorrecto
+          if (isLoggedIn && value) formData.append(key, value);
+          return;
         }
 
-        // Añadir otros campos si tienen valor
+        // Añadir campo si tiene valor
         if (value !== null && value !== undefined && value !== "") {
           formData.append(key, value);
         }
@@ -552,6 +561,45 @@ function PqrsForm({
             <br />
             <div className="pqrs-otro">
               <div className="floating-label">
+                <select
+                  id="parentesco"
+                  name="parentesco"
+                  value={form.parentesco}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
+                >
+                  <option value="" disabled hidden></option>
+                  {parentesco.map((opcion) => (
+                    <option key={opcion} value={opcion}>
+                      {opcion}
+                    </option>
+                  ))}
+                </select>
+                <label htmlFor="parentesco">Parentesco o entidad</label>
+                {errors.parentesco && (
+                  <p className="error">{errors.parentesco}</p>
+                )}
+              </div>
+              {form.parentesco === "Ente de control" && (
+                <div className="floating-label">
+                  <input
+                    id="nombre_entidad"
+                    name="nombre_entidad"
+                    value={form.nombre_entidad}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    // 🔹 Solo requerido si el parentesco es "Ente de control"
+                    required={form.parentesco === "Ente de control"}
+                  />
+                  <label htmlFor="nombre_entidad">Nombre de la entidad</label>
+                  {errors.nombre_entidad && (
+                    <p className="error">{errors.nombre_entidad}</p>
+                  )}
+                </div>
+              )}
+
+              <div className="floating-label">
                 <input
                   id="registrador_nombre"
                   name="registrador_nombre"
@@ -560,9 +608,7 @@ function PqrsForm({
                   onBlur={handleBlur}
                   required
                 />
-                <label htmlFor="registrador_nombre">
-                  Primer nombre ó nombre de la entidad
-                </label>
+                <label htmlFor="registrador_nombre">Primer nombre</label>
                 {errors.registrador_nombre && (
                   <p className="error">{errors.registrador_nombre}</p>
                 )}
@@ -592,9 +638,7 @@ function PqrsForm({
                   onBlur={handleBlur}
                   required
                 />
-                <label htmlFor="registrador_apellido">
-                  Primer apellido ó razón social
-                </label>
+                <label htmlFor="registrador_apellido">Primer apellido</label>
                 {errors.registrador_apellido && (
                   <p className="error">{errors.registrador_apellido}</p>
                 )}
@@ -615,76 +659,60 @@ function PqrsForm({
                 )}
               </div>
 
-              <div className="floating-label">
-                <select
-                  id="parentesco"
-                  name="parentesco"
-                  value={form.parentesco}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  required
-                >
-                  <option value="" disabled hidden></option>
-                  {parentesco.map((opcion) => (
-                    <option key={opcion} value={opcion}>
-                      {opcion}
-                    </option>
-                  ))}
-                </select>
-                <label htmlFor="parentesco">Parentesco</label>
-                {errors.parentesco && (
-                  <p className="error">{errors.parentesco}</p>
-                )}
-              </div>
+              {form.parentesco !== "Ente de control" && (
+                <div className="floating-label">
+                  <select
+                    id="registrador_documento_tipo"
+                    name="registrador_documento_tipo"
+                    value={form.registrador_documento_tipo}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                  >
+                    <option value="" disabled hidden></option>
+                    <option value="CC">Cédula</option>
+                    <option value="CD">Carné diplomático</option>
+                    <option value="CN">Certificado nacido vivo</option>
+                    <option value="CE">Cédula de extranjería</option>
+                    <option value="DC">Documento Extranjero</option>
+                    <option value="NIT">NIT</option>
+                    <option value="PA">Pasaporte</option>
+                    <option value="PE">Permiso Especial de Permanencia</option>
+                    <option value="PT">Permiso por Protección Temporal</option>
+                    <option value="RC">Registro Civil</option>
+                    <option value="SC">Salvo Conducto</option>
+                    <option value="TI">Tarjeta de identidad</option>
+                  </select>
+                  <label htmlFor="registrador_documento_tipo">
+                    Tipo de documento
+                  </label>
+                  {errors.registrador_documento_tipo && (
+                    <p className="error">{errors.registrador_documento_tipo}</p>
+                  )}
+                </div>
+              )}
 
-              <div className="floating-label">
-                <select
-                  id="registrador_documento_tipo"
-                  name="registrador_documento_tipo"
-                  value={form.registrador_documento_tipo}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  required
-                >
-                  <option value="" disabled hidden></option>
-                  <option value="CC">Cédula</option>
-                  <option value="CD">Carné diplomático</option>
-                  <option value="CN">Certificado nacido vivo</option>
-                  <option value="CE">Cédula de extranjería</option>
-                  <option value="DC">Documento Extranjero</option>
-                  <option value="NIT">NIT</option>
-                  <option value="PA">Pasaporte</option>
-                  <option value="PE">Permiso Especial de Permanencia</option>
-                  <option value="PT">Permiso por Protección Temporal</option>
-                  <option value="RC">Registro Civil</option>
-                  <option value="SC">Salvo Conducto</option>
-                  <option value="TI">Tarjeta de identidad</option>
-                </select>
-                <label htmlFor="registrador_documento_tipo">
-                  Tipo de documento
-                </label>
-                {errors.registrador_documento_tipo && (
-                  <p className="error">{errors.registrador_documento_tipo}</p>
-                )}
-              </div>
-
-              <div className="floating-label">
-                <input
-                  id="registrador_documento_numero"
-                  name="registrador_documento_numero"
-                  type="text" // Mantener como text para permitir guiones/letras si NIT lo requiere
-                  value={form.registrador_documento_numero}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  required
-                />
-                <label htmlFor="registrador_documento_numero">
-                  Número de documento
-                </label>
-                {errors.registrador_documento_numero && (
-                  <p className="error">{errors.registrador_documento_numero}</p>
-                )}
-              </div>
+              {form.parentesco !== "Ente de control" && (
+                <div className="floating-label">
+                  <input
+                    id="registrador_documento_numero"
+                    name="registrador_documento_numero"
+                    type="text" // Mantener como text para permitir guiones/letras si NIT lo requiere
+                    value={form.registrador_documento_numero}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                  />
+                  <label htmlFor="registrador_documento_numero">
+                    Número de documento
+                  </label>
+                  {errors.registrador_documento_numero && (
+                    <p className="error">
+                      {errors.registrador_documento_numero}
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="floating-label">
                 <input
@@ -717,6 +745,23 @@ function PqrsForm({
                   <p className="error">{errors.registrador_telefono}</p>
                 )}
               </div>
+
+              {form.parentesco === "Ente de control" && (
+                <div className="floating-label">
+                  <input
+                    id="registrador_cargo"
+                    name="registrador_cargo"
+                    value={form.registrador_cargo}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required={form.parentesco === "Ente de control"}
+                  />
+                  <label htmlFor="registrador_cargo">Cargo</label>
+                  {errors.registrador_cargo && (
+                    <p className="error">{errors.registrador_cargo}</p>
+                  )}
+                </div>
+              )}
             </div>
           </>
         )}
@@ -905,14 +950,19 @@ function PqrsForm({
               required
             >
               <option value="" disabled hidden></option>
-              <option value="ARL">ARL</option>
+              <option value="ARL">
+                ARL(Administradora de Riesgos Laborales)
+              </option>
               <option value="Contributivo">Contributivo</option>
-              <option value="Especial">Especial (Fomag) </option>
+              <option value="Especial">
+                Especial y de Excepción (Magisterio, Fuerzas Militares y de
+                Policía, Universidades públicas)
+              </option>
               <option value="Medicina prepagada">Medicina prepagada</option>
               <option value="Particular">Particular</option>
               <option value="Subsidiado">Subsidiado</option>
             </select>
-            <label htmlFor="regimen">Tipo de asegurador</label>
+            <label htmlFor="regimen">Tipo de afiliación</label>
             {errors.regimen && <p className="error">{errors.regimen}</p>}
           </div>
 
@@ -1057,8 +1107,11 @@ function PqrsForm({
                   Formulario de la web
                 </option>
                 <option value="Presencial">Presencial</option>
+                <option value="Correo de Notificaciones IPS">
+                  Correo de Notificaciones IPS
+                </option>
               </select>
-              <label htmlFor="fuente">Fuente</label>
+              <label htmlFor="fuente">Origen</label>
               {errors.fuente && <p className="error">{errors.fuente}</p>}
             </div>
           )}
@@ -1221,23 +1274,47 @@ export default PqrsForm;
 // ];
 // epsOptions.sort();
 
-// const serviciosPrestados = [
-//   "Hidroterapia",
-//   "Programa-Rehabilitacion",
-//   "Neuropediatria",
-//   "Psiquiatria",
-//   "Fisiatria",
-//   "Acuamotricidad",
-//   "Natacion-infantil",
-//   "Natacion-jovenes-adultos",
-//   "Yoga",
-//   "Yoga-acuatico",
-//   "Mindfulness",
-//   "Pilates",
-//   "Pilates-acuatico",
-//   "Valoracion inicial",
-// ];
-// serviciosPrestados.sort();
+// const serviciosPorSede = {
+//   "Bogota-Norte": [
+//     "Hidroterapia",
+//     "Valoración por fisioterapia telemedicina",
+//     "Psiquiatría",
+//     "Fisiatría",
+//   ],
+//   "Bogota-Centro": [
+//     "Hidroterapia",
+//     "Valoración por fisioterapia telemedicina",
+//     "Programa de Rehabilitación",
+//   ],
+//   "Bogota-Sur-Occidente-Rehabilitación": [
+//     "Programa de Rehabilitación",
+//     "Neuropediatría",
+//     "Psiquiatría",
+//     "Fisiatría",
+//   ],
+//   "Bogota-Sur-Occidente-Hidroterapia": [
+//     "Hidroterapia",
+//     "Valoración por fisioterapia telemedicina",
+//   ],
+//   Ibague: [
+//     "Hidroterapia",
+//     "Valoración por fisioterapia telemedicina ",
+//     "Programa de Rehabilitación",
+//     "Neuropediatría",
+//     "Psiquiatría",
+//     "Fisiatría",
+//   ],
+//   Chia: ["Programa de Rehabilitación", "Neuropediatría", "Psiquiatría"],
+//   Florencia: [
+//     "Programa de Rehabilitación",
+//     "Hidroterapía",
+//     "Valoración por fisioterapia telemedicina",
+//     "Neuropediatría",
+//     "Psiquiatría",
+//     "Fisiatría",
+//   ],
+//   "Cedritos-Divertido": ["Natación", "Yoga", "Pilates"],
+// };
 
 // const parentesco = [
 //   "Hijo/a",
@@ -1261,17 +1338,17 @@ export default PqrsForm;
 //   Peticion: {
 //     title: "Petición",
 //     description:
-//       " Recuerde que una petición es una solicitud de información o servicio. Por ejemplo, es el derecho que tiene todo usuario a solicitar información, documentos, servicios o atención en salud. También puede ser una solicitud para que se tomen decisiones o se actúe frente a un asunto específico.",
+//       "Requerimiento a través de la cual una persona por motivos de interés general o particular solicita la intervención de la entidad para la resolución de una situación, la prestación de un servicio, la información o requerimiento de copia de documentos, entre otros. (Derecho de Petición).",
 //   },
 //   Queja: {
 //     title: "Queja",
 //     description:
-//       "Recuerde que una queja es la manifestación de su inconformidad o malestar frente a algo que ocurrió durante su atención, como el trato del personal, demoras, mal servicio o cualquier situación que no le pareció adecuada.",
+//       "Es la manifestación de una inconformidad presentada respecto a los servicios recibidos tales como el trato por parte de los trabajadores y profesionales de la salud, condiciones físicas del entorno, o deficiencias en la atención.",
 //   },
 //   Reclamo: {
 //     title: "Reclamo",
 //     description:
-//       "Recuerde que un reclamo es cuando usted desea que se corrija una situación o se dé una solución concreta. Por ejemplo, si considera que hubo un cobro indebido, no recibió el servicio como se acordó o hubo un incumplimiento por parte de la IPS. ",
+//       "Es la exigencia formal que se presenta ante una irregularidad, incumplimiento o afectación directa en la prestación del servicio de salud, que requiere respuesta, corrección, o compensación.",
 //   },
 // };
 
@@ -1308,6 +1385,7 @@ export default PqrsForm;
 //     registrador_correo: "",
 //     registrador_telefono: "",
 //     parentesco: "",
+//     cargo: "",
 //     fuente: "Formulario de la web",
 //     fecha_inicio_real: "", // Se inicializa como cadena vacía, se llenará en useEffect
 //   });
@@ -1393,6 +1471,7 @@ export default PqrsForm;
 //         registrador_correo: pqrData.registrador_correo || "",
 //         registrador_telefono: pqrData.registrador_telefono || "",
 //         parentesco: pqrData.parentesco || "",
+//         cargo: pqrData.cargo || "",
 //         politica_aceptada: pqrData.politica_aceptada === "true", // O el valor que use tu API
 //       }));
 //     }
@@ -1413,6 +1492,16 @@ export default PqrsForm;
 //         } else if (name === "fecha_inicio_real") {
 //           newValue = formatDateToISOWithTime(value);
 //         }
+
+//         // Si cambia la sede, se limpia servicio_prestado
+//         if (name === "sede") {
+//           return {
+//             ...prev,
+//             sede: newValue,
+//             servicio_prestado: "", // limpiar al cambiar la sede
+//           };
+//         }
+
 //         return {
 //           ...prev,
 //           [name]: newValue,
@@ -1422,18 +1511,15 @@ export default PqrsForm;
 //       // Lógica para mostrar descripciones de tipo de solicitud en un modal
 //       if (name === "tipo_solicitud") {
 //         if (tipoSolicitudDescriptions[value]) {
-//           // Primero actualiza el contenido
 //           setModalContent(tipoSolicitudDescriptions[value]);
-//           // Luego muestra el modal
 //           setShowModal(true);
 //         } else {
-//           // Si el valor no es una opción válida, cierra el modal y limpia el contenido
 //           setShowModal(false);
-//           setModalContent({ title: "", description: "" }); // Limpiar al cerrar
+//           setModalContent({ title: "", description: "" });
 //         }
 //       }
 //     },
-//     [readOnlyTipoSolicitud, setForm, setModalContent, setShowModal] // Añade todas las dependencias que cambian
+//     [readOnlyTipoSolicitud, setForm, setModalContent, setShowModal]
 //   );
 
 //   const handleBlur = async (e) => {
@@ -1564,7 +1650,8 @@ export default PqrsForm;
 //         Swal.fire({
 //           icon: "success",
 //           title: "¡PQR enviada!",
-//           text: "Tu PQRS ha sido enviada con éxito.",
+//           html: `Tu PQRS ha sido enviada con éxito.<br />
+//           El número de radicado será enviado al correo <strong>${form.correo}</strong>.`,
 //           confirmButtonColor: "#3085d6",
 //         });
 //       }
@@ -1683,6 +1770,28 @@ export default PqrsForm;
 //             <br />
 //             <div className="pqrs-otro">
 //               <div className="floating-label">
+//                 <select
+//                   id="parentesco"
+//                   name="parentesco"
+//                   value={form.parentesco}
+//                   onChange={handleChange}
+//                   onBlur={handleBlur}
+//                   required
+//                 >
+//                   <option value="" disabled hidden></option>
+//                   {parentesco.map((opcion) => (
+//                     <option key={opcion} value={opcion}>
+//                       {opcion}
+//                     </option>
+//                   ))}
+//                 </select>
+//                 <label htmlFor="parentesco">Parentesco</label>
+//                 {errors.parentesco && (
+//                   <p className="error">{errors.parentesco}</p>
+//                 )}
+//               </div>
+
+//               <div className="floating-label">
 //                 <input
 //                   id="registrador_nombre"
 //                   name="registrador_nombre"
@@ -1743,28 +1852,6 @@ export default PqrsForm;
 //                 <label htmlFor="registrador_apellido">Segundo apellido</label>
 //                 {errors.registrador_segundo_apellido && (
 //                   <p className="error">{errors.registrador_segundo_apellido}</p>
-//                 )}
-//               </div>
-
-//               <div className="floating-label">
-//                 <select
-//                   id="parentesco"
-//                   name="parentesco"
-//                   value={form.parentesco}
-//                   onChange={handleChange}
-//                   onBlur={handleBlur}
-//                   required
-//                 >
-//                   <option value="" disabled hidden></option>
-//                   {parentesco.map((opcion) => (
-//                     <option key={opcion} value={opcion}>
-//                       {opcion}
-//                     </option>
-//                   ))}
-//                 </select>
-//                 <label htmlFor="parentesco">Parentesco</label>
-//                 {errors.parentesco && (
-//                   <p className="error">{errors.parentesco}</p>
 //                 )}
 //               </div>
 
@@ -1862,7 +1949,7 @@ export default PqrsForm;
 //               onBlur={handleBlur}
 //               required
 //             />
-//             <label htmlFor="nombre">Nombre</label>
+//             <label htmlFor="nombre">Primer nombre</label>
 //             {errors.nombre && <p className="error">{errors.nombre}</p>}
 //           </div>
 
@@ -1890,7 +1977,7 @@ export default PqrsForm;
 //               onBlur={handleBlur}
 //               required
 //             />
-//             <label htmlFor="apellido">Apellido</label>
+//             <label htmlFor="apellido">Primer apellido</label>
 //             {errors.apellido && <p className="error">{errors.apellido}</p>}
 //           </div>
 
@@ -2008,24 +2095,19 @@ export default PqrsForm;
 //               required
 //             >
 //               <option value="" disabled hidden></option>
-//               <option value="No he sido atendido">No he sido atendido</option>
-//               <option value="Bogota-Sur-Occidente-Rehabilitación">
-//                 Bogotá-Sur-Occidente-Rehabilitación
-//               </option>
+//               {/* <option value="No he sido atendido">No he sido atendido</option> */}
+//               <option value="Bogota-Centro">Bogotá Centro</option>
+//               <option value="Bogota-Norte">Bogotá Norte</option>
 //               <option value="Bogota-Sur-Occidente-Hidroterapia">
-//                 Bogotá-Sur-Occidente-Hidroterapia
+//                 Bogotá Sur Occidente Hidroterapia
 //               </option>
-//               <option value="Bogota-Norte-Hidroterapia">Bogotá-Norte</option>
-//               <option value="Bogota-Centro-Hidroterapia">
-//                 Bogotá-Centro-Hidroterapia
+//               <option value="Bogota-Sur-Occidente-Rehabilitación">
+//                 Bogotá Sur Occidente Rehabilitación
 //               </option>
-//               <option value="Chia-Rehabilitacion">Chia-Rehabilitacion</option>
-//               <option value="Florencia-Hidroterapia-Rehabilitacion">
-//                 Florencia-Hidroterapia-Rehabilitacion
-//               </option>
-//               <option value="Ibague-Hidroterapia-Rehabilitacion">
-//                 Ibagué-Hidroterapia-Rehabilitacion
-//               </option>
+//               <option value="Cedritos-Divertido">Cedritos-Divertido</option>
+//               <option value="Chia">Chía</option>
+//               <option value="Florencia">Florencia</option>
+//               <option value="Ibague">Ibagué</option>
 //             </select>
 //             <label htmlFor="sede">Sede de atención</label>
 //             {errors.sede && <p className="error">{errors.sede}</p>}
@@ -2041,14 +2123,19 @@ export default PqrsForm;
 //               required
 //             >
 //               <option value="" disabled hidden></option>
-//               <option value="ARL">ARL</option>
+//               <option value="ARL">
+//                 ARL(Administradora de Riesgos Laborales)
+//               </option>
 //               <option value="Contributivo">Contributivo</option>
-//               <option value="Especial">Especial (Fomag) </option>
+//               <option value="Especial">
+//                 Especial y de Excepción (Magisterio, Fuerzas Militares y de
+//                 Policía, Universidades públicas)
+//               </option>
 //               <option value="Medicina prepagada">Medicina prepagada</option>
 //               <option value="Particular">Particular</option>
 //               <option value="Subsidiado">Subsidiado</option>
 //             </select>
-//             <label htmlFor="regimen">Tipo de asegurador</label>
+//             <label htmlFor="regimen">Tipo de afiliación</label>
 //             {errors.regimen && <p className="error">{errors.regimen}</p>}
 //           </div>
 
@@ -2062,14 +2149,13 @@ export default PqrsForm;
 //               required
 //             >
 //               <option value="" disabled hidden></option>
-//               {serviciosPrestados.map((servicio) => (
+//               {(serviciosPorSede[form.sede] || []).map((servicio) => (
 //                 <option key={servicio} value={servicio}>
-//                   {servicio
-//                     .replace(/-/g, " ")
-//                     .replace(/\b\w/g, (c) => c.toUpperCase())}
+//                   {servicio}
 //                 </option>
 //               ))}
 //             </select>
+
 //             <label htmlFor="servicio_prestado">Servicio prestado</label>
 
 //             {errors.servicio_prestado && (
@@ -2093,7 +2179,7 @@ export default PqrsForm;
 //                 </option>
 //               ))}
 //             </select>
-//             <label htmlFor="eps">Entidad</label>
+//             <label htmlFor="eps">Asegurador (EPS-ARL)</label>
 //             {errors.eps && <p className="error">{errors.eps}</p>}
 //           </div>
 
@@ -2194,8 +2280,11 @@ export default PqrsForm;
 //                   Formulario de la web
 //                 </option>
 //                 <option value="Presencial">Presencial</option>
+//                  <option value="Correo de Notificaciones IPS">
+//                   Correo de Notificaciones IPS
+//                 </option>
 //               </select>
-//               <label htmlFor="fuente">Fuente</label>
+//               <label htmlFor="fuente">Origen</label>
 //               {errors.fuente && <p className="error">{errors.fuente}</p>}
 //             </div>
 //           )}

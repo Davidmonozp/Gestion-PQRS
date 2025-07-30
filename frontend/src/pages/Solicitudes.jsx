@@ -280,10 +280,10 @@ export const Solicitudes = () => {
             <i className="fas fa-file-invoice-dollar icon"></i>
             <span>Reembolsos</span>
           </div>
-          <div className="card" onClick={() => handleOpenModal("valoraciones")}>
+          {/* <div className="card" onClick={() => handleOpenModal("valoraciones")}>
             <i className="fas fa-user-clock icon"></i>
             <span>Valoraciones sin agenda - Lista de espera</span>
-          </div>
+          </div> */}
           <div className="card" onClick={() => handleOpenModal("multa")}>
             <i className="fas fa-ban icon"></i>
             <span>Exoneración de Multa por Inasistencia</span>

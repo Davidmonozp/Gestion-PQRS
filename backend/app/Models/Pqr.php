@@ -30,7 +30,6 @@ class Pqr extends Model
         'archivo',
         'atributo_calidad',
         'fuente',
-        'asignado_a',
         'fecha_inicio_real',
 
         // ✅ Datos del registrador
@@ -43,6 +42,8 @@ class Pqr extends Model
         'registrador_documento_numero',
         'registrador_correo',
         'registrador_telefono',
+        'registrador_cargo',
+        'nombre_entidad',
         'parentesco',
 
         // Estados de respuesta
@@ -66,9 +67,13 @@ class Pqr extends Model
         return $this->hasMany(Respuesta::class, 'pqrs_id');
     }
 
+    public function asignados()
+    {
+        return $this->belongsToMany(User::class, 'pqrs_user');
+    }
     public function asignado()
     {
-        return $this->belongsTo(User::class, 'asignado_a');
+        return $this->asignados();
     }
     public function setPrioridadAttribute($value)
     {

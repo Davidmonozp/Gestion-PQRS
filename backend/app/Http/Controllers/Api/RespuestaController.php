@@ -20,17 +20,21 @@ use Illuminate\Support\Facades\Log;
 class RespuestaController extends Controller
 {
 
+ 
     // public function registrarRespuesta(Request $request, $pqr_codigo)
     // {
     //     $request->validate([
     //         'contenido' => 'required|string',
+    //         'adjuntos' => 'nullable|array',
+    //         'adjuntos.*' => 'file|max:8000',
     //     ]);
 
     //     $pqrs = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
 
-    //     if ($pqrs->asignado_a !== Auth::id()) {
+    //     if (!$pqrs->asignados->contains(Auth::id())) {
     //         return response()->json(['error' => 'No autorizado'], 403);
     //     }
+
 
     //     $respuestaExistente = Respuesta::where('pqrs_id', $pqrs->id)
     //         ->where('user_id', Auth::id())
@@ -40,10 +44,22 @@ class RespuestaController extends Controller
     //         return response()->json(['error' => 'Ya has registrado una respuesta para esta PQRS'], 400);
     //     }
 
+    //     $adjuntosData = [];
+    //     if ($request->hasFile('adjuntos')) {
+    //         foreach ($request->file('adjuntos') as $file) {
+    //             $path = $file->store('respuestas', 'public');
+    //             $adjuntosData[] = [
+    //                 'path' => str_replace('public/', '', $path),
+    //                 'original_name' => $file->getClientOriginalName(),
+    //             ];
+    //         }
+    //     }
+
     //     Respuesta::create([
     //         'pqrs_id' => $pqrs->id,
     //         'user_id' => Auth::id(),
     //         'contenido' => $request->contenido,
+    //         'adjuntos' => $adjuntosData,
     //     ]);
 
     //     if ($pqrs->estado_respuesta === 'Asignado') {
@@ -53,7 +69,8 @@ class RespuestaController extends Controller
 
     //     return response()->json(['mensaje' => 'Respuesta preliminar guardada']);
     // }
-    public function registrarRespuesta(Request $request, $pqr_codigo)
+
+ public function registrarRespuesta(Request $request, $pqr_codigo)
     {
         $request->validate([
             'contenido' => 'required|string',
@@ -63,9 +80,10 @@ class RespuestaController extends Controller
 
         $pqrs = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
 
-        if ($pqrs->asignado_a !== Auth::id()) {
+        if (!$pqrs->asignados->contains(Auth::id())) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
+
 
         $respuestaExistente = Respuesta::where('pqrs_id', $pqrs->id)
             ->where('user_id', Auth::id())
@@ -78,7 +96,7 @@ class RespuestaController extends Controller
         $adjuntosData = [];
         if ($request->hasFile('adjuntos')) {
             foreach ($request->file('adjuntos') as $file) {
-                $path = $file->store('respuestas', 'public'); 
+                $path = $file->store('respuestas', 'public');
                 $adjuntosData[] = [
                     'path' => str_replace('public/', '', $path),
                     'original_name' => $file->getClientOriginalName(),
@@ -100,8 +118,6 @@ class RespuestaController extends Controller
 
         return response()->json(['mensaje' => 'Respuesta preliminar guardada']);
     }
-
-
 
     // public function registrarRespuestaFinal(Request $request, $pqr_codigo)
     // {
@@ -224,29 +240,40 @@ class RespuestaController extends Controller
     {
         $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
 
-        // Busca la respuesta final más reciente
         $respuesta = $pqr->respuestas()->where('es_final', true)->latest()->first();
 
         if (!$respuesta) {
             return response()->json(['error' => 'No hay respuesta final registrada para esta PQRS.'], 400);
         }
 
-        // Obtén los adjuntos de la respuesta final
-        // Asegúrate de que $respuesta->adjuntos devuelva una colección o array de objetos/rutas de archivo
-        $adjuntosRespuesta = $respuesta->adjuntos; // Asumiendo que 'adjuntos' es una relación o un campo serializado
+        $adjuntosRespuesta = $respuesta->adjuntos;
 
-        // Pasa los adjuntos al Mailable
-        Mail::to($pqr->correo)->send(new RespuestaFinalPQRSMail($pqr, $respuesta, $adjuntosRespuesta));
-        Mail::to($pqr->registrador_correo)->send(new RespuestaFinalPQRSMail($pqr, $respuesta, $adjuntosRespuesta));
+        // Validar correos válidos y enviar
+        try {
+            $correoCiudadanoValido = !empty($pqr->correo) && filter_var($pqr->correo, FILTER_VALIDATE_EMAIL);
+            $correoRegistradorValido = !empty($pqr->registrador_correo) && filter_var($pqr->registrador_correo, FILTER_VALIDATE_EMAIL);
 
+            if (!$correoCiudadanoValido && !$correoRegistradorValido) {
+                return response()->json(['error' => 'No se pudo enviar el correo: ambas direcciones son inválidas.'], 400);
+            }
 
+            if ($correoCiudadanoValido) {
+                Mail::to($pqr->correo)->send(new RespuestaFinalPQRSMail($pqr, $respuesta, $adjuntosRespuesta));
+            }
+
+            if ($correoRegistradorValido) {
+                Mail::to($pqr->registrador_correo)->send(new RespuestaFinalPQRSMail($pqr, $respuesta, $adjuntosRespuesta));
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al enviar correos.'], 500);
+        }
+
+        // Marcar como respondida
         $fechaRespuesta = Carbon::parse($respuesta->created_at, 'America/Bogota');
 
-        $pqr->estado_respuesta = 'Cerrado'; // Considera si quieres que esto sea 'Cerrado' o 'Respondido'
+        $pqr->estado_respuesta = 'Cerrado';
         $pqr->respuesta_enviada = true;
         $pqr->respondido_en = $fechaRespuesta;
-
-        // Estas fechas de deadline quizás deban actualizarse solo si la PQR se cierra
         $pqr->deadline_interno = $fechaRespuesta;
         $pqr->deadline_ciudadano = $fechaRespuesta;
 
@@ -255,7 +282,7 @@ class RespuestaController extends Controller
 
         $pqr->save();
 
-        return response()->json(['mensaje' => 'Respuesta final enviada al ciudadano.']);
+        return response()->json(['mensaje' => 'Respuesta final enviada correctamente.']);
     }
 
 

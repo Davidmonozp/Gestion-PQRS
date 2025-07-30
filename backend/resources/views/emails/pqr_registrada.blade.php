@@ -169,7 +169,7 @@
                 <table class="content" width="100%" cellpadding="0" cellspacing="0" role="presentation">
                     <tr>
                         <td class="header-section">
-                            <a href="{{ url('/') }}" target="_blank" style="display: inline-block; text-decoration: none;">
+                            <a href="{{ url('https://passusips.com/') }}" target="_blank" style="display: inline-block; text-decoration: none;">
                                 <img src="{{ asset('storage/logo-passus.png') }}" alt="Passus IPS Logo" border="0">
                             </a>
                         </td>

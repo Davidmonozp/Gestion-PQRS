@@ -16,13 +16,15 @@ class FelicitacionController extends Controller
     {
         $validated = $request->validate([
             'nombre' => 'required|string|max:100',
+            'segundo_nombre' => 'nullable|string|max:100',
             'apellido' => 'required|string|max:100',
+            'segundo_apellido' => 'nullable|string|max:100',
             'documento_tipo' => 'required|string',
             'documento_numero' => 'required|string',
             'correo' => 'required|email',
             'correo_confirmacion' => 'required|same:correo',
             'descripcion' => 'required|string',
-            'sede' => 'required|string|max:100',  // validar sede también
+            'sede' => 'required|string|max:100',
         ]);
 
 
@@ -32,19 +34,21 @@ class FelicitacionController extends Controller
         $pqr = Pqr::create([
             'pqr_codigo' => $codigo,
             'nombre' => $validated['nombre'],
+            'segundo_nombre' => $validated['segundo_nombre'] ?? null,
             'apellido' => $validated['apellido'],
+            'segundo_apellido' => $validated['segundo_apellido'] ?? null,
             'documento_tipo' => $validated['documento_tipo'],
             'documento_numero' => $validated['documento_numero'],
             'correo' => $validated['correo'],
-            'telefono' => null, // no lo tienes en felicitacion, así que pon null o un valor por defecto
+            'telefono' => null,
             'sede' => $validated['sede'],
-            'servicio_prestado' => 'No aplica', // o null si la DB lo permite
-            'eps' => 'No aplica', // o null
+            'servicio_prestado' => 'No aplica',
+            'eps' => 'No aplica',
             'regimen' => 'No aplica',
             'tipo_solicitud' => 'Felicitacion',
             'descripcion' => $validated['descripcion'],
             'archivo' => null,
-            'registra_otro' => 0, // o 'no', dependiendo de cómo tienes ese campo
+            'registra_otro' => 0,
             'registrador_nombre' => null,
             'registrador_apellido' => null,
             'registrador_documento_tipo' => null,
@@ -55,6 +59,7 @@ class FelicitacionController extends Controller
             'estado_respuesta' => 'cerrado',
             'respondido_en' => Carbon::now(),
         ]);
+
 
 
         // Enviar correo

@@ -14,6 +14,7 @@ const UserDetailEdit = () => {
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
+  const [showSedesDropdown, setShowSedesDropdown] = useState(false);
 
   // --- Constants for roles, areas, cargos, sedes ---
   // These can be defined at the top of the component as they don't depend on formik.
@@ -142,19 +143,28 @@ const UserDetailEdit = () => {
 
   // --- Formik Definition (MUST come before useMemo hooks that depend on it) ---
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
-      name: "",
-      email: "",
-      role: "",
+      name: user?.name || "",
+      segundo_nombre: user?.segundo_nombre || "",
+      primer_apellido: user?.primer_apellido || "",
+      segundo_apellido: user?.segundo_apellido || "",
+      email: user?.email || "",
+      role: user?.roles?.[0]?.name || "",
       password: "",
       confirmPassword: "",
-      cargo: "",
-      area: "",
-      sede: "",
+      cargo: user?.cargo || "",
+      area: user?.area || "",
+      sedes: user?.sedes?.map((s) => Number(s.id)) || [],
     },
     enableReinitialize: true,
     validationSchema: Yup.object({
       name: Yup.string().required("El nombre es obligatorio"),
+      segundo_nombre: Yup.string().nullable(),
+      primer_apellido: Yup.string().required(
+        "El primer apellido es obligatorio"
+      ),
+      segundo_apellido: Yup.string().nullable(),
       email: Yup.string()
         .email("Correo inválido")
         .required("El correo es obligatorio"),
@@ -171,7 +181,9 @@ const UserDetailEdit = () => {
       }),
       cargo: Yup.string().required("El cargo es obligatorio"),
       area: Yup.string().required("El área es obligatoria"),
-      sede: Yup.string().required("La sede es obligatoria"),
+      sedes: Yup.array()
+        .of(Yup.number().integer())
+        .min(1, "Debes seleccionar al menos una sede"),
     }),
     onSubmit: async (values) => {
       try {
@@ -181,7 +193,7 @@ const UserDetailEdit = () => {
           role: values.role,
           cargo: values.cargo,
           area: values.area,
-          sede: values.sede,
+          sedes: values.sedes,
         };
 
         if (showPasswordFields && values.password) {
@@ -197,14 +209,17 @@ const UserDetailEdit = () => {
 
         formik.resetForm({
           values: {
-            name: updatedUserFromServer.name,
-            email: updatedUserFromServer.email,
+            name: updatedUserFromServer.name || "",
+            segundo_nombre: updatedUserFromServer.segundo_nombre || "",
+            primer_apellido: updatedUserFromServer.primer_apellido || "",
+            segundo_apellido: updatedUserFromServer.segundo_apellido || "",
+            email: updatedUserFromServer.email || "",
             role: updatedUserFromServer.roles[0]?.name || "",
             password: "",
             confirmPassword: "",
             cargo: updatedUserFromServer.cargo || "",
             area: updatedUserFromServer.area || "",
-            sede: updatedUserFromServer.sede || "",
+            sedes: updatedUserFromServer.sedes?.map((s) => s.id) || [],
           },
         });
 
@@ -252,15 +267,19 @@ const UserDetailEdit = () => {
         const res = await api.get(`/users/${id}`);
         const data = res.data;
         setUser(data);
+
         formik.setValues({
-          name: data.name,
-          email: data.email,
-          role: data.roles[0]?.name || "",
+          name: data.name || "",
+          segundo_nombre: data.segundo_nombre || "",
+          primer_apellido: data.primer_apellido || "",
+          segundo_apellido: data.segundo_apellido || "",
+          email: data.email || "",
+          role: data.roles?.[0]?.name || "",
           password: "",
           confirmPassword: "",
           cargo: data.cargo || "",
           area: data.area || "",
-          sede: data.sede || "",
+          sedes: data.sedes?.map((s) => s.id) || [],
         });
       } catch (error) {
         Swal.fire({
@@ -275,7 +294,7 @@ const UserDetailEdit = () => {
     };
 
     fetchUser();
-  }, [id, navigate, formik.setValues]); // formik.setValues is a stable function provided by Formik, so it's safe here.
+  }, [id, navigate]);
 
   if (loading) return <p>Cargando...</p>;
   if (!user) return <p>Usuario no encontrado</p>;
@@ -292,7 +311,7 @@ const UserDetailEdit = () => {
 
       <div className="details-user">
         <form onSubmit={formik.handleSubmit}>
-          {/* Campo Nombre */}
+          {/* Campo Primer Nombre */}
           <div>
             <label htmlFor="name">Nombre:</label>
             {editMode ? (
@@ -309,6 +328,63 @@ const UserDetailEdit = () => {
             )}
             {formik.touched.name && formik.errors.name && (
               <div className="text-danger">{formik.errors.name}</div>
+            )}
+          </div>
+
+          {/* Campo Segundo Nombre */}
+          <div>
+            <label htmlFor="segundo_nombre">Segundo nombre:</label>
+            {editMode ? (
+              <input
+                type="text"
+                id="segundo_nombre"
+                name="segundo_nombre"
+                value={formik.values.segundo_nombre}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            ) : (
+              <p>{user.segundo_nombre || "-"}</p>
+            )}
+          </div>
+
+          {/* Campo Primer Apellido */}
+          <div>
+            <label htmlFor="primer_apellido">Primer apellido:</label>
+            {editMode ? (
+              <input
+                type="text"
+                id="primer_apellido"
+                name="primer_apellido"
+                value={formik.values.primer_apellido}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            ) : (
+              <p>{user.primer_apellido}</p>
+            )}
+            {formik.touched.primer_apellido &&
+              formik.errors.primer_apellido && (
+                <div className="text-danger">
+                  {formik.errors.primer_apellido}
+                </div>
+              )}
+          </div>
+
+          {/* Campo Segundo Apellido */}
+          <div>
+            <label htmlFor="segundo_apellido">Segundo apellido:</label>
+            {editMode ? (
+              <input
+                type="text"
+                id="segundo_apellido"
+                name="segundo_apellido"
+                value={formik.values.segundo_apellido}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+            ) : (
+              <p>{user.segundo_apellido || "-"}</p>
             )}
           </div>
 
@@ -426,36 +502,66 @@ const UserDetailEdit = () => {
             )}
           </div>
 
-          {/* Campo Sede */}
-          <div>
-            <label htmlFor="sede">Sede:</label>
-            {editMode ? (
-              <select
-                id="sede"
-                name="sede"
-                value={formik.values.sede}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="select-role"
+          {/* Campo Sedes (múltiple con dropdown nativo) */}
+          <div className="mb-3">
+            <label>Sedes:</label>
+            <div className="custom-multiselect-sedes">
+              <div
+                className={`custom-select-box-sedes ${
+                  !editMode ? "disabled" : ""
+                }`}
+                onClick={() => {
+                  if (editMode) setShowSedesDropdown((prev) => !prev);
+                }}
               >
-                <option value="" disabled>
-                  Selecciona una sede
-                </option>
-                {sedes.map((sede) => (
-                  <option key={sede.id} value={sede.name}>
-                    {sede.name}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <p>{user.sede}</p>
-            )}
-            {formik.touched.sede && formik.errors.sede && (
-              <div className="text-danger">{formik.errors.sede}</div>
+                {formik.values.sedes.length > 0
+                  ? sedes
+                      .filter((s) => formik.values.sedes.includes(s.id))
+                      .map((s) => s.name)
+                      .join(", ")
+                  : "Seleccione sedes..."}
+              </div>
+
+              {showSedesDropdown && editMode && (
+                <div className="checkbox-options-sedes">
+                  {sedes.map((sede) => {
+                    const checked = formik.values.sedes.includes(sede.id);
+                    return (
+                      <label key={sede.id} className="checkbox-item-sedes">
+                        <input
+                          type="checkbox"
+                          value={sede.id}
+                          checked={checked}
+                          onChange={(e) => {
+                            const id = Number(e.target.value);
+                            if (e.target.checked) {
+                              formik.setFieldValue("sedes", [
+                                ...formik.values.sedes,
+                                id,
+                              ]);
+                            } else {
+                              formik.setFieldValue(
+                                "sedes",
+                                formik.values.sedes.filter(
+                                  (sedeId) => sedeId !== id
+                                )
+                              );
+                            }
+                          }}
+                          disabled={!editMode} // deshabilita si no está en modo edición
+                        />
+                        {sede.name}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {formik.touched.sedes && formik.errors.sedes && (
+              <div className="text-danger">{formik.errors.sedes}</div>
             )}
           </div>
-
-          {/* ... (rest of your component remains the same) ... */}
 
           {/* Botón para cambiar contraseña (visible en modo edición, si los campos no están visible) */}
           {editMode && !showPasswordFields && (
@@ -508,7 +614,7 @@ const UserDetailEdit = () => {
             </>
           )}
 
-          {/* Botones de acción: Guardar y Cancelar (visible solo en modo edición) */}
+          {/* Botones de acción */}
           {editMode && (
             <div className="button-group mt-3">
               <button type="submit" className="btn btn-primary me-2">
@@ -520,13 +626,16 @@ const UserDetailEdit = () => {
                 onClick={() => {
                   formik.setValues({
                     name: user.name,
+                    segundo_nombre: user.segundo_nombre || "",
+                    primer_apellido: user.primer_apellido || "",
+                    segundo_apellido: user.segundo_apellido || "",
                     email: user.email,
                     role: user.roles[0]?.name || "",
                     password: "",
                     confirmPassword: "",
                     cargo: user.cargo || "",
                     area: user.area || "",
-                    sede: user.sede || "",
+                    sedes: user.sedes?.map((s) => s.id) || [],
                   });
                   setEditMode(false);
                   setShowPasswordFields(false);
@@ -537,8 +646,7 @@ const UserDetailEdit = () => {
             </div>
           )}
         </form>
-
-        {/* Botones de Editar y Volver a la lista (visible solo en modo de visualización) */}
+        {/* Botones de Editar y Volver */}
         {!editMode && (
           <div className="mt-3">
             <button
@@ -561,7 +669,6 @@ const UserDetailEdit = () => {
     </>
   );
 };
-
 export default UserDetailEdit;
 
 // import React, { useEffect, useState } from "react";

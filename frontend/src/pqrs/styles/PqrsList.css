@@ -121,7 +121,7 @@ tbody td:hover::before {
     cursor: pointer;
     width: 3%;
     /* max-width: 155px; */
-    margin-top: -10px;
+    margin-top: 0px;
     align-self: center;
 }
 
@@ -308,7 +308,51 @@ tbody td:hover::before {
     background: #0087cd;
 }
 
+/* ESTILO RESPUESTA PRELIMINAR */
+.pqr-status-cell {
+  /* vertical-align: top; */
+  padding: 0.5rem;
+}
+
+.pqr-status-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pqr-status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pqr-icon {
+  font-size: 1rem;
+}
+
+.pqr-icon.success {
+  color: #16a34a; 
+}
+
+.pqr-icon.pending {
+  color: #f59e0b; 
+}
+
+.pqr-user-name {
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* FIN ESTILO RESPUESTA PRELIMINAR */
+
 /* FIN PAGINACION */
+@media (max-width: 1365px) {
+    .filtros-busqueda button {
+        width: 6%;
+    }
+}
 
 @media (max-width: 834px) {
 

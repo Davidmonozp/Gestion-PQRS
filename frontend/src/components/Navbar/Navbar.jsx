@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import "./Navbar.css";
+import { tienePermiso } from "../../utils/permisoHelper";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -141,14 +142,16 @@ const Navbar = () => {
               </div>
             </li>
 
-            <li>
-              <NavLink
-                to="/users"
-                className={({ isActive }) => (isActive ? "active-link" : "")}
-              >
-                Administración de Usuarios
-              </NavLink>
-            </li>
+            {tienePermiso(["Administrador"]) && (
+              <li>
+                <NavLink
+                  to="/users"
+                  className={({ isActive }) => (isActive ? "active-link" : "")}
+                >
+                  Administración de Usuarios
+                </NavLink>
+              </li>
+            )}
           </ul>
         </div>
       </div>

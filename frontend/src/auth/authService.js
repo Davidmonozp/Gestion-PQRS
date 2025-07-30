@@ -11,15 +11,17 @@ export const login = async (credentials) => {
   try {
     const res = await axios.post(`${API}login`, credentials);
 
+    localStorage.setItem("usuarioId", res.data.user.id);
+
     // Guardamos el token y el rol principal
     localStorage.setItem('token', res.data.token);
 
     if (res.data.roles && res.data.roles.length > 0) {
       localStorage.setItem('role', res.data.roles[0]);
     }
-    if (res.data.user && res.data.user.sede) {
-      localStorage.setItem('sede', res.data.user.sede);
-
+    if (res.data.user && res.data.user.sedes) {
+      const nombresSedes = res.data.user.sedes.map((s) => s.name);
+      localStorage.setItem("sedes", JSON.stringify(nombresSedes));
     }
     if (res.data.user && res.data.user.name) {
       localStorage.setItem('nameUser', res.data.user.name);
@@ -80,5 +82,7 @@ export const logout = () => {
 // ✅ Getters
 export const getToken = () => localStorage.getItem('token');
 export const getRole = () => localStorage.getItem('role');
-export const getSede = () => localStorage.getItem('sede');
-
+export const getSedes = () => {
+  const sedes = localStorage.getItem("sedes");
+  return sedes ? JSON.parse(sedes) : [];
+};
