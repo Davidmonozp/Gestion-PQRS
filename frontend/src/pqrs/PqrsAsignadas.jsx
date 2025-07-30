@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar/Navbar";
 import Swal from "sweetalert2";
 import PqrsFilters from "./components/PqrsFilters";
+import CountdownTimer from "./components/CountDownTimer";
 
 function PqrsAsignadas() {
   const [pqrsBrutas, setPqrsBrutas] = useState([]);
@@ -12,7 +13,7 @@ function PqrsAsignadas() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10); 
+  const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
 
   const [filters, setFilters] = useState({
     pqr_codigo: "",
@@ -30,8 +31,7 @@ function PqrsAsignadas() {
       setLoading(true);
       try {
         const data = await getPqrsAsignadas();
-         data.forEach((pqr) => {
-      });
+        data.forEach((pqr) => {});
         setPqrsBrutas(data);
         setPqrsFiltradas(data);
       } catch (err) {
@@ -122,20 +122,27 @@ function PqrsAsignadas() {
               <tr>
                 <th>Acciones</th>
                 <th>Contestada</th>
-                <th>ID</th>
-                <th>Nombre</th>
+                <th># Radicado</th>
+                <th>Fecha de solicitud</th>
+                <th>Fecha de registro</th>
+                <th>Sede</th>
+                <th>Tipo Solicitud</th>
+                <th>Estado de la PQR</th>
                 <th>Tipo Doc.</th>
                 <th>Número Doc.</th>
-                <th>Correo</th>
-                <th>Teléfono</th>
-                <th>Sede</th>
-                <th>Servicio</th>
+                <th>Nombre</th>
                 <th>EPS</th>
-                <th>Tipo Solicitud</th>
+                <th>Servicio</th>
+                <th>Fecha de cierre</th>
+                <th>Tiempo de respuesta PASSUS</th>
+                <th>Asignado a</th>
+
+                {/* <th>Correo</th>
+                <th>Teléfono</th>
                 <th>Archivo</th>
                 <th>Estado de la respuesta</th>
                 <th>Respuesta enviada a usuario</th>
-                <th>Fecha</th>
+                <th>Fecha</th> */}
               </tr>
             </thead>
             <tbody>
@@ -149,7 +156,6 @@ function PqrsAsignadas() {
                 pqrsFiltradas.map((pqr) => {
                   const yaRespondio = pqr.respuestas?.some(
                     (r) => r.user_id === usuarioId
-                    
                   );
                   return (
                     <tr key={pqr.id}>
@@ -203,17 +209,73 @@ function PqrsAsignadas() {
                       </td>
 
                       <td>{pqr.pqr_codigo}</td>
+                      <td>{pqr.fecha_inicio_real}</td>
+                      <td>{new Date(pqr.created_at).toLocaleString()}</td>
+                      <td>{pqr.sede}</td>
+                      <td>{pqr.tipo_solicitud}</td>
+                      <td>{pqr.estado_respuesta}</td>
+                      <td>{pqr.documento_tipo}</td>
+                      <td>{pqr.documento_numero}</td>
                       <td>
                         {pqr.nombre} {pqr.apellido}
                       </td>
-                      <td>{pqr.documento_tipo}</td>
-                      <td>{pqr.documento_numero}</td>
-                      <td>{pqr.correo}</td>
-                      <td>{pqr.telefono || "No proporcionado"}</td>
-                      <td>{pqr.sede}</td>
-                      <td>{pqr.servicio_prestado}</td>
                       <td>{pqr.eps}</td>
-                      <td>{pqr.tipo_solicitud}</td>
+                      <td>{pqr.servicio_prestado}</td>
+                      <td>{pqr.respondido_en}</td>
+                      <td>
+                        {pqr.estado_respuesta === "Cerrado" ? (
+                          <span
+                            style={{ color: "#474646", fontStyle: "italic" }}
+                          >
+                            Finalizado
+                          </span>
+                        ) : pqr.deadline_interno ? (
+                          <CountdownTimer targetDate={pqr.deadline_interno} />
+                        ) : (
+                          <span
+                            style={{ color: "#474646", fontStyle: "italic" }}
+                          >
+                            No iniciado
+                          </span>
+                        )}
+                      </td>
+                      <td className="pqr-status-cell">
+                        <ul className="pqr-status-list">
+                          {pqr.asignados?.map((usuario) => {
+                            const respondio = (pqr.respuestas ?? []).some(
+                              (r) =>
+                                r.user_id === usuario.id &&
+                                r.es_respuesta_usuario === 0
+                            );
+
+                            return (
+                              <li key={usuario.id} className="pqr-status-item">
+                                <i
+                                  className={`fa-solid ${
+                                    respondio
+                                      ? "fa-check pqr-icon success"
+                                      : "fa-clock pqr-icon pending"
+                                  }`}
+                                  title={
+                                    respondio
+                                      ? "Respuesta enviada"
+                                      : "Pendiente de respuesta"
+                                  }
+                                ></i>
+                                <span
+                                  className="pqr-user-name"
+                                  title={usuario.name}
+                                >
+                                  {usuario.name}
+                                </span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </td>
+
+                      {/* <td>{pqr.correo}</td>
+                      <td>{pqr.telefono || "No proporcionado"}</td>
                       <td>
                         {pqr.archivo ? (
                           <a
@@ -233,7 +295,7 @@ function PqrsAsignadas() {
                           ? "Enviada ✅"
                           : "No enviada ❌"}
                       </td>
-                      <td>{new Date(pqr.created_at).toLocaleString()}</td>
+                      <td>{new Date(pqr.created_at).toLocaleString()}</td> */}
                     </tr>
                   );
                 })

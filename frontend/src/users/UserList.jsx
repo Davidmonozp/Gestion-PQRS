@@ -23,7 +23,7 @@ const UserList = () => {
   const [cargando, setCargando] = useState(true);
 
   const [filters, setFilters] = useState({
-    id: "",
+    documento_numero: "",
     name: "",
     email: "",
     role: "",
@@ -46,12 +46,12 @@ const UserList = () => {
   // Función para manejar la búsqueda y el filtrado local
   const handleBuscar = () => {
     const filtered = usuarios.filter((user) => {
-      const filterId = filters.id.trim();
+      const filterId = filters.documento_numero.trim();
       const filterName = filters.name.trim().toLowerCase();
       const filterEmail = filters.email.trim().toLowerCase();
       const filterRole = filters.role.trim();
 
-      const matchId = filterId === "" || user.id.toString().includes(filterId);
+      const matchId = filterId === "" || user.documento_numero.toString() === filterId;
       const matchName = user.name.toLowerCase().includes(filterName);
       const matchEmail = user.email.toLowerCase().includes(filterEmail);
       const matchRole =
@@ -99,7 +99,7 @@ const UserList = () => {
           <table className="container-table-users" border="1" cellPadding="8">
             <thead>
               <tr>
-                <th>ID</th>
+                <th># Documento</th>
                 <th>Nombre</th>
                 <th>Nombre de usuario</th>
                 <th>Correo</th>
@@ -119,7 +119,7 @@ const UserList = () => {
             <tbody>
               {usuariosFiltrados.map((user) => (
                 <tr key={user.id}>
-                  <td>{user.id}</td>
+                  <td>{user.documento_numero}</td>
                   <td>
                     {user.name} {user.segundo_nombre} {user.primer_apellido}{" "}
                     {user.segundo_apellido}

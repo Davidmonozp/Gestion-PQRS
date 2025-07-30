@@ -92,7 +92,7 @@ tbody td:hover::before {
 .filtros-busqueda-users select {
     background: transparent;
     width: 206px;
-    height: 30px;
+    height: 47px;
     border: 1px solid #00933f;
     border-radius: 2px;
     color: #0087cd;
@@ -117,8 +117,8 @@ tbody td:hover::before {
     border: none;
     cursor: pointer;
     border-radius: 5px;
-    width: 100%;
-    max-width: 200px;
+    /* width: 100%;
+    max-width: 200px; */
     align-self: center;
 }
 
@@ -165,6 +165,42 @@ td button:hover {
 .user-sedes-list li {
   padding: 2px 0;         /* Espaciado entre cada sede */
 }
+
+
+.limpiar-filtros {
+  color: #00933f; /* Verde principal */
+  font-size: 25px; /* Tamaño del ícono */
+  cursor: pointer;
+  transition: color 0.3s ease, transform 0.2s ease;
+  margin-left: 10px;
+  margin-top: 4px;
+}
+
+/* Efecto hover */
+.limpiar-filtros:hover {
+  color: #00b34f; /* Verde más brillante al pasar el mouse */
+  transform: scale(1.1); /* Pequeño zoom */
+}
+
+/* Efecto activo (click) */
+.limpiar-filtros:active {
+  transform: scale(0.95);
+}
+
+/* Contenedor de los botones e icono */
+.filtros-acciones {
+  display: flex;
+  align-items: center;      /* Centra verticalmente los elementos */
+  justify-content: center;  /* Centra horizontalmente */
+  gap: 10px;                /* Espacio entre botones e ícono */
+  margin-top: -42px;
+  flex-wrap: nowrap;        /* Evita que se vayan a otra línea */
+}
+
+
+
+
+
 
 @media (max-width: 834px) {
 

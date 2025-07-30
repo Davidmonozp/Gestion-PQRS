@@ -275,8 +275,8 @@ function PqrsList() {
                         )}
                       </td>
                       <td>{pqr.pqr_codigo}</td>
-                      <td>{new Date(pqr.created_at).toLocaleString()}</td>
                       <td>{pqr.fecha_inicio_real}</td>
+                      <td>{new Date(pqr.created_at).toLocaleString()}</td>
                       <td>{pqr.sede}</td>
                       <td>{pqr.tipo_solicitud}</td>
                       <td>{pqr.prioridad || "No asignada"}</td>

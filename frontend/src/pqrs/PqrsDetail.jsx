@@ -636,20 +636,22 @@ function PqrsDetail() {
               )}
             </p>
 
-            <p>
-              <strong>⏱ Tiempo de usuario:</strong>{" "}
-              {pqr.estado_respuesta === "Cerrado" ? (
-                <span style={{ color: "gray", fontStyle: "italic" }}>
-                  Finalizado
-                </span>
-              ) : pqr.deadline_ciudadano ? (
-                <CountdownTimer targetDate={pqr.deadline_ciudadano} />
-              ) : (
-                <span style={{ color: "gray", fontStyle: "italic" }}>
-                  No iniciado
-                </span>
-              )}
-            </p>
+            {tienePermiso(["Administrador", "Supervisor"]) && (
+              <p>
+                <strong>⏱ Tiempo de usuario:</strong>{" "}
+                {pqr.estado_respuesta === "Cerrado" ? (
+                  <span style={{ color: "gray", fontStyle: "italic" }}>
+                    Finalizado
+                  </span>
+                ) : pqr.deadline_ciudadano ? (
+                  <CountdownTimer targetDate={pqr.deadline_ciudadano} />
+                ) : (
+                  <span style={{ color: "gray", fontStyle: "italic" }}>
+                    No iniciado
+                  </span>
+                )}
+              </p>
+            )}
 
             <p>
               <strong>La PQR fue respondida en un tiempo de:</strong>{" "}
