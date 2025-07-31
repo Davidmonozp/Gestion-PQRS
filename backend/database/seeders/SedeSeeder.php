@@ -16,11 +16,11 @@ class SedeSeeder extends Seeder
         $sedes = [
             ['name' => 'Bogota-Sur-Occidente-Rehabilitación'],
             ['name' => 'Bogota-Sur-Occidente-Hidroterapia'],
-            ['name' => 'Bogota-Norte-Hidroterapia'],
-            ['name' => 'Bogota-Centro-Hidroterapia'],
-            ['name' => 'Chia-Rehabilitacion'],
-            ['name' => 'Florencia-Hidroterapia-Rehabilitacion'],
-            ['name' => 'Ibague-Hidroterapia-Rehabilitacion'],
+            ['name' => 'Bogota-Norte'],
+            ['name' => 'Bogota-Centro'],
+            ['name' => 'Chia'],
+            ['name' => 'Florencia'],
+            ['name' => 'Ibague'],
         ];
 
         foreach ($sedes as $sede) {

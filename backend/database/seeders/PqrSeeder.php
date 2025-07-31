@@ -44,7 +44,7 @@ class PqrSeeder extends Seeder
                 'documento_numero'   => $documentoNumero,
                 'correo'             => fake()->unique()->safeEmail(),
                 'telefono'           => fake()->phoneNumber(),
-                'sede'               => fake()->randomElement(['Bogota-Sur-Occidente-Rehabilitación', 'Bogota-Sur-Occidente-Hidroterapia', 'Bogota-Norte-Hidroterapia', 'Bogota-Centro-Hidroterapia']),
+                'sede'               => fake()->randomElement(['Bogota-Sur-Occidente-Rehabilitación', 'Bogota-Sur-Occidente-Hidroterapia', 'Bogota-Norte', 'Bogota-Centro', 'Ibague', 'Florencia']),
                 'servicio_prestado'  => fake()->randomElement(['Hidroterapia', 'Fisiatría', 'Fonoaudiología']),
                 'eps'                => fake()->randomElement(['Sanitas', 'Compensar', 'Famisanar', 'Cafam', 'Sura', 'Nueva EPS']),
                 'tipo_solicitud'     => $tipoSolicitud,

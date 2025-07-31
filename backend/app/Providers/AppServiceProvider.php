@@ -2,8 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Pqr;
+use App\Models\Respuesta;
+use App\Observers\PqrObserver;
+use App\Observers\RespuestaObserver;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Schema; 
+use Illuminate\Support\Facades\Schema;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,5 +25,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+
+        Pqr::observe(PqrObserver::class);
+
+        Respuesta::observe(RespuestaObserver::class);
     }
 }

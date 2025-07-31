@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\UsuarioRespuestaController;
 use App\Http\Controllers\Api\FelicitacionController;
 use App\Http\Controllers\Api\PqrAlertaController;
 use App\Http\Controllers\EncuestaController;
+use App\Http\Controllers\EventLogController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -104,4 +105,6 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,
 
 Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,Supervisor,Consultor,Digitador'])->group(function () {
     Route::get('/pqrs/{pqr_codigo}/seguimientos', [PqrController::class, 'obtenerSeguimientos']);
+    Route::get('/event-logs', [EventLogController::class, 'index']);
+    Route::get('/event-logs/pqrs/{pqrId}', [EventLogController::class, 'showByPqr']);
 });
