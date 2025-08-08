@@ -21,6 +21,7 @@ import DerechoPeticionForm from "../pqrs/DerechoPeticionForm";
 import TutelaForm from "../pqrs/TutelaForm";
 import SolicitudForm from "../pqrs/SolicitudForm";
 import InicioPQRS from "../pqrs/InicioPQRS";
+import EventLogs from "../pqrs/EventLogs";
 
 
 export function AppRouter() {
@@ -44,7 +45,10 @@ export function AppRouter() {
        <Route path="/tutela" element={<TutelaForm />} />
        <Route path="/derecho-peticion" element={<DerechoPeticionForm />} />
        <Route path="/solicitud" element={<SolicitudForm />} />
-       <Route path="/inicio-pqrs" element={<InicioPQRS/>} />
+       <Route path="/consultar-radicado" element={<InicioPQRS/>} />
+       <Route path="/event-logs" element={<EventLogs/>} />
+        <Route path="/pqr/:pqr_id/logs" element={<EventLogs />} />
+
        
 
 

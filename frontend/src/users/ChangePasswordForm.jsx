@@ -6,6 +6,7 @@ import api from "../api/api";
 import { useNavigate } from "react-router-dom";
 import "./styles/ChangePasswordForm.css";
 import Navbar from "../components/Navbar/Navbar";
+import { Version } from "../components/Footer/Version";
 
 const ChangePasswordForm = () => {
   const [loading, setLoading] = useState(false);
@@ -159,6 +160,7 @@ const ChangePasswordForm = () => {
           </button>
         </form>
       </div>
+      <Version/>
     </>
   );
 };

@@ -138,7 +138,7 @@
 @media (max-width: 500px) {
     .pqrs-res-container {
         width: 80%;
-        margin: 210px auto;
+        margin: 395px auto;
         background: transparent;
         padding: 30px;
         border-radius: 12px;
@@ -151,5 +151,9 @@
         top: 47%;
         left: 50%;
         transform: translate(-50%, -50%);
+    }
+
+    .pqrs-res-title {
+        font-size: 27px;
     }
 }

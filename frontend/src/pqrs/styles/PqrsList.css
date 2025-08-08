@@ -23,6 +23,14 @@ h2 {
     color: #0087cd;
 }
 
+.color-verde {
+    color: #00933f;
+}
+
+.color-azul {
+    color: #0087cd;
+}
+
 .container-table {
     width: 100%;
     min-width: 600px;
@@ -52,10 +60,7 @@ td {
     border: 1px solid rgba(255, 255, 255, 0.507)
 }
 
-th {
-    text-align: left;
-    background-color: #0087cd;
-}
+
 
 tbody tr:hover {
     background-color: #1f9cce69;
@@ -159,7 +164,7 @@ tbody td:hover::before {
 }
 
 .cabecera h2 {
-    font-size: 25px;
+    font-size: 30px;
 }
 
 /* ESTILOS ICONO RESPUESTA PRELIMINAR */
@@ -310,42 +315,43 @@ tbody td:hover::before {
 
 /* ESTILO RESPUESTA PRELIMINAR */
 .pqr-status-cell {
-  /* vertical-align: top; */
-  padding: 0.5rem;
+    /* vertical-align: top; */
+    padding: 0.5rem;
 }
 
 .pqr-status-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 .pqr-status-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .pqr-icon {
-  font-size: 1rem;
+    font-size: 1rem;
 }
 
 .pqr-icon.success {
-  color: #16a34a; 
+    color: #16a34a;
 }
 
 .pqr-icon.pending {
-  color: #f59e0b; 
+    color: #f59e0b;
 }
 
 .pqr-user-name {
-  max-width: 140px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* FIN ESTILO RESPUESTA PRELIMINAR */
+
 
 /* FIN PAGINACION */
 @media (max-width: 1365px) {

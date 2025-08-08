@@ -26,6 +26,8 @@ class Pqr extends Model
         'eps',
         'regimen',
         'tipo_solicitud',
+        'clasificacion_tutela',
+        'accionado',
         'descripcion',
         'archivo',
         'atributo_calidad',
@@ -61,6 +63,7 @@ class Pqr extends Model
 
     protected $casts = [
         'archivo' => 'array',
+        'accionado' => 'array',
     ];
     public function respuestas()
     {
@@ -143,5 +146,10 @@ class Pqr extends Model
     public function clasificaciones()
     {
         return $this->belongsToMany(Clasificacion::class, 'clasificacion_pqr', 'pqr_id', 'clasificacion_id');
+    }
+
+    public function eventLogs()
+    {
+        return $this->hasMany(EventLog::class, 'pqr_codigo', 'pqr_codigo')->orderBy('created_at', 'desc');
     }
 }

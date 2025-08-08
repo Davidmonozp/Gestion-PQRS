@@ -7,5 +7,11 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173
+  },
+  // 🔹 Configuración para producción
+  base: '/', // Para que cargue correctamente los assets
+  build: {
+    outDir: '../backend/public/dist', // Ruta donde Laravel pueda servir React
+    emptyOutDir: true
   }
-});
+})

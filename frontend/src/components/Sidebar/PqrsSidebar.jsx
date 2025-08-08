@@ -8,7 +8,7 @@ function PqrsSidebar() {
 
   useEffect(() => {
     // fetch("http://127.0.0.1:8000/api/pqrs/alertas-tiempo")
-    fetch("http://192.168.1.30:8000/api/pqrs/alertas-tiempo")
+    fetch("http://192.168.1.15:8000/api/pqrs/alertas-tiempo")
       .then((res) => res.json())
       .then((data) => {
         const porVencerFiltradas = (data.por_vencer || []).filter(

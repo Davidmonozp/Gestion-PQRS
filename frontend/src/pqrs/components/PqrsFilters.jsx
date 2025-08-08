@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../styles/PqrsFilters.css";
 
+// El componente DropdownMultiSelect es el mismo, no se necesita modificarlo.
 function DropdownMultiSelect({
   options,
   selected = [],
@@ -11,7 +12,7 @@ function DropdownMultiSelect({
   const ref = useRef();
 
   const toggleOption = (option) => {
-    if (!Array.isArray(selected)) return; // Prevención
+    if (!Array.isArray(selected)) return;
     if (selected.includes(option)) {
       setSelected(selected.filter((o) => o !== option));
     } else {
@@ -59,6 +60,7 @@ function DropdownMultiSelect({
 function PqrsFilters({ filters, setFilters, onBuscar }) {
   const [tempFilters, setTempFilters] = useState(filters);
 
+  // Opciones existentes
   const servicios = [
     "Hidroterapia",
     "Programa Rehabilitación",
@@ -82,6 +84,8 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
     "Queja",
     "Reclamo",
     "Solicitud",
+    "Tutela",
+    "Derecho de peticion"
   ];
 
   const sedes = [
@@ -93,6 +97,7 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
     "Chia",
     "Florencia",
   ];
+
   const epsOptions = [
     "Compensar",
     "Fomag",
@@ -110,9 +115,36 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
   ];
   epsOptions.sort();
 
+  // Nuevo conjunto de opciones para 'respuesta_enviada'
+  const respuestaEnviadaOptions = [
+    { label: "PQR-S Enviadas", value: 1 },
+    { label: "PQR-S No enviadas", value: 0 },
+  ];
+
   useEffect(() => {
-    setTempFilters(filters); // sincronizar al inicio o al limpiar
+    setTempFilters(filters);
   }, [filters]);
+
+  const handleRespuestaChange = (selectedValues) => {
+    // Convierte las etiquetas seleccionadas ("Sí", "No") a sus valores numéricos (1, 0)
+    const selectedNumericValues = selectedValues.map(
+      (label) =>
+        respuestaEnviadaOptions.find((opt) => opt.label === label).value
+    );
+    setTempFilters({
+      ...tempFilters,
+      respuesta_enviada: selectedNumericValues,
+    });
+  };
+
+  // Mapea los valores numéricos de vuelta a etiquetas para que el dropdown las muestre
+  const getRespuestaLabels = (values) => {
+    if (!Array.isArray(values)) return [];
+    return values.map(
+      (value) =>
+        respuestaEnviadaOptions.find((opt) => opt.value === value)?.label
+    );
+  };
 
   return (
     <>
@@ -121,7 +153,7 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
           type="text"
           className="input-placeholder"
           placeholder="Buscar por ID ó radicado"
-          value={tempFilters.pqr_codigo}
+          value={tempFilters.pqr_codigo || ""}
           onChange={(e) =>
             setTempFilters({ ...tempFilters, pqr_codigo: e.target.value })
           }
@@ -130,7 +162,7 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
           type="text"
           className="input-placeholder"
           placeholder="Número de Documento"
-          value={tempFilters.documento_numero}
+          value={tempFilters.documento_numero || ""}
           onChange={(e) =>
             setTempFilters({ ...tempFilters, documento_numero: e.target.value })
           }
@@ -138,8 +170,8 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
         <input
           type="date"
           className="input-placeholder"
-          placeholder="Fecha de Inicio" // Placeholder para claridad
-          value={tempFilters.fecha_inicio || ""} // Asegúrate de que no sea undefined
+          placeholder="Fecha de Inicio"
+          value={tempFilters.fecha_inicio || ""}
           onChange={(e) =>
             setTempFilters({ ...tempFilters, fecha_inicio: e.target.value })
           }
@@ -147,8 +179,8 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
         <input
           type="date"
           className="input-placeholder"
-          placeholder="Fecha de Fin" // Placeholder para claridad
-          value={tempFilters.fecha_fin || ""} // Asegúrate de que no sea undefined
+          placeholder="Fecha de Fin"
+          value={tempFilters.fecha_fin || ""}
           onChange={(e) =>
             setTempFilters({ ...tempFilters, fecha_fin: e.target.value })
           }
@@ -175,7 +207,8 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
             placeholder="Seleccione tipo(s) de solicitud"
           />
         </div>
-        <div className="filtro-tipo-solicitud">
+
+        <div className="filtro-sede">
           <DropdownMultiSelect
             options={sedes}
             selected={tempFilters.sede}
@@ -186,7 +219,8 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
             className="dropdown-sede"
           />
         </div>
-        <div className="filtro-tipo-solicitud">
+
+        <div className="filtro-eps">
           <DropdownMultiSelect
             options={epsOptions}
             selected={tempFilters.eps}
@@ -197,44 +231,62 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
           />
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setFilters(tempFilters); // ← aplica el filtro real
-            onBuscar(); // ← ejecuta la búsqueda
-          }}
-          title="Buscar"
-          className="search-button"
-        >
-          <i className="fas fa-xl fa-search"></i>
-        </button>
+        {/* --- Nuevo Filtro: Estado de Respuesta --- */}
+        <div className="filtro-respuesta">
+          <DropdownMultiSelect
+            options={respuestaEnviadaOptions.map((opt) => opt.label)}
+            selected={getRespuestaLabels(tempFilters.respuesta_enviada)}
+            setSelected={handleRespuestaChange}
+            placeholder="Estado de la PQR-S"
+          />
+        </div>
+        <div className="iconos-filtros">
+          <button
+            type="button"
+            onClick={() => {
+              setFilters(tempFilters);
+              onBuscar();
+            }}
+            title="Buscar"
+            className="search-button"
+          >
+            <i className="fas fa-xl fa-search">
+              <span className="texto-iconos">Buscar</span>
+            </i>
+          </button>
 
-        <button
-          onClick={() =>
-            setTempFilters({
-              pqr_codigo: "",
-              documento_numero: "",
-              servicio_prestado: [],
-              tipo_solicitud: [],
-              sede: [],
-              eps: [],
-              // A J U S T E   E N   L I M P I A R   F I L T R O S
-              fecha_inicio: "",
-              fecha_fin: "",
-            })
-          }
-          title="Limpiar filtros"
-        >
-          <i className="fas fa-xl fa-eraser"></i>
-        </button>
+          <button
+            className="eraser-button"
+            onClick={() =>
+              setTempFilters({
+                pqr_codigo: "",
+                documento_numero: "",
+                servicio_prestado: [],
+                tipo_solicitud: [],
+                sede: [],
+                eps: [],
+                fecha_inicio: "",
+                fecha_fin: "",
+                respuesta_enviada: [],
+              })
+            }
+            title="Limpiar filtros"
+          >
+            <i className="fas fa-xl fa-eraser">
+              <span className="texto-iconos">Limpiar</span>
+            </i>
+          </button>
 
-        <p
-          className="boton-refrescar"
-          onClick={() => window.location.reload()}
-          title="Refrescar página"
-        >
-          <i className="fas fa-xl fa-sync-alt"></i>
-        </p>
+          <button
+            className="boton-refrescar"
+            onClick={() => window.location.reload()}
+            title="Refrescar página"
+          >
+            <i className="fas fa-xl fa-sync-alt">
+              <span className="texto-iconos">Actualizar</span>
+            </i>
+          </button>
+        </div>
       </div>
     </>
   );
@@ -301,6 +353,8 @@ export default PqrsFilters;
 // }
 
 // function PqrsFilters({ filters, setFilters, onBuscar }) {
+//   const [tempFilters, setTempFilters] = useState(filters);
+
 //   const servicios = [
 //     "Hidroterapia",
 //     "Programa Rehabilitación",
@@ -352,6 +406,20 @@ export default PqrsFilters;
 //   ];
 //   epsOptions.sort();
 
+//   useEffect(() => {
+//     setTempFilters(filters); // sincronizar al inicio o al limpiar
+//   }, [filters]);
+
+//   const getSelectedLabels = (values) => {
+//     if (!Array.isArray(values)) return [];
+//     return values.map((value) => {
+//       const option = respuesta_enviada_options.find(
+//         (opt) => opt.value === value
+//       );
+//       return option ? option.label : "";
+//     });
+//   };
+
 //   return (
 //     <>
 //       <div className="filtros-busqueda">
@@ -359,27 +427,45 @@ export default PqrsFilters;
 //           type="text"
 //           className="input-placeholder"
 //           placeholder="Buscar por ID ó radicado"
-//           value={filters.pqr_codigo}
+//           value={tempFilters.pqr_codigo}
 //           onChange={(e) =>
-//             setFilters({ ...filters, pqr_codigo: e.target.value })
+//             setTempFilters({ ...tempFilters, pqr_codigo: e.target.value })
 //           }
 //         />
 //         <input
 //           type="text"
 //           className="input-placeholder"
 //           placeholder="Número de Documento"
-//           value={filters.documento_numero}
+//           value={tempFilters.documento_numero}
 //           onChange={(e) =>
-//             setFilters({ ...filters, documento_numero: e.target.value })
+//             setTempFilters({ ...tempFilters, documento_numero: e.target.value })
+//           }
+//         />
+//         <input
+//           type="date"
+//           className="input-placeholder"
+//           placeholder="Fecha de Inicio" // Placeholder para claridad
+//           value={tempFilters.fecha_inicio || ""} // Asegúrate de que no sea undefined
+//           onChange={(e) =>
+//             setTempFilters({ ...tempFilters, fecha_inicio: e.target.value })
+//           }
+//         />
+//         <input
+//           type="date"
+//           className="input-placeholder"
+//           placeholder="Fecha de Fin" // Placeholder para claridad
+//           value={tempFilters.fecha_fin || ""} // Asegúrate de que no sea undefined
+//           onChange={(e) =>
+//             setTempFilters({ ...tempFilters, fecha_fin: e.target.value })
 //           }
 //         />
 
 //         <div className="filtro-servicio">
 //           <DropdownMultiSelect
 //             options={servicios}
-//             selected={filters.servicio_prestado}
+//             selected={tempFilters.servicio_prestado}
 //             setSelected={(selected) =>
-//               setFilters({ ...filters, servicio_prestado: selected })
+//               setTempFilters({ ...tempFilters, servicio_prestado: selected })
 //             }
 //             placeholder="Seleccione el/los servicio(s)"
 //           />
@@ -388,9 +474,9 @@ export default PqrsFilters;
 //         <div className="filtro-tipo-solicitud">
 //           <DropdownMultiSelect
 //             options={tiposSolicitud}
-//             selected={filters.tipo_solicitud}
+//             selected={tempFilters.tipo_solicitud}
 //             setSelected={(selected) =>
-//               setFilters({ ...filters, tipo_solicitud: selected })
+//               setTempFilters({ ...tempFilters, tipo_solicitud: selected })
 //             }
 //             placeholder="Seleccione tipo(s) de solicitud"
 //           />
@@ -398,9 +484,9 @@ export default PqrsFilters;
 //         <div className="filtro-tipo-solicitud">
 //           <DropdownMultiSelect
 //             options={sedes}
-//             selected={filters.sede}
+//             selected={tempFilters.sede}
 //             setSelected={(selected) =>
-//               setFilters({ ...filters, sede: selected })
+//               setTempFilters({ ...tempFilters, sede: selected })
 //             }
 //             placeholder="Seleccione sede(s)"
 //             className="dropdown-sede"
@@ -409,41 +495,29 @@ export default PqrsFilters;
 //         <div className="filtro-tipo-solicitud">
 //           <DropdownMultiSelect
 //             options={epsOptions}
-//             selected={filters.eps}
+//             selected={tempFilters.eps}
 //             setSelected={(selected) =>
-//               setFilters({ ...filters, eps: selected })
+//               setTempFilters({ ...tempFilters, eps: selected })
 //             }
 //             placeholder="Seleccione EPS"
 //           />
 //         </div>
 
-//         {/* C A M B I O S   A Q U Í */}
-//         <input
-//           type="date"
-//           className="input-placeholder"
-//           placeholder="Fecha de Inicio" // Placeholder para claridad
-//           value={filters.fecha_inicio || ""} // Asegúrate de que no sea undefined
-//           onChange={(e) =>
-//             setFilters({ ...filters, fecha_inicio: e.target.value })
-//           }
-//         />
-//         <input
-//           type="date"
-//           className="input-placeholder"
-//           placeholder="Fecha de Fin" // Placeholder para claridad
-//           value={filters.fecha_fin || ""} // Asegúrate de que no sea undefined
-//           onChange={(e) =>
-//             setFilters({ ...filters, fecha_fin: e.target.value })
-//           }
-//         />
-//         {/* F I N   C A M B I O S */}
-
-//         <button onClick={onBuscar} title="Buscar" className="search-button">
-//           <i className="fas fa-xl fa-search"></i>{" "}
+//         <button
+//           type="button"
+//           onClick={() => {
+//             setFilters(tempFilters); // ← aplica el filtro real
+//             onBuscar(); // ← ejecuta la búsqueda
+//           }}
+//           title="Buscar"
+//           className="search-button"
+//         >
+//           <i className="fas fa-xl fa-search"></i>
 //         </button>
+
 //         <button
 //           onClick={() =>
-//             setFilters({
+//             setTempFilters({
 //               pqr_codigo: "",
 //               documento_numero: "",
 //               servicio_prestado: [],
@@ -453,6 +527,7 @@ export default PqrsFilters;
 //               // A J U S T E   E N   L I M P I A R   F I L T R O S
 //               fecha_inicio: "",
 //               fecha_fin: "",
+//               respuesta_enviada: null,
 //             })
 //           }
 //           title="Limpiar filtros"

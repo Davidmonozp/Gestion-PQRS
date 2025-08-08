@@ -22,6 +22,7 @@ class PqrController extends Controller
     {
         try {
             $registra_otro = $request->input('registra_otro') === 'si';
+            $tipo_solicitud = $request->input('tipo_solicitud');
 
             // Reglas de validación base
             $rules = [
@@ -78,6 +79,20 @@ class PqrController extends Controller
                 }
             }
 
+            // Regla condicional para 'clasificacion_tutela'
+            if ($tipo_solicitud === 'Tutela') {
+                $rules['clasificacion_tutela'] = 'required|string';
+            } else {
+                $rules['clasificacion_tutela'] = 'nullable';
+            }
+
+            if ($tipo_solicitud === 'Tutela') {
+                $rules['accionado'] = 'required|array|min:1';
+                $rules['accionado.*'] = 'in:Asegurador,Passus';
+            } else {
+                $rules['accionado'] = 'nullable|array';
+                $rules['accionado.*'] = 'in:Asegurador,Passus';
+            }
 
             // Lógica condicional para 'fecha_inicio_real' y 'fuente'
             // Esto asume que tienes alguna forma de saber si el usuario está "logeado" en el backend.
@@ -131,6 +146,8 @@ class PqrController extends Controller
                 'eps' => $validated['eps'],
                 'regimen' => $validated['regimen'],
                 'tipo_solicitud' => $validated['tipo_solicitud'],
+                'clasificacion_tutela' => $validated['clasificacion_tutela'] ?? null,
+                'accionado' => $request->input('accionado', []),
                 'fuente' => $validated['fuente'] ?? null,
                 'descripcion' => $validated['descripcion'],
                 'archivo' => $uploadedFilesData,
@@ -232,18 +249,32 @@ class PqrController extends Controller
 
     //         // Reglas condicionales para el registrador
     //         if ($registra_otro) {
+    //             $parentesco = $request->input('parentesco');
+
     //             $rules = array_merge($rules, [
     //                 'registrador_nombre' => 'required|string|max:100',
     //                 'registrador_segundo_nombre' => 'nullable|string|max:100',
     //                 'registrador_apellido' => 'required|string|max:100',
     //                 'registrador_segundo_apellido' => 'nullable|string|max:100',
-    //                 'registrador_documento_tipo' => 'required|string',
-    //                 'registrador_documento_numero' => 'required|string',
     //                 'registrador_correo' => 'required|email',
     //                 'registrador_telefono' => 'nullable|string',
     //                 'parentesco' => 'required|string|max:50',
     //             ]);
+
+    //             if ($parentesco === 'Ente de control' || $parentesco === 'Entidad') {
+    //                 // ✅ Solo pedimos cargo
+    //                 $rules['registrador_cargo'] = 'required|string|max:100';
+    //                 $rules['registrador_documento_tipo'] = 'nullable|string';
+    //                 $rules['registrador_documento_numero'] = 'nullable|string';
+    //                 $rules['nombre_entidad'] = 'required|string|max:100';
+    //             } else {
+    //                 // ✅ Solo pedimos documentos
+    //                 $rules['registrador_documento_tipo'] = 'required|string';
+    //                 $rules['registrador_documento_numero'] = 'required|string';
+    //                 $rules['registrador_cargo'] = 'nullable|string|max:100';
+    //             }
     //         }
+
 
     //         // Lógica condicional para 'fecha_inicio_real' y 'fuente'
     //         // Esto asume que tienes alguna forma de saber si el usuario está "logeado" en el backend.
@@ -256,7 +287,7 @@ class PqrController extends Controller
     //         if ($isLoggedInBackend) {
     //             // Si el usuario está logeado, estas reglas se vuelven 'required'
     //             $rules['fecha_inicio_real'] = 'required|date_format:Y-m-d H:i';
-    //             $rules['fuente'] = 'required|string|in:"Formulario de la web","Correo atención al usuario","Correo de Agendamiento NAC","Encuesta de satisfacción IPS","Callcenter","Presencial"';
+    //             $rules['fuente'] = 'required|string|in:Formulario de la web,Correo atención al usuario,Correo de Agendamiento NAC,Encuesta de satisfacción IPS,Callcenter,Presencial';
     //         }
 
     //         Log::info('Valor de politica_aceptada recibido antes de validación:', ['politica_aceptada_raw' => $request->input('politica_aceptada')]);
@@ -291,25 +322,39 @@ class PqrController extends Controller
     //             'documento_tipo' => $validated['documento_tipo'],
     //             'documento_numero' => $validated['documento_numero'],
     //             'correo' => $validated['correo'],
-    //             'telefono' => $validated['telefono'] ?? null, // Usa null si es nullable y no se envió
+    //             'telefono' => $validated['telefono'] ?? null,
     //             'sede' => $validated['sede'],
     //             'servicio_prestado' => $validated['servicio_prestado'],
     //             'eps' => $validated['eps'],
     //             'regimen' => $validated['regimen'],
     //             'tipo_solicitud' => $validated['tipo_solicitud'],
-    //             'fuente' => $validated['fuente'] ?? null, // Si 'fuente' es nullable y no se envió, será null
+    //             'fuente' => $validated['fuente'] ?? null,
     //             'descripcion' => $validated['descripcion'],
-    //             'archivo' => $uploadedFilesData, // Esto asume que 'archivo' en DB es JSON o TEXT para guardar el array
-    //             'registra_otro' => $validated['registra_otro'] === 'si', // Guarda como boolean si la columna es boolean
+    //             'archivo' => $uploadedFilesData,
+    //             'registra_otro' => $validated['registra_otro'] === 'si',
     //             'registrador_nombre' => $validated['registrador_nombre'] ?? null,
     //             'registrador_apellido' => $validated['registrador_apellido'] ?? null,
-    //             'registrador_documento_tipo' => $validated['registrador_documento_tipo'] ?? null,
-    //             'registrador_documento_numero' => $validated['registrador_documento_numero'] ?? null,
+    //             'registrador_documento_tipo' =>
+    //             in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Entidad'])
+    //                 ? null
+    //                 : ($validated['registrador_documento_tipo'] ?? null),
+
+    //             'registrador_documento_numero' =>
+    //             in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Entidad'])
+    //                 ? null
+    //                 : ($validated['registrador_documento_numero'] ?? null),
+
     //             'registrador_correo' => $validated['registrador_correo'] ?? null,
     //             'registrador_telefono' => $validated['registrador_telefono'] ?? null,
+    //             'registrador_cargo' => $validated['registrador_cargo'] ?? null,
     //             'parentesco' => $validated['parentesco'] ?? null,
     //             'fecha_inicio_real' => $validated['fecha_inicio_real'] ?? null,
+    //             'nombre_entidad' =>
+    //             in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Entidad'])
+    //                 ? ($validated['nombre_entidad'] ?? null)
+    //                 : null,
     //         ];
+
 
     //         // Crear la PQR
     //         $pqr = Pqr::create($dataToCreate);
@@ -351,8 +396,6 @@ class PqrController extends Controller
 
 
 
-
-
     public function index(Request $request)
     {
         try {
@@ -381,7 +424,8 @@ class PqrController extends Controller
                 $request->filled('sede') ||
                 $request->filled('eps') ||
                 $request->filled('fecha_inicio') ||
-                $request->filled('fecha_fin')
+                $request->filled('fecha_fin') ||
+                $request->filled('respuesta_enviada')
             ) {
                 $query->where(function ($q) use ($request) {
                     if ($request->filled('pqr_codigo')) {
@@ -433,11 +477,35 @@ class PqrController extends Controller
                             }
                         });
                     }
+                    if ($request->has('respuesta_enviada')) {
+                        $respuestas = $request->input('respuesta_enviada');
+                        if (is_array($respuestas)) {
+                            $q->orWhereIn('respuesta_enviada', $respuestas);
+                        } else {
+                            $q->orWhere('respuesta_enviada', $respuestas);
+                        }
+                    }
                 });
             }
 
+            // 🔹 Antes de paginar, obtenemos todas las PQRs que se van a mostrar y actualizamos estado_tiempo
+            $pqrsSinRespuesta = (clone $query)
+                ->where('respuesta_enviada', 0)
+                ->get();
+
+            $tiempoService = new PqrTiempoService();
+
+            foreach ($pqrsSinRespuesta as $pqr) {
+                $nuevoEstado = $tiempoService->calcularEstadoTiempo($pqr)['estado'];
+                if ($pqr->estado_tiempo !== $nuevoEstado) {
+                    $pqr->estado_tiempo = $nuevoEstado;
+                    $pqr->save();
+                }
+            }
+
             // Ordenar por fecha más reciente
-            $pqrs = $query->orderBy('created_at', 'desc')
+            $pqrs = $query->orderBy('respuesta_enviada', 'asc')
+                ->orderBy('created_at', 'desc')
                 ->with([
                     'asignados:id,name',
                     'respuestas:id,pqrs_id,user_id,es_respuesta_usuario'
@@ -584,9 +652,22 @@ class PqrController extends Controller
                 ->with([
                     'asignados',
                     'respuestas.autor',
-                    'clasificaciones'
+                    'clasificaciones',
+                    'eventLogs'
                 ])
                 ->firstOrFail();
+
+            // 🔹 Calcular y actualizar estado_tiempo antes de retornar
+            if ($pqr->respuesta_enviada == 0) {
+                $tiempoService = new PqrTiempoService();
+                $resultado = $tiempoService->calcularEstadoTiempo($pqr);
+                $nuevoEstado = $resultado['estado'];
+
+                if ($pqr->estado_tiempo !== $nuevoEstado) {
+                    $pqr->estado_tiempo = $nuevoEstado;
+                    $pqr->save();
+                }
+            }
 
             // Calcular tiempo_respondido usando Carbon
             $tiempoRespondido = null;

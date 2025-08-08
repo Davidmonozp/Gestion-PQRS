@@ -5,6 +5,7 @@ import "./styles/PqrsResponder.css";
 import Navbar from "../components/Navbar/Navbar";
 import Swal from "sweetalert2";
 import CountdownTimer from "./components/CountDownTimer";
+import { Version } from "../components/Footer/Version";
 
 const PqrsResponder = () => {
   const { pqr_codigo } = useParams();
@@ -274,6 +275,7 @@ const PqrsResponder = () => {
           </form>
         )}
       </div>
+      <Version/>
     </>
   );
 };

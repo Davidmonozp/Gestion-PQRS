@@ -1,5 +1,6 @@
 import React from "react";
 import PqrsForm from "./PqrsForm";
+import { Footer } from "../components/Footer/Footer";
 
 export default function DerechoPeticionForm() {
   const tipoSolicitudOptions = [
@@ -7,23 +8,14 @@ export default function DerechoPeticionForm() {
   ];
 
   return (
-    <PqrsForm
-      defaultTipoSolicitud="Derecho de peticion"
-      tipoSolicitudOptions={tipoSolicitudOptions}
-    />
+    <>
+      <PqrsForm
+        defaultTipoSolicitud="Derecho de peticion"
+        tipoSolicitudOptions={tipoSolicitudOptions}
+      />
+    </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
 
 // import React, { useState, useEffect, useCallback } from "react";
 // import { createPqr } from "./pqrsService"; // Asegúrate de tener createPqr y updatePqr si los usas

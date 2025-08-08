@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import UserFilters from "./components/UserFilters";
 import useEstadoUsuario from "./hooks/useEstadoUsuario";
 import Navbar from "../components/Navbar/Navbar";
+import { Version } from "../components/Footer/Version";
 
 const UserList = () => {
   // Ahora usas el hook para manejar los estados y la lógica de activación
@@ -19,6 +20,9 @@ const UserList = () => {
 
   // ¡CRUCIAL! Inicializa el hook useNavigate dentro del componente
   const navigate = useNavigate();
+  const irAEventLogs = () => {
+    navigate("/event-logs");
+  };
 
   const [cargando, setCargando] = useState(true);
 
@@ -51,7 +55,12 @@ const UserList = () => {
       const filterEmail = filters.email.trim().toLowerCase();
       const filterRole = filters.role.trim();
 
-      const matchId = filterId === "" || user.documento_numero.toString() === filterId;
+      // 🟢 La única línea que se modificó
+      // Se usa `.includes()` para buscar coincidencias parciales
+        const matchId =
+        filterId === "" || user.documento_numero.toString().includes(filterId);
+
+      // El resto de la lógica permanece igual
       const matchName = user.name.toLowerCase().includes(filterName);
       const matchEmail = user.email.toLowerCase().includes(filterEmail);
       const matchRole =
@@ -84,6 +93,7 @@ const UserList = () => {
   return (
     <>
       <Navbar />
+      {/* <button onClick={irAEventLogs}>Ver Logs</button> */}
 
       <div className="container-users">
         <div className="header-top-users">
@@ -177,6 +187,7 @@ const UserList = () => {
           </table>
         </div>
       </div>
+      <Version />
     </>
   );
 };

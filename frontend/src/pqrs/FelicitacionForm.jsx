@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import * as Yup from "yup";
 import Swal from "sweetalert2";
 import api from "../api/api";
+import { Footer } from "../components/Footer/Footer";
 
 const felicitacionSchema = Yup.object().shape({
   nombre: Yup.string()
@@ -150,188 +151,191 @@ export default function FelicitacionForm() {
   };
 
   return (
-    <div className="pqrs-container">
-      <div className="header-pqrs">
-        <div>
-          Envía tu <span>Felicitación</span>
+    <>
+      <div className="pqrs-container">
+        <div className="header-pqrs">
+          <div>
+            Envía tu <span>Felicitación</span>
+          </div>
         </div>
+
+        <form onSubmit={handleSubmit} className="pqrs" noValidate>
+          <input
+            type="text"
+            name="nombre"
+            placeholder="Primer nombre"
+            value={form.nombre}
+            onChange={handleChange}
+          />
+          {errors.nombre && <p className="error">{errors.nombre}</p>}
+
+          <input
+            type="text"
+            name="segundo_nombre"
+            placeholder="Segundo nombre"
+            value={form.segundo_nombre}
+            onChange={handleChange}
+          />
+          {errors.segundo_nombre && (
+            <p className="error">{errors.segundo_nombre}</p>
+          )}
+
+          <input
+            type="text"
+            name="apellido"
+            placeholder="Primer apellido"
+            value={form.apellido}
+            onChange={handleChange}
+          />
+          {errors.apellido && <p className="error">{errors.apellido}</p>}
+
+          <input
+            type="text"
+            name="segundo_apellido"
+            placeholder="Segundo apellido"
+            value={form.segundo_apellido}
+            onChange={handleChange}
+          />
+          {errors.segundo_apellido && (
+            <p className="error">{errors.segundo_apellido}</p>
+          )}
+
+          <select
+            name="documento_tipo"
+            value={form.documento_tipo}
+            onChange={handleChange}
+          >
+            <option value="">Tipo de documento</option>
+            <option value="CC">Cédula</option>
+            <option value="CD">Carné diplomático</option>
+            <option value="CN">Certificado nacido vivo</option>
+            <option value="CE">Cédula de extranjería</option>
+            <option value="DC">Documento Extranjero</option>
+            <option value="NIT">NIT</option>
+            <option value="PA">Pasaporte</option>
+            <option value="PE">Permiso Especial de Permanencia</option>
+            <option value="PT">Permiso por Protección Temporal</option>
+            <option value="RC">Registro Civil</option>
+            <option value="SC">Salvo Conducto</option>
+            <option value="TI">Tarjeta de identidad</option>
+          </select>
+          {errors.documento_tipo && (
+            <p className="error">{errors.documento_tipo}</p>
+          )}
+
+          <input
+            type="text"
+            name="documento_numero"
+            placeholder="Número de documento"
+            value={form.documento_numero}
+            onChange={handleChange}
+          />
+          {errors.documento_numero && (
+            <p className="error">{errors.documento_numero}</p>
+          )}
+
+          <input
+            type="email"
+            name="correo"
+            placeholder="Correo electrónico"
+            value={form.correo}
+            onChange={handleChange}
+          />
+          {errors.correo && <p className="error">{errors.correo}</p>}
+
+          <input
+            type="email"
+            name="correo_confirmacion"
+            placeholder="Confirma tu correo"
+            value={form.correo_confirmacion}
+            onChange={handleChange}
+          />
+          {errors.correo_confirmacion && (
+            <p className="error">{errors.correo_confirmacion}</p>
+          )}
+
+          <select name="sede" value={form.sede} onChange={handleChange}>
+            <option value="">Selecciona una sede</option>
+            <option value="Bogota-Sur-Occidente-Rehabilitación">
+              Bogotá-Sur-Occidente-Rehabilitación
+            </option>
+            <option value="Bogota-Sur-Occidente-Hidroterapia">
+              Bogotá-Sur-Occidente-Hidroterapia
+            </option>
+            <option value="Bogota-Norte-Hidroterapia">
+              Bogotá-Norte-Hidroterapia
+            </option>
+            <option value="Bogota-Centro-Hidroterapia">
+              Bogotá-Centro-Hidroterapia
+            </option>
+            <option value="Chia-Rehabilitacion">Chia-Rehabilitacion</option>
+            <option value="Florencia-Hidroterapia-Rehabilitacion">
+              Florencia-Hidroterapia-Rehabilitacion
+            </option>
+            <option value="Ibague-Hidroterapia-Rehabilitacion">
+              Ibagué-Hidroterapia-Rehabilitacion
+            </option>
+          </select>
+          {errors.sede && <p className="error">{errors.sede}</p>}
+
+          <textarea
+            name="descripcion"
+            placeholder="Describe tu felicitación"
+            value={form.descripcion}
+            onChange={handleChange}
+            rows={5}
+          />
+          {errors.descripcion && <p className="error">{errors.descripcion}</p>}
+
+          <div className="politica-box politica-box-compact">
+            <label className="politica-label">
+              <input
+                type="checkbox"
+                name="politica_aceptada"
+                checked={form.politica_aceptada}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    politica_aceptada: e.target.checked,
+                  }))
+                }
+              />
+              <div className="politica-texto">
+                <span className="politica-descripcion">
+                  Acepto la 
+                  <a
+                    href="https://passusips.com/nosotros-politica-manejo-datos"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    política de tratamiento de datos personales
+                  </a>{" "}
+                  de Passus 👆, pues he leído y estoy de acuerdo con lo expuesto
+                  en el manuscrito publicado. <br /> <br />
+                  He Comprendido los{" "}
+                  <a
+                    href="https://passusips.com/nosotros-politica-agendamiento-web"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {" "}
+                    Términos y condiciones de Servicio Web{" "}
+                  </a>
+                  de Passus 👆, pues he leído y estoy de acuerdo con lo expuesto
+                  en la información publicada.
+                </span>
+              </div>
+            </label>
+          </div>
+          {errors.politica_aceptada && (
+            <p className="error">{errors.politica_aceptada}</p>
+          )}
+          <button type="submit" disabled={loading}>
+            {loading ? "Enviando..." : "Enviar Felicitación"}
+          </button>
+        </form>
       </div>
-
-      <form onSubmit={handleSubmit} className="pqrs" noValidate>
-        <input
-          type="text"
-          name="nombre"
-          placeholder="Primer nombre"
-          value={form.nombre}
-          onChange={handleChange}
-        />
-        {errors.nombre && <p className="error">{errors.nombre}</p>}
-
-        <input
-          type="text"
-          name="segundo_nombre"
-          placeholder="Segundo nombre"
-          value={form.segundo_nombre}
-          onChange={handleChange}
-        />
-        {errors.segundo_nombre && (
-          <p className="error">{errors.segundo_nombre}</p>
-        )}
-
-        <input
-          type="text"
-          name="apellido"
-          placeholder="Primer apellido"
-          value={form.apellido}
-          onChange={handleChange}
-        />
-        {errors.apellido && <p className="error">{errors.apellido}</p>}
-
-        <input
-          type="text"
-          name="segundo_apellido"
-          placeholder="Segundo apellido"
-          value={form.segundo_apellido}
-          onChange={handleChange}
-        />
-        {errors.segundo_apellido && (
-          <p className="error">{errors.segundo_apellido}</p>
-        )}
-
-        <select
-          name="documento_tipo"
-          value={form.documento_tipo}
-          onChange={handleChange}
-        >
-          <option value="">Tipo de documento</option>
-          <option value="CC">Cédula</option>
-          <option value="CD">Carné diplomático</option>
-          <option value="CN">Certificado nacido vivo</option>
-          <option value="CE">Cédula de extranjería</option>
-          <option value="DC">Documento Extranjero</option>
-          <option value="NIT">NIT</option>
-          <option value="PA">Pasaporte</option>
-          <option value="PE">Permiso Especial de Permanencia</option>
-          <option value="PT">Permiso por Protección Temporal</option>
-          <option value="RC">Registro Civil</option>
-          <option value="SC">Salvo Conducto</option>
-          <option value="TI">Tarjeta de identidad</option>
-        </select>
-        {errors.documento_tipo && (
-          <p className="error">{errors.documento_tipo}</p>
-        )}
-
-        <input
-          type="text"
-          name="documento_numero"
-          placeholder="Número de documento"
-          value={form.documento_numero}
-          onChange={handleChange}
-        />
-        {errors.documento_numero && (
-          <p className="error">{errors.documento_numero}</p>
-        )}
-
-        <input
-          type="email"
-          name="correo"
-          placeholder="Correo electrónico"
-          value={form.correo}
-          onChange={handleChange}
-        />
-        {errors.correo && <p className="error">{errors.correo}</p>}
-
-        <input
-          type="email"
-          name="correo_confirmacion"
-          placeholder="Confirma tu correo"
-          value={form.correo_confirmacion}
-          onChange={handleChange}
-        />
-        {errors.correo_confirmacion && (
-          <p className="error">{errors.correo_confirmacion}</p>
-        )}
-
-        <select name="sede" value={form.sede} onChange={handleChange}>
-          <option value="">Selecciona una sede</option>
-          <option value="Bogota-Sur-Occidente-Rehabilitación">
-            Bogotá-Sur-Occidente-Rehabilitación
-          </option>
-          <option value="Bogota-Sur-Occidente-Hidroterapia">
-            Bogotá-Sur-Occidente-Hidroterapia
-          </option>
-          <option value="Bogota-Norte-Hidroterapia">
-            Bogotá-Norte-Hidroterapia
-          </option>
-          <option value="Bogota-Centro-Hidroterapia">
-            Bogotá-Centro-Hidroterapia
-          </option>
-          <option value="Chia-Rehabilitacion">Chia-Rehabilitacion</option>
-          <option value="Florencia-Hidroterapia-Rehabilitacion">
-            Florencia-Hidroterapia-Rehabilitacion
-          </option>
-          <option value="Ibague-Hidroterapia-Rehabilitacion">
-            Ibagué-Hidroterapia-Rehabilitacion
-          </option>
-        </select>
-        {errors.sede && <p className="error">{errors.sede}</p>}
-
-        <textarea
-          name="descripcion"
-          placeholder="Describe tu felicitación"
-          value={form.descripcion}
-          onChange={handleChange}
-          rows={5}
-        />
-        {errors.descripcion && <p className="error">{errors.descripcion}</p>}
-
-        <div className="politica-box politica-box-compact">
-          <label className="politica-label">
-            <input
-              type="checkbox"
-              name="politica_aceptada"
-              checked={form.politica_aceptada}
-              onChange={(e) =>
-                setForm((prev) => ({
-                  ...prev,
-                  politica_aceptada: e.target.checked,
-                }))
-              }
-            />
-            <div className="politica-texto">
-              <span className="politica-descripcion">
-                Acepto la 
-                <a
-                  href="https://passusips.com/nosotros-politica-manejo-datos"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  política de tratamiento de datos personales
-                </a>{" "}
-                de Passus 👆, pues he leído y estoy de acuerdo con lo expuesto
-                en el manuscrito publicado. <br /> <br />
-                He Comprendido los{" "}
-                <a
-                  href="https://passusips.com/nosotros-politica-agendamiento-web"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {" "}
-                  Términos y condiciones de Servicio Web{" "}
-                </a>
-                de Passus 👆, pues he leído y estoy de acuerdo con lo expuesto
-                en la información publicada.
-              </span>
-            </div>
-          </label>
-        </div>
-        {errors.politica_aceptada && (
-          <p className="error">{errors.politica_aceptada}</p>
-        )}
-        <button type="submit" disabled={loading}>
-          {loading ? "Enviando..." : "Enviar Felicitación"}
-        </button>
-      </form>
-    </div>
+      <Footer/>
+    </>
   );
 }

@@ -3,7 +3,7 @@ import Swal from 'sweetalert2';
 
 
 // const API = "http://127.0.0.1:8000/api/auth/";
-const API = "http://192.168.1.30:8000/api/auth/";
+const API = "http://192.168.1.15:8000/api/auth/";
 
 
 // 🔐 LOGIN

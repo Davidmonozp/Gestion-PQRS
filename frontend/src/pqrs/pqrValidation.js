@@ -5,7 +5,7 @@ const commonContactFields = {
   nombre: Yup.string()
     .matches(
       /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/,
-      "El nombre no puede contener espacios en blanco al inicio"
+      "El nombre no puede contener espacios en blanco"
     )
     // .trim("El nombre no puede consistir solo en espacios en blanco")
     .required("El nombre es obligatorio")
@@ -24,7 +24,7 @@ const commonContactFields = {
   apellido: Yup.string()
     .matches(
       /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/,
-      "El apellido solo puede contener espacios en blanco al inicio"
+      "El apellido no puede contener espacios en blanco"
     )
     // .trim("El apellido no puede consistir solo en espacios en blanco")
     .required("El apellido es obligatorio")
@@ -107,6 +107,24 @@ export const pqrsSchema = Yup.object().shape({
 
   tipo_solicitud: Yup.string().required("Selecciona un tipo de solicitud"),
 
+  clasificacion_tutela: Yup.string().when("tipo_solicitud", {
+    is: "Tutela",
+    then: (schema) =>
+      schema.required("Debes seleccionar una clasificación para la tutela."),
+    otherwise: (schema) => schema.Required(),
+  }),
+
+accionado: Yup.array()
+  .when("tipo_solicitud", {
+    is: "Tutela",
+    then: (schema) =>
+      schema
+        .min(1, "Debes seleccionar al menos un accionado para la tutela.")
+        .required("Debes seleccionar al menos un accionado para la tutela."),
+    otherwise: (schema) => schema.Required(),
+  }),
+
+
   fuente: Yup.string().when("$isLoggedIn", {
     is: true,
     then: (schema) =>
@@ -148,7 +166,7 @@ export const pqrsSchema = Yup.object().shape({
       schema
         .matches(
           /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/,
-          "El nombre no puede contener espacios en blanco al inicio"
+          "El nombre no puede contener espacios en blanco"
         )
         // .trim("El nombre no puede consistir solo en espacios en blanco")
         .required("El nombre del solicitante es obligatorio")
@@ -182,7 +200,7 @@ export const pqrsSchema = Yup.object().shape({
       schema
         .matches(
           /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/,
-          "El apellido solo puede contener espacios en blanco al inicio"
+          "El apellido no puede contener espacios en blanco"
         )
         .required("El apellido del solicitante es obligatorio")
         .min(2, "El apellido del solicitante debe tener al menos 2 caracteres")
@@ -226,7 +244,7 @@ export const pqrsSchema = Yup.object().shape({
 
   registrador_documento_tipo: Yup.string().when(["registra_otro", "parentesco"], {
     is: (registra_otro, parentesco) =>
-      registra_otro === "si" && parentesco !== "Ente de control",
+      registra_otro === "si" && parentesco !== "Ente de control" && parentesco !== "Entidad",
     then: (schema) =>
       schema.required("Selecciona el tipo de documento del solicitante"),
     otherwise: (schema) =>
@@ -237,9 +255,10 @@ export const pqrsSchema = Yup.object().shape({
         ),
   }),
 
+
   registrador_documento_numero: Yup.string().when(["registra_otro", "parentesco"], {
     is: (registra_otro, parentesco) =>
-      registra_otro === "si" && parentesco !== "Ente de control",
+      registra_otro === "si" && parentesco !== "Ente de control" && parentesco !== "Entidad",
     then: (schema) =>
       schema
         .required("El número de documento del solicitante es obligatorio")
@@ -262,6 +281,7 @@ export const pqrsSchema = Yup.object().shape({
           originalValue === "" ? undefined : originalValue
         ),
   }),
+
 
 
   registrador_correo: Yup.string().when("registra_otro", {
@@ -295,14 +315,16 @@ export const pqrsSchema = Yup.object().shape({
         ),
   }),
   registrador_cargo: Yup.string().when("parentesco", {
-    is: "Ente de control",
+    is: (val) => val === "Ente de control" || val === "Entidad",
     then: (schema) =>
       schema.required("El cargo es obligatorio"),
     otherwise: (schema) => schema.nullable(),
   }),
+
   nombre_entidad: Yup.string().when("parentesco", {
-    is: "Ente de control",
-    then: (schema) => schema.required("El nombre de la entidad es obligatorio").max(100),
+    is: (val) => val === "Ente de control" || val === "Entidad",
+    then: (schema) =>
+      schema.required("El nombre de la entidad es obligatorio").max(100),
     otherwise: (schema) => schema.nullable(),
   }),
 

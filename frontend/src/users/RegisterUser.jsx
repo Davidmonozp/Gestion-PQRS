@@ -22,11 +22,12 @@ const RegisterUser = () => {
   const sedes = [
     { id: 1, name: "Bogota-Sur-Occidente-Rehabilitación" },
     { id: 2, name: "Bogota-Sur-Occidente-Hidroterapia" },
-    { id: 3, name: "Bogota-Norte-Hidroterapia" },
-    { id: 4, name: "Bogota-Centro-Hidroterapia" },
-    { id: 5, name: "Chia-Rehabilitacion" },
-    { id: 6, name: "Florencia-Hidroterapia-Rehabilitacion" },
-    { id: 7, name: "Ibague-Hidroterapia-Rehabilitacion" },
+    { id: 3, name: "Bogota-Norte" },
+    { id: 4, name: "Bogota-Centro" },
+    { id: 5, name: "Chia" },
+    { id: 6, name: "Florencia" },
+    { id: 7, name: "Ibague" },
+    { id: 8, name: "Cedritos-Divertido" },
   ];
   const documentos = [
     { id: 1, nombre: "CC" },

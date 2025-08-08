@@ -25,6 +25,7 @@
     display: flex;
     gap: 40px;
     flex-wrap: wrap;
+    margin-bottom: 27px;
 }
 
 .pqr-card-col {
@@ -337,6 +338,45 @@ h4 {
 /* FIN ESTILOS INPUT ASIGNADO A */
 
 
+
+
+.logs-acordeon li {
+  margin-bottom: 5px;
+  border-radius: 4px;
+  background-color: #e2e2e2;
+}
+
+.log-header {
+  padding: 10px;
+  cursor: pointer;
+  background-color: #f7f7f7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+.log-details {
+  padding: 10px;
+  background-color: #fff;
+  border-top: 1px solid #ddd;
+}
+.ver-logs-link {
+  color: #007bff; /* Un color de enlace estándar */
+  cursor: pointer;
+  margin-left: 10px; /* Separación del texto "Logs:" */
+  text-decoration: underline; /* Para que parezca un enlace */
+}
+
+/* Opcional: estilo al pasar el mouse por encima */
+.ver-logs-link:hover {
+  text-decoration: none;
+}
+
+
+
+
+
 @media (min-width: 300px) and (max-width: 475px) {
 
     .header-details-user div {
@@ -350,5 +390,18 @@ h4 {
 
     .pqr-card-container h2 {
         font-size: 25px;
+    }
+    .solicitante {
+        width: auto;
+    }
+}
+@media (min-width: 800px) and (max-width: 1051px) {
+       .solicitante {
+        width: 355px;
+    }
+}
+@media (min-width: 1052px) and (max-width: 1265px) {
+       .solicitante {
+        width: 400px;
     }
 }

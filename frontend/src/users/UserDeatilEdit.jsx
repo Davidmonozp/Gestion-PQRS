@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import api from "../api/api";
 import "./styles/UserDetailEdit.css";
 import Navbar from "../components/Navbar/Navbar";
+import { Version } from "../components/Footer/Version";
 
 const UserDetailEdit = () => {
   const { id } = useParams();
@@ -134,11 +135,12 @@ const UserDetailEdit = () => {
   const sedes = [
     { id: 1, name: "Bogota-Sur-Occidente-Rehabilitación" },
     { id: 2, name: "Bogota-Sur-Occidente-Hidroterapia" },
-    { id: 3, name: "Bogota-Norte-Hidroterapia" },
-    { id: 4, name: "Bogota-Centro-Hidroterapia" },
-    { id: 5, name: "Chia-Rehabilitacion" },
-    { id: 6, name: "Florencia-Hidroterapia-Rehabilitacion" },
-    { id: 7, name: "Ibague-Hidroterapia-Rehabilitacion" },
+    { id: 3, name: "Bogota-Norte" },
+    { id: 4, name: "Bogota-Centro" },
+    { id: 5, name: "Chia" },
+    { id: 6, name: "Florencia" },
+    { id: 7, name: "Ibague" },
+    { id: 8, name: "Cedritos-Divertido" },
   ];
 
   // --- Formik Definition (MUST come before useMemo hooks that depend on it) ---
@@ -157,7 +159,6 @@ const UserDetailEdit = () => {
       area: user?.area || "",
       sedes: user?.sedes?.map((s) => Number(s.id)) || [],
     },
-    enableReinitialize: true,
     validationSchema: Yup.object({
       name: Yup.string().required("El nombre es obligatorio"),
       segundo_nombre: Yup.string().nullable(),
@@ -666,6 +667,7 @@ const UserDetailEdit = () => {
           </div>
         )}
       </div>
+      <Version/>
     </>
   );
 };

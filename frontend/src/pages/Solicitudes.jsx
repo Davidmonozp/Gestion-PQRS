@@ -3,6 +3,7 @@ import "../pqrs/styles/Solicitudes.css";
 import "animate.css";
 import { useNavigate } from "react-router-dom";
 import api from "../api/api";
+import { Footer } from "../components/Footer/Footer";
 
 export const Solicitudes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,21 +28,37 @@ export const Solicitudes = () => {
     setTimeout(() => {
       setIsModalOpen(false);
       setAnimationClass("animate__zoomIn");
-      if (callback) callback();
+      if (typeof callback === "function") {
+        callback();
+      }
     }, 500);
   };
 
   const modalContent = {
     citas: {
-      title: "Agendar citas",
+      title: (
+        <>
+          <span className="titulo-verde">Agendar</span>{" "}
+          <span className="titulo-azul">citas</span>
+        </>
+      ),
       text: "<strong> Estimado usuario:</strong><br/> Recuerda que puedes agendar tu cita directamente desde nuestra página web en la opción <a href='https://oficinavirtual.passusips.com/login' target='_blank' rel='noopener noreferrer'>Agéndate aqui</a> sin necesidad de registrar una solicitud.",
     },
     valoraciones: {
-      title: "Lista de espera",
+      title: (
+        <>
+          <span className="titulo-verde">Lista de espera</span>
+        </>
+      ),
       text: "Actualmente no hay agenda disponible para esta especialidad. Puedes registrarte en la lista de espera y te contactaremos en cuanto se habiliten cupos.",
     },
     historia: {
-      title: "Historia clínica",
+      title: (
+        <>
+          <span className="titulo-verde">Historia</span>{" "}
+          <span className="titulo-azul">clínica</span>
+        </>
+      ),
       text: `Estimado usuario: <br />
             Los informes se envían automáticamente al correo electrónico   registrado al finalizar la atención. Si no los ha recibido, le recomendamos   revisar su bandeja de entrada, correo no deseado o spam.<br /><br />
             Si no recibiste la información o necesitas la historia clínica completa por favor debes tener en cuenta   los siguientes requisitos según el tipo de solicitante para tramitar la   solicitud de manera correcta. <br /><br />
@@ -73,7 +90,12 @@ export const Solicitudes = () => {
             Si desea realizar la <strong>solicitud</strong> por favor Adjuntar los soportes según corresponda. `,
     },
     multa: {
-      title: "Exoneración de multa",
+      title: (
+        <>
+          <span className="titulo-verde">Exoneración de</span>{" "}
+          <span className="titulo-azul">multa</span>
+        </>
+      ),
       text: `Estimado usuario: <strong>¡Recuerde!</strong> <br /><br />
 
             Las multas por inasistencia solo podrán ser exoneradas si se presenta una justificación médica válida dentro de las 24 horas siguientes a la cita.<br /><br />
@@ -88,7 +110,12 @@ export const Solicitudes = () => {
             Si desea realizar la <strong>solicitud</strong> por favor adjuntar los soportes médicos según corresponda.`,
     },
     reprogramacion: {
-      title: "Reprogramación o cancelación",
+      title: (
+        <>
+          <span className="titulo-verde">Reprogramación ó</span>{" "}
+          <span className="titulo-azul">cancelación</span>
+        </>
+      ),
       text: `Estimado usuario: <br /><br />
             Su mejoría depende directamente de la asistencia, constancia y disciplina durante el tratamiento. Por esta razón, PASSUS IPS no realiza cancelaciones ni reprogramaciones de citas de forma libre, ya que buscamos promover la adherencia al tratamiento ordenado y continuo.<br /><br />
             La cancelación o inasistencia a citas puede afectar negativamente su progreso y reducir la efectividad del proceso de recuperación.<br /><br />
@@ -109,20 +136,26 @@ export const Solicitudes = () => {
       text: "Por favor revisa nuestro centro de ayuda o chatbot, donde respondemos preguntas frecuentes.  <a href='/solicitud'>  ¿Deseas continuar con una solicitud personalizada?</a>",
     },
     reembolsos: {
-      title: "Reembolsos",
+      title: (
+        <>
+          <span className="titulo-verde">Reembolsos</span>{" "}
+        </>
+      ),
       text: `
-            Estimado usuario:<br /><br />
-            En PASSUS IPS los reembolsos se realizan únicamente en los siguientes casos:<br /><br />
-            1. Cuando, durante la valoración inicial, se determina que el paciente no es apto para ingresar al programa de hidroterapia.<br />
-            2. Cuando, por criterio médico debidamente soportado, se considera que el paciente no debe realizar terapias en agua, siempre y cuando no haya asistido a más de dos (2) sesiones acuáticas.<br /><br />
+            <strong>Por favor, lea atentamente antes de continuar con su solicitud.</strong> <br /><br />
+
+            <strong>Solicitud de Reembolso</strong> <br /><br />
+
+            <strong>En PASSUS IPS los reembolsos se realizan únicamente en los siguientes casos:</strong><br /><br />
+            1. Cuando, durante la valoración inicial, se determina que el paciente <strong>no es apto</strong> para ingresar al programa de hidroterapia.<br />
+            2. Cuando, por criterio médico debidamente soportado, se establece que el paciente <strong>no debe continuar con terapias acuáticas</strong>, siempre y cuando <strong>no haya asistido a más de dos (2) sesiones</strong>.<br /><br />
 
             <strong>Documentos requeridos para la solicitud de reembolso:</strong><br /><br />
             • Certificación bancaria.<br />
             • Carta de autorización de consignación a un tercero (si aplica).<br />
             • Soporte médico.<br />
             • Soporte de pago o transacción. <br /><br />
-            Si su situación corresponde a alguno de los casos mencionados, por favor registre su <strong>solicitud</strong>, adjunte los documentos requeridos y describa claramente el motivo en el detalle de la solicitud.
-            Agradecemos su atención y comprensión.
+            Si su situación corresponde a alguno de los casos mencionados, por favor registre su <strong>solicitud</strong>, adjunte los documentos requeridos y describa claramente el motivo.
           `,
     },
   };
@@ -136,12 +169,57 @@ export const Solicitudes = () => {
   };
 
   return (
-    <>
+    <div className="pty">
+      <section className="hero-banner-contactanos">
+        <div className="hero-overlay">
+          <div className="social-icons">
+            <a href="https://www.tiktok.com/@passusipscolombia" target="_blank">
+              <i className="fab fa-tiktok"></i>
+            </a>
+            <a
+              href="https://www.facebook.com/passsusipscolombia?_rdc=1&_rdr#"
+              target="_blank"
+            >
+              <i className="fab fa-facebook-f"></i>
+            </a>
+            <a
+              href="https://www.instagram.com/passusipscolombia/?igsh=dm1tdWJuMHEzMGU%3D#"
+              target="_blank"
+            >
+              <i className="fab fa-instagram"></i>
+            </a>
+            <a
+              href="https://www.youtube.com/@passusipscolombia"
+              target="_blank"
+            >
+              <i className="fab fa-youtube"></i>
+            </a>
+            <a
+              href="https://www.linkedin.com/in/passuscolombia"
+              target="_blank"
+            >
+              <i className="fab fa-linkedin-in"></i>
+            </a>
+          </div>
+
+          <h1 id="titulo_contactanos">
+            Contáctanos
+            <hr />
+          </h1>
+
+          <a href="servicios_passusIPS.php">
+            <button className="reflected-button">Servicios Passus IPS</button>
+          </a>
+        </div>
+      </section>
+
       {isModalOpen && (
         <div id="modal-container">
           <div className="modal-background" onClick={startCloseAnimation}>
             <div
-              className={`modal ${animationClass}`}
+              className={`modal ${animationClass} ${
+                modalType === "citas" ? "modal-citas-grande" : ""
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
               <h2>{modalContent[modalType]?.title}</h2>
@@ -170,8 +248,8 @@ export const Solicitudes = () => {
                   <br />
                   <ul className="opciones-decision">
                     <li>
-                      La información fue clara y cuento con los documentos
-                      necesarios para realizar el registro.{" "}
+                      Entendí la información y tengo todos los documentos
+                      requeridos. <br />
                       <span
                         onClick={() => {
                           enviarEncuesta("diligenciar");
@@ -180,12 +258,15 @@ export const Solicitudes = () => {
                         }}
                         className="enlace-simulado"
                       >
-                        [Haga clic aquí para diligenciar el formulario]
+                        <img src="../../formulario.png" alt="" />
+                        <span>
+                          [Diligenciar el formulario para la solicitud]
+                        </span>
                       </span>
                     </li>
                     <li>
-                      La información fue clara, pero no cuento con los soportes
-                      requeridos.{" "}
+                      Entendí la información, pero no tengo los documentos
+                      requeridos. <br />
                       <span
                         onClick={() => {
                           enviarEncuesta("cerrar");
@@ -193,12 +274,13 @@ export const Solicitudes = () => {
                         }}
                         className="enlace-simulado"
                       >
-                        [Haga clic aquí para cerrar]
+                        <img src="../../cerrar.png" alt="" />
+                        <span>[Haga clic aquí para cerrar]</span>
                       </span>
                     </li>
                     <li>
-                      La información no fue clara y deseo registrar mi solicitud
-                      para recibir orientación.{" "}
+                      No entendí completamente y deseo recibir orientación.{" "}
+                      <br />
                       <span
                         onClick={() => {
                           enviarEncuesta("diligenciar-orientacion");
@@ -207,7 +289,10 @@ export const Solicitudes = () => {
                         }}
                         className="enlace-simulado"
                       >
-                        [Haga clic aquí para diligenciar el formulario]
+                        <img src="../../formulario.png" alt="" />
+                        <span>
+                          [Diligenciar el formulario para la solicitud]
+                        </span>
                       </span>
                     </li>
                   </ul>
@@ -228,21 +313,19 @@ export const Solicitudes = () => {
                           Agéndate aquí
                         </button>
                       </a>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startCloseAnimation();
+                        }}
+                      >
+                        Cerrar
+                      </button>
                     </div>
                   )}
                 </div>
               </div>
               {/* El botón de cerrar se mantiene, se muestra si no es "citas" */}
-              {modalType !== "citas" && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startCloseAnimation();
-                  }}
-                >
-                  Cerrar
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -273,35 +356,85 @@ export const Solicitudes = () => {
 
         <div className="buttons">
           <div className="card" onClick={() => handleOpenModal("citas")}>
-            <i className="fas fa-calendar-check icon"></i>
-            <span>Agendar citas</span>
+            <img src="../asignacion.png" alt="Asignación de citas" />
+            <span>Asignación de citas</span>
           </div>
           <div className="card" onClick={() => handleOpenModal("reembolsos")}>
-            <i className="fas fa-file-invoice-dollar icon"></i>
+            <img
+              src="../reembolsos.png"
+              alt="Reembolsos"
+              className="reembolsos"
+            />
             <span>Reembolsos</span>
+          </div>
+          <div className="card" onClick={() => handleOpenModal("historia")}>
+            <img
+              src="../Historia-clinica.png"
+              alt="Historia clínica"
+              className="historia"
+            />
+            <span>Envío de Historia Clínica ó Informes Finales</span>
           </div>
           {/* <div className="card" onClick={() => handleOpenModal("valoraciones")}>
             <i className="fas fa-user-clock icon"></i>
-            <span>Valoraciones sin agenda - Lista de espera</span>
+            <span>Envío de Historia Clínica o informes finales</span>
           </div> */}
           <div className="card" onClick={() => handleOpenModal("multa")}>
-            <i className="fas fa-ban icon"></i>
+            <img
+              src="../exoneracion.png"
+              alt="Exoneración de multas"
+              className="exoneracion"
+            />
             <span>Exoneración de Multa por Inasistencia</span>
-          </div>
-          <div className="card" onClick={() => handleOpenModal("historia")}>
-            <i className="fas fa-file-medical icon"></i>
-            <span>Envío de Historia Clínica ó Informes Finales</span>
           </div>
           <div
             className="card"
             onClick={() => handleOpenModal("reprogramacion")}
           >
-            <i className="fas fa-calendar-times icon"></i>
+            <img
+              src="../reprogramacion.png"
+              alt="Reprogramación ó Cancelación"
+              className="reprogramacion"
+            />
             <span>Reprogramación ó Cancelación de Citas</span>
           </div>
         </div>
       </div>
-    </>
+
+      <div className="contenido">
+        <div className="contenedor-redes-sociales">
+          <a
+            className="whatsapp"
+            href="https://wa.me/573209621527"
+            target="_blank"
+          >
+            <span className="circulo">
+              <i className="fab fa-whatsapp"></i>
+            </span>
+            <span className="titulo">Natación</span>
+            <span className="titulo-hover">Escribir</span>
+          </a>
+          <a className="call">
+            <span className="circulo">
+              <i className="fas fa-phone"></i>
+            </span>
+            <span className="titulo">Call Center</span>
+            <span className="titulo-hover">(601) 316 16 99</span>
+          </a>
+        </div>
+        <div className="horarios">
+          <p>
+            <strong>Callcenter para asignación de citas </strong>(601) 3161699.{" "}
+            <br />
+            <strong>Horarios de atención:</strong> <br />
+            Lunes a viernes: 7:30 am a 5:30 pm. <br />
+            Sábados: 8:00 am a 1:00 pm.
+          </p>
+        </div>
+      </div>
+
+      <Footer />
+    </div>
   );
 };
 

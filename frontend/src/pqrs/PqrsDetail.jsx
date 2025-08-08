@@ -8,11 +8,20 @@ import Navbar from "../components/Navbar/Navbar";
 import CountdownTimer from "./components/CountDownTimer";
 import SeguimientoPqrs from "./components/SeguimientoPqrs";
 import ClasificacionesPqrs from "./components/ClasificacionesPqrs";
+import { Version } from "../components/Footer/Version";
 
 function PqrsDetail() {
   const { pqr_codigo } = useParams();
   const navigate = useNavigate();
   const currentUserRole = localStorage.getItem("role");
+
+  // 🟢 Estado para controlar la visibilidad de los logs
+  const [showLogs, setShowLogs] = useState(false);
+
+  // 🟢 Función para alternar la visibilidad
+  const toggleLogs = () => {
+    setShowLogs(!showLogs);
+  };
 
   const [pqr, setPqr] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
@@ -663,12 +672,16 @@ function PqrsDetail() {
                 <strong>Tiempo de respuesta:</strong> {pqr.estado_tiempo}
               </p>
             )}
-            <ClasificacionesPqrs
-              pqrId={pqr.id}
-              useIdInUrl={true}
-              deshabilitado={pqr?.estado_respuesta === "Cerrado"}
-              onClasificacionesActualizadas={() => setYaClasificada(true)}
-            />
+
+            {tienePermiso(["Supervisor", "Administrador"]) &&
+              pqr.rol !== "Gestor" && (
+                <ClasificacionesPqrs
+                  pqrId={pqr.id}
+                  useIdInUrl={true}
+                  deshabilitado={pqr?.estado_respuesta === "Cerrado"}
+                  onClasificacionesActualizadas={() => setYaClasificada(true)}
+                />
+              )}
           </div>
 
           {/* Columna editable (centro) */}
@@ -685,6 +698,19 @@ function PqrsDetail() {
             <p>
               <strong>Tipo Solicitud:</strong> {pqr.tipo_solicitud}
             </p>
+
+            {pqr.clasificacion_tutela && (
+              <>
+                <p>
+                  <strong>Clasificación de la Tutela:</strong>{" "}
+                  {pqr.clasificacion_tutela}
+                </p>
+                <p>
+                  <strong>Accionado de la Tutela:</strong> {pqr.accionado}
+                </p>
+              </>
+            )}
+
             <p>
               <strong>Fecha solicitud:</strong>{" "}
               {new Date(pqr.created_at).toLocaleString()}
@@ -696,8 +722,51 @@ function PqrsDetail() {
                 : "No registra"}
             </p>
             <p>
-              <strong>Estado PQR:</strong> {pqr.estado_tiempo}
+              <strong>Estado de la respuesta PQR:</strong> {pqr.estado_tiempo}
             </p>
+
+            {tienePermiso(["Administrador", "Supervisor"]) && (
+              <>
+                <p>
+                  <strong>Histórico: </strong>
+                  <span className="ver-logs-link" onClick={toggleLogs}>
+                    {showLogs ? "Ocultar Logs" : "Ver Logs"}
+                  </span>
+                </p>
+
+                {/* Renderizado condicional de los logs */}
+                {showLogs && (
+                  <ul className="logs-acordeon">
+                    {pqr.event_logs && pqr.event_logs.length > 0 ? (
+                      pqr.event_logs.map((log) => {
+                        const logUser = usuarios.find(
+                          (user) => user.id === log.user_id
+                        );
+                        const userName = logUser
+                          ? logUser.name
+                          : "Usuario Desconocido";
+
+                        return (
+                          <li key={log.id}>
+                            <strong>{log.description}</strong><br />
+                            <strong>Estado anterior: </strong>{" "}
+                            {log.estado_anterior} <br />
+                            <strong>Estado nuevo: </strong>
+                            {log.estado_nuevo} <br />
+                            <strong>Autor: </strong> {userName} <br />
+                            <strong>Fecha: </strong> {log.fecha_evento}
+                            <hr />
+                            <hr />
+                          </li>
+                        );
+                      })
+                    ) : (
+                      <li>No hay eventos registrados.</li>
+                    )}
+                  </ul>
+                )}
+              </>
+            )}
 
             {/* Campos bloqueados para roles específicos */}
             {!["Administrador", "Supervisor"].includes(
@@ -715,6 +784,12 @@ function PqrsDetail() {
                   {pqr.asignados && pqr.asignados.length > 0
                     ? pqr.asignados.map((u) => u.name).join(", ")
                     : "Sin asignar"}
+                </p>
+                <p>
+                  <strong>Clasificación: </strong>
+                  {pqr.clasificaciones && pqr.clasificaciones.length > 0
+                    ? pqr.clasificaciones.map((c) => c.nombre).join(", ")
+                    : "Sin clasificar"}
                 </p>
               </>
             )}
@@ -836,13 +911,12 @@ function PqrsDetail() {
                     <option value="" disabled>
                       Seleccione prioridad
                     </option>
-                    {["Vital", "Priorizado", "Simple", "Solicitud"].map(
-                      (opt) => (
-                        <option key={opt} value={opt}>
-                          {opt}
-                        </option>
-                      )
-                    )}
+                    {/* {["Vital", "Priorizado", "Simple", "Solicitud"].map( */}
+                    {["Vital", "Priorizado", "Simple"].map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
                   </select>
 
                   <button type="submit" disabled={isSavingForm || estaCerrada}>
@@ -866,7 +940,7 @@ function PqrsDetail() {
                 {pqr.archivo.map((fileItem, index) => {
                   // Asume que fileItem es un objeto { path: "...", original_name: "..." }
                   // const urlArchivo = `http://localhost:8000/storage/${fileItem.path}`;
-                  const urlArchivo = `http://192.168.1.30:8000/storage/${fileItem.path}`;
+                  const urlArchivo = `http://192.168.1.15:8000/storage/${fileItem.path}`;
 
                   const fileName = fileItem.original_name;
 
@@ -903,7 +977,7 @@ function PqrsDetail() {
                             src={urlArchivo}
                             title={`PDF Adjunto ${index + 1}`}
                             width="100%"
-                            height="200px"
+                            height="500px"
                             style={{ border: "1px solid #ccc" }}
                           ></iframe>
                         </div>
@@ -991,7 +1065,7 @@ function PqrsDetail() {
                               <li key={idx} className="adjunto-item">
                                 <a
                                   // href={`http://127.0.0.1:8000/storage/${adj.path}`}
-                                  href={`http://192.168.1.30:8000/storage/${adj.path}`}
+                                  href={`http://192.168.1.15:8000/storage/${adj.path}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                 >
@@ -1183,7 +1257,7 @@ function PqrsDetail() {
                               className="adjunto-item"
                             >
                               <a
-                                href={`http://192.168.1.30:8000/storage/${fileItem.path}`}
+                                href={`http://192.168.1.15:8000/storage/${fileItem.path}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
@@ -1273,6 +1347,7 @@ function PqrsDetail() {
           </div>
         </div>
       </div>
+      <Version />
     </>
   );
 }

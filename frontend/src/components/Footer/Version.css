@@ -1,0 +1,33 @@
+
+
+
+.version {
+  height: 22px;
+  display: flex;
+  justify-content: space-between; /* Mantiene los elementos en los extremos */
+  align-items: center;
+  width: 100%;
+  background-color: #0087cd;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  color: white;
+  padding: 0 15px;
+}
+
+/* Contenedor para el texto de derechos de autor, centrado */
+.version .copyright-container {
+  flex-grow: 1; /* Permite que este contenedor ocupe el espacio disponible */
+  display: flex;
+  justify-content: center; /* Centra el contenido horizontalmente */
+  align-items: center;
+}
+
+.version p {
+    margin: 0;
+    padding-right: 30px;
+    font-size: 12px;
+    color: white;
+}
+

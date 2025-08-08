@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPqr } from "./pqrsService"; // Asegúrate de tener createPqr y updatePqr si los usas
 import "./styles/Pqrs.css";
 import Swal from "sweetalert2";
 import { pqrsSchema } from "./pqrValidation"; // Asegúrate de que esto sea pqrsValidation.js
 import Modal from "../components/Modal/Modal";
+import { Footer } from "../components/Footer/Footer";
 
 // Función auxiliar para formatear la fecha a YYYY-MM-DD
 const formatDateToISO = (date) => {
@@ -157,6 +158,8 @@ function PqrsForm({
     eps: "",
     regimen: "",
     tipo_solicitud: defaultTipoSolicitud || "",
+    clasificacion_tutela: "",
+    accionado: [],
     descripcion: "",
     politica_aceptada: false,
     registra_otro: "no",
@@ -179,12 +182,25 @@ function PqrsForm({
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const isLoggedIn = !!localStorage.getItem("token"); // Verifica si el usuario está logeado
+  // Estado para mostrar/ocultar el dropdown de Accionado
+  const [showAccionadoDropdown, setShowAccionadoDropdown] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({
     title: "",
     description: "",
   });
+
+  const accionadoRef = useRef(null);
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (accionadoRef.current && !accionadoRef.current.contains(e.target)) {
+        setShowAccionadoDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Efecto para inicializar el formulario (ej. al cargar el componente o al recibir pqrData)
   useEffect(() => {
@@ -242,6 +258,8 @@ function PqrsForm({
         eps: pqrData.eps || "",
         regimen: pqrData.regimen || "",
         tipo_solicitud: pqrData.tipo_solicitud || defaultTipoSolicitud || "",
+        clasificacion_tutela: pqrData.clasificacion_tutela || "",
+        accionado: pqrData.accionado || "",
         descripcion: pqrData.descripcion || "",
         fuente: pqrData.fuente || "Formulario de la web",
         registra_otro: pqrData.registra_otro === "si" ? "si" : "no",
@@ -279,6 +297,28 @@ function PqrsForm({
           newValue = formatDateToISOWithTime(value);
         }
 
+        // 🔹 Manejo especial para "accionado" múltiple
+        if (name === "accionado") {
+          let updatedAccionado = [...(prev.accionado || [])];
+
+          if (type === "checkbox") {
+            if (checked) {
+              updatedAccionado.push(value);
+            } else {
+              updatedAccionado = updatedAccionado.filter(
+                (item) => item !== value
+              );
+            }
+          } else {
+            updatedAccionado = value; // Si viene de un multiselect
+          }
+
+          return {
+            ...prev,
+            accionado: updatedAccionado,
+          };
+        }
+
         // Si cambia la sede, se limpia servicio_prestado
         if (name === "sede") {
           return {
@@ -288,6 +328,18 @@ function PqrsForm({
           };
         }
 
+        // 🟢 Lógica para el tipo de solicitud y clasificacion_tutela
+        if (name === "tipo_solicitud") {
+          const newState = {
+            ...prev,
+            [name]: newValue,
+          };
+          // Si el nuevo tipo de solicitud NO es "Tutela", limpia el campo de clasificación.
+          if (newValue !== "Tutela") {
+            newState.clasificacion_tutela = "";
+          }
+          return newState;
+        }
         return {
           ...prev,
           [name]: newValue,
@@ -389,15 +441,20 @@ function PqrsForm({
           return;
         if (key === "parentesco" && form.registra_otro === "no") return;
 
-        // 🔹 Solo enviar cargo si el parentesco es Ente de control
+        // 🔹 Solo enviar cargo si el parentesco es Ente de control o entidad
         if (
           key === "registrador_cargo" &&
-          form.parentesco !== "Ente de control"
+          form.parentesco !== "Ente de control" &&
+          form.parentesco !== "Entidad"
         )
           return;
 
-        // 🔹 Solo enviar nombre_entidad si el parentesco es Ente de control
-        if (key === "nombre_entidad" && form.parentesco !== "Ente de control")
+        // 🔹 Solo enviar nombre_entidad si el parentesco es Ente de control o entidad
+        if (
+          key === "nombre_entidad" &&
+          form.parentesco !== "Ente de control" &&
+          form.parentesco !== "Entidad"
+        )
           return;
 
         // Convertir booleanos
@@ -415,6 +472,30 @@ function PqrsForm({
         // Añadir campo si tiene valor
         if (value !== null && value !== undefined && value !== "") {
           formData.append(key, value);
+        }
+
+        // 🟢 Anexar clasificacion_tutela
+        if (key === "clasificacion_tutela") {
+          // Solo enviar el campo si el tipo de solicitud es Tutela
+          if (form.tipo_solicitud === "Tutela" && value) {
+            formData.append(key, value);
+          }
+          return; // ⛔ Es importante usar return aquí para evitar que se anexe de nuevo
+        }
+
+        // 🟢 Anexar accionado
+        if (key === "accionado") {
+          // Solo enviar si es Tutela y hay elementos seleccionados
+          if (
+            form.tipo_solicitud === "Tutela" &&
+            Array.isArray(value) &&
+            value.length > 0
+          ) {
+            value.forEach((item) => {
+              formData.append("accionado[]", item);
+            });
+          }
+          return; // ⛔ Evita que se anexe de nuevo fuera de aquí
         }
       });
 
@@ -515,700 +596,838 @@ function PqrsForm({
   };
 
   return (
-    <div className="pqrs-container">
-      <div className="header-pqrs">
-        <div>
-          Envía tu <span>PQR</span>
+    <>
+      <div className="pqrs-container">
+        <div className="header-pqrs">
+          <div>
+            Envía tu <span>PQR</span>
+          </div>
         </div>
-      </div>
-      <br />
+        <br />
 
-      <label className="registra-otro-label">
-        ¿Está registrando esta solicitud en nombre de otra persona o entidad?
-      </label>
-      <div className="radio-group">
-        <label>
-          <input
-            type="radio"
-            name="registra_otro"
-            value="no"
-            checked={form.registra_otro === "no"}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          />
-          No
+        <label className="registra-otro-label">
+          ¿Está registrando esta solicitud en nombre de otra persona o entidad?
         </label>
-        <label>
-          <input
-            type="radio"
-            name="registra_otro"
-            value="si"
-            checked={form.registra_otro === "si"}
-            onChange={handleChange}
-            onBlur={handleBlur}
-          />
-          Sí
-        </label>
-      </div>
-      {errors.registra_otro && <p className="error">{errors.registra_otro}</p>}
+        <div className="radio-group">
+          <label>
+            <input
+              type="radio"
+              name="registra_otro"
+              value="no"
+              checked={form.registra_otro === "no"}
+              onChange={handleChange}
+              onBlur={handleBlur}
+            />
+            No
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="registra_otro"
+              value="si"
+              checked={form.registra_otro === "si"}
+              onChange={handleChange}
+              onBlur={handleBlur}
+            />
+            Sí
+          </label>
+        </div>
+        {errors.registra_otro && (
+          <p className="error">{errors.registra_otro}</p>
+        )}
 
-      <form className="pqrs" onSubmit={handleSubmit} noValidate>
-        {form.registra_otro === "si" && (
-          <>
-            <h1 className="titulo-form">
-              Datos de quien registra la solicitud:
-            </h1>
-            <br />
-            <div className="pqrs-otro">
-              <div className="floating-label">
-                <select
-                  id="parentesco"
-                  name="parentesco"
-                  value={form.parentesco}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  required
-                >
-                  <option value="" disabled hidden></option>
-                  {parentesco.map((opcion) => (
-                    <option key={opcion} value={opcion}>
-                      {opcion}
-                    </option>
-                  ))}
-                </select>
-                <label htmlFor="parentesco">Parentesco o entidad</label>
-                {errors.parentesco && (
-                  <p className="error">{errors.parentesco}</p>
-                )}
-              </div>
-              {form.parentesco === "Ente de control" && (
-                <div className="floating-label">
-                  <input
-                    id="nombre_entidad"
-                    name="nombre_entidad"
-                    value={form.nombre_entidad}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    // 🔹 Solo requerido si el parentesco es "Ente de control"
-                    required={form.parentesco === "Ente de control"}
-                  />
-                  <label htmlFor="nombre_entidad">Nombre de la entidad</label>
-                  {errors.nombre_entidad && (
-                    <p className="error">{errors.nombre_entidad}</p>
-                  )}
-                </div>
-              )}
-
-              <div className="floating-label">
-                <input
-                  id="registrador_nombre"
-                  name="registrador_nombre"
-                  value={form.registrador_nombre}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  required
-                />
-                <label htmlFor="registrador_nombre">Primer nombre</label>
-                {errors.registrador_nombre && (
-                  <p className="error">{errors.registrador_nombre}</p>
-                )}
-              </div>
-
-              <div className="floating-label">
-                <input
-                  id="registrador_segundo_nombre"
-                  name="registrador_segundo_nombre"
-                  value={form.registrador_segundo_nombre}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  required
-                />
-                <label htmlFor="registrador_nombre">Segundo nombre</label>
-                {errors.registrador_segundo_nombre && (
-                  <p className="error">{errors.registrador_segundo_nombre}</p>
-                )}
-              </div>
-
-              <div className="floating-label">
-                <input
-                  id="registrador_apellido"
-                  name="registrador_apellido"
-                  value={form.registrador_apellido}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  required
-                />
-                <label htmlFor="registrador_apellido">Primer apellido</label>
-                {errors.registrador_apellido && (
-                  <p className="error">{errors.registrador_apellido}</p>
-                )}
-              </div>
-
-              <div className="floating-label">
-                <input
-                  id="registrador_segundo_apellido"
-                  name="registrador_segundo_apellido"
-                  value={form.registrador_segundo_apellido}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  required
-                />
-                <label htmlFor="registrador_apellido">Segundo apellido</label>
-                {errors.registrador_segundo_apellido && (
-                  <p className="error">{errors.registrador_segundo_apellido}</p>
-                )}
-              </div>
-
-              {form.parentesco !== "Ente de control" && (
+        <form className="pqrs" onSubmit={handleSubmit} noValidate>
+          {form.registra_otro === "si" && (
+            <>
+              <h1 className="titulo-form">
+                Datos de quien registra la solicitud:
+              </h1>
+              <br />
+              <div className="pqrs-otro">
                 <div className="floating-label">
                   <select
-                    id="registrador_documento_tipo"
-                    name="registrador_documento_tipo"
-                    value={form.registrador_documento_tipo}
+                    id="parentesco"
+                    name="parentesco"
+                    value={form.parentesco}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     required
                   >
                     <option value="" disabled hidden></option>
-                    <option value="CC">Cédula</option>
-                    <option value="CD">Carné diplomático</option>
-                    <option value="CN">Certificado nacido vivo</option>
-                    <option value="CE">Cédula de extranjería</option>
-                    <option value="DC">Documento Extranjero</option>
-                    <option value="NIT">NIT</option>
-                    <option value="PA">Pasaporte</option>
-                    <option value="PE">Permiso Especial de Permanencia</option>
-                    <option value="PT">Permiso por Protección Temporal</option>
-                    <option value="RC">Registro Civil</option>
-                    <option value="SC">Salvo Conducto</option>
-                    <option value="TI">Tarjeta de identidad</option>
+                    {parentesco.map((opcion) => (
+                      <option key={opcion} value={opcion}>
+                        {opcion}
+                      </option>
+                    ))}
                   </select>
-                  <label htmlFor="registrador_documento_tipo">
-                    Tipo de documento
-                  </label>
-                  {errors.registrador_documento_tipo && (
-                    <p className="error">{errors.registrador_documento_tipo}</p>
+                  <label htmlFor="parentesco">Parentesco o entidad</label>
+                  {errors.parentesco && (
+                    <p className="error">{errors.parentesco}</p>
                   )}
                 </div>
-              )}
+                {(form.parentesco === "Ente de control" ||
+                  form.parentesco === "Entidad") && (
+                  <div className="floating-label">
+                    <input
+                      id="nombre_entidad"
+                      name="nombre_entidad"
+                      value={form.nombre_entidad}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      // 🔹 Solo requerido si el parentesco es "Ente de control" o "Entidad"
+                      required={
+                        form.parentesco === "Ente de control" ||
+                        form.parentesco === "Entidad"
+                      }
+                    />
+                    <label htmlFor="nombre_entidad">Nombre de la entidad</label>
+                    {errors.nombre_entidad && (
+                      <p className="error">{errors.nombre_entidad}</p>
+                    )}
+                  </div>
+                )}
 
-              {form.parentesco !== "Ente de control" && (
                 <div className="floating-label">
                   <input
-                    id="registrador_documento_numero"
-                    name="registrador_documento_numero"
-                    type="text" // Mantener como text para permitir guiones/letras si NIT lo requiere
-                    value={form.registrador_documento_numero}
+                    id="registrador_nombre"
+                    name="registrador_nombre"
+                    value={form.registrador_nombre}
                     onChange={handleChange}
                     onBlur={handleBlur}
                     required
                   />
-                  <label htmlFor="registrador_documento_numero">
-                    Número de documento
+                  <label htmlFor="registrador_nombre">
+                    Primer nombre de quien registra
                   </label>
-                  {errors.registrador_documento_numero && (
+                  {errors.registrador_nombre && (
+                    <p className="error">{errors.registrador_nombre}</p>
+                  )}
+                </div>
+
+                <div className="floating-label">
+                  <input
+                    id="registrador_segundo_nombre"
+                    name="registrador_segundo_nombre"
+                    value={form.registrador_segundo_nombre}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                  />
+                  <label htmlFor="registrador_nombre">
+                    Segundo nombre de quien registra
+                  </label>
+                  {errors.registrador_segundo_nombre && (
+                    <p className="error">{errors.registrador_segundo_nombre}</p>
+                  )}
+                </div>
+
+                <div className="floating-label">
+                  <input
+                    id="registrador_apellido"
+                    name="registrador_apellido"
+                    value={form.registrador_apellido}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                  />
+                  <label htmlFor="registrador_apellido">
+                    Primer apellido de quien registra
+                  </label>
+                  {errors.registrador_apellido && (
+                    <p className="error">{errors.registrador_apellido}</p>
+                  )}
+                </div>
+
+                <div className="floating-label">
+                  <input
+                    id="registrador_segundo_apellido"
+                    name="registrador_segundo_apellido"
+                    value={form.registrador_segundo_apellido}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                  />
+                  <label htmlFor="registrador_apellido">
+                    Segundo apellido de quien registra
+                  </label>
+                  {errors.registrador_segundo_apellido && (
                     <p className="error">
-                      {errors.registrador_documento_numero}
+                      {errors.registrador_segundo_apellido}
                     </p>
                   )}
                 </div>
-              )}
 
-              <div className="floating-label">
-                <input
-                  id="registrador_correo"
-                  name="registrador_correo"
-                  type="email"
-                  value={form.registrador_correo}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  required
-                />
-                <label htmlFor="registrador_correo">Correo</label>
-                {errors.registrador_correo && (
-                  <p className="error">{errors.registrador_correo}</p>
-                )}
-              </div>
+                {form.parentesco !== "Ente de control" &&
+                  form.parentesco !== "Entidad" && (
+                    <div className="floating-label">
+                      <select
+                        id="registrador_documento_tipo"
+                        name="registrador_documento_tipo"
+                        value={form.registrador_documento_tipo}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        required
+                      >
+                        <option value="" disabled hidden></option>
+                        <option value="CC">Cédula</option>
+                        <option value="CD">Carné diplomático</option>
+                        <option value="CN">Certificado nacido vivo</option>
+                        <option value="CE">Cédula de extranjería</option>
+                        <option value="DC">Documento Extranjero</option>
+                        <option value="NIT">NIT</option>
+                        <option value="PA">Pasaporte</option>
+                        <option value="PE">
+                          Permiso Especial de Permanencia
+                        </option>
+                        <option value="PT">
+                          Permiso por Protección Temporal
+                        </option>
+                        <option value="RC">Registro Civil</option>
+                        <option value="SC">Salvo Conducto</option>
+                        <option value="TI">Tarjeta de identidad</option>
+                      </select>
+                      <label htmlFor="registrador_documento_tipo">
+                        Tipo de documento
+                      </label>
+                      {errors.registrador_documento_tipo && (
+                        <p className="error">
+                          {errors.registrador_documento_tipo}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
-              <div className="floating-label">
-                <input
-                  id="registrador_telefono"
-                  name="registrador_telefono"
-                  type="text"
-                  value={form.registrador_telefono}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  required
-                />
-                <label htmlFor="registrador_telefono">Número de Celular</label>
-                {errors.registrador_telefono && (
-                  <p className="error">{errors.registrador_telefono}</p>
-                )}
-              </div>
+                {form.parentesco !== "Ente de control" &&
+                  form.parentesco !== "Entidad" && (
+                    <div className="floating-label">
+                      <input
+                        id="registrador_documento_numero"
+                        name="registrador_documento_numero"
+                        type="text" // Mantener como text para permitir guiones/letras si NIT lo requiere
+                        value={form.registrador_documento_numero}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        required
+                      />
+                      <label htmlFor="registrador_documento_numero">
+                        Número de documento
+                      </label>
+                      {errors.registrador_documento_numero && (
+                        <p className="error">
+                          {errors.registrador_documento_numero}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
-              {form.parentesco === "Ente de control" && (
                 <div className="floating-label">
                   <input
-                    id="registrador_cargo"
-                    name="registrador_cargo"
-                    value={form.registrador_cargo}
+                    id="registrador_correo"
+                    name="registrador_correo"
+                    type="email"
+                    value={form.registrador_correo}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    required={form.parentesco === "Ente de control"}
+                    required
                   />
-                  <label htmlFor="registrador_cargo">Cargo</label>
-                  {errors.registrador_cargo && (
-                    <p className="error">{errors.registrador_cargo}</p>
+                  <label htmlFor="registrador_correo">Correo</label>
+                  {errors.registrador_correo && (
+                    <p className="error">{errors.registrador_correo}</p>
                   )}
                 </div>
-              )}
-            </div>
-          </>
-        )}
-        <h1 className="titulo-form">Datos del paciente</h1> <br />
-        <div className="pqrs-paciente">
-          <div className="floating-label">
-            <input
-              type="text"
-              name="nombre"
-              value={form.nombre}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            />
-            <label htmlFor="nombre">Primer nombre</label>
-            {errors.nombre && <p className="error">{errors.nombre}</p>}
-          </div>
 
-          <div className="floating-label">
-            <input
-              type="text"
-              name="segundo_nombre"
-              value={form.segundo_nombre}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            />
-            <label htmlFor="nombre">Segundo nombre</label>
-            {errors.segundo_nombre && (
-              <p className="error">{errors.segundo_nombre}</p>
-            )}
-          </div>
+                <div className="floating-label">
+                  <input
+                    id="registrador_telefono"
+                    name="registrador_telefono"
+                    type="text"
+                    value={form.registrador_telefono}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                  />
+                  <label htmlFor="registrador_telefono">
+                    Número de Celular
+                  </label>
+                  {errors.registrador_telefono && (
+                    <p className="error">{errors.registrador_telefono}</p>
+                  )}
+                </div>
 
-          <div className="floating-label">
-            <input
-              type="text"
-              name="apellido"
-              value={form.apellido}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            />
-            <label htmlFor="apellido">Primer apellido</label>
-            {errors.apellido && <p className="error">{errors.apellido}</p>}
-          </div>
-
-          <div className="floating-label">
-            <input
-              type="text"
-              name="segundo_apellido"
-              value={form.segundo_apellido}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            />
-            <label htmlFor="apellido">Segundo apellido</label>
-            {errors.segundo_apellido && (
-              <p className="error">{errors.segundo_apellido}</p>
-            )}
-          </div>
-
-          <div className="floating-label">
-            <select
-              id="documento_tipo"
-              name="documento_tipo"
-              value={form.documento_tipo}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            >
-              <option value="" disabled hidden></option>
-              <option value="CC">Cédula</option>
-              <option value="CD">Carné diplomático</option>
-              <option value="CN">Certificado nacido vivo</option>
-              <option value="CE">Cédula de extranjería</option>
-              <option value="DC">Documento Extranjero</option>
-              <option value="NIT">NIT</option>
-              <option value="PA">Pasaporte</option>
-              <option value="PE">Permiso Especial de Permanencia</option>
-              <option value="PT">Permiso por Protección Temporal</option>
-              <option value="RC">Registro Civil</option>
-              <option value="SC">Salvo Conducto</option>
-              <option value="TI">Tarjeta de identidad</option>
-            </select>
-            <label htmlFor="documento_tipo">Tipo de documento</label>
-            {errors.documento_tipo && (
-              <p className="error">{errors.documento_tipo}</p>
-            )}
-          </div>
-
-          <div className="floating-label">
-            <input
-              type="text"
-              id="documento_numero"
-              name="documento_numero"
-              value={form.documento_numero}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            />
-            <label htmlFor="documento_numero">Número de documento</label>
-            {errors.documento_numero && (
-              <p className="error">{errors.documento_numero}</p>
-            )}
-          </div>
-
-          <div className="floating-label">
-            <input
-              id="correo"
-              name="correo"
-              type="email"
-              value={form.correo}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            />
-            <label htmlFor="correo">Correo</label>
-            {errors.correo && <p className="error">{errors.correo}</p>}
-          </div>
-
-          <div className="floating-label">
-            <input
-              id="correo_confirmacion"
-              name="correo_confirmacion"
-              type="email"
-              value={form.correo_confirmacion}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            />
-            <label htmlFor="correo_confirmacion">Confirmar correo</label>
-            {errors.correo_confirmacion && (
-              <p className="error">{errors.correo_confirmacion}</p>
-            )}
-          </div>
-
-          <div className="floating-label">
-            <input
-              id="telefono"
-              name="telefono"
-              type="text"
-              value={form.telefono}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            />
-            <label htmlFor="telefono">Número de Celular</label>
-            {errors.telefono && <p className="error">{errors.telefono}</p>}
-          </div>
-
-          <div className="floating-label">
-            <select
-              id="sede"
-              name="sede"
-              value={form.sede}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            >
-              <option value="" disabled hidden></option>
-              {/* <option value="No he sido atendido">No he sido atendido</option> */}
-              <option value="Bogota-Centro">Bogotá Centro</option>
-              <option value="Bogota-Norte">Bogotá Norte</option>
-              <option value="Bogota-Sur-Occidente-Hidroterapia">
-                Bogotá Sur Occidente Hidroterapia
-              </option>
-              <option value="Bogota-Sur-Occidente-Rehabilitación">
-                Bogotá Sur Occidente Rehabilitación
-              </option>
-              <option value="Cedritos-Divertido">Cedritos-Divertido</option>
-              <option value="Chia">Chía</option>
-              <option value="Florencia">Florencia</option>
-              <option value="Ibague">Ibagué</option>
-            </select>
-            <label htmlFor="sede">Sede de atención</label>
-            {errors.sede && <p className="error">{errors.sede}</p>}
-          </div>
-
-          <div className="floating-label">
-            <select
-              id="regimen"
-              name="regimen"
-              value={form.regimen}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            >
-              <option value="" disabled hidden></option>
-              <option value="ARL">
-                ARL(Administradora de Riesgos Laborales)
-              </option>
-              <option value="Contributivo">Contributivo</option>
-              <option value="Especial">
-                Especial y de Excepción (Magisterio, Fuerzas Militares y de
-                Policía, Universidades públicas)
-              </option>
-              <option value="Medicina prepagada">Medicina prepagada</option>
-              <option value="Particular">Particular</option>
-              <option value="Subsidiado">Subsidiado</option>
-            </select>
-            <label htmlFor="regimen">Tipo de afiliación</label>
-            {errors.regimen && <p className="error">{errors.regimen}</p>}
-          </div>
-
-          <div className="floating-label">
-            <select
-              id="servicio_prestado"
-              name="servicio_prestado"
-              value={form.servicio_prestado}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            >
-              <option value="" disabled hidden></option>
-              {(serviciosPorSede[form.sede] || []).map((servicio) => (
-                <option key={servicio} value={servicio}>
-                  {servicio}
-                </option>
-              ))}
-            </select>
-
-            <label htmlFor="servicio_prestado">Servicio prestado</label>
-
-            {errors.servicio_prestado && (
-              <p className="error">{errors.servicio_prestado}</p>
-            )}
-          </div>
-
-          <div className="floating-label">
-            <select
-              id="eps"
-              name="eps"
-              value={form.eps}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            >
-              <option value="" disabled hidden></option>
-              {epsOptions.map((eps) => (
-                <option key={eps} value={eps}>
-                  {eps}
-                </option>
-              ))}
-            </select>
-            <label htmlFor="eps">Asegurador (EPS-ARL)</label>
-            {errors.eps && <p className="error">{errors.eps}</p>}
-          </div>
-
-          <div className="floating-label">
-            <select
-              id="tipo_solicitud"
-              name="tipo_solicitud"
-              value={form.tipo_solicitud}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-              disabled={readOnlyTipoSolicitud}
-            >
-              <option value="" disabled hidden></option>
-              {(
-                tipoSolicitudOptions || [
-                  { value: "Peticion", label: "Petición" },
-                  { value: "Queja", label: "Queja" },
-                  { value: "Reclamo", label: "Reclamo" },
-                ]
-              ).map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <label htmlFor="tipo_solicitud">Tipo de solicitud</label>
-            {errors.tipo_solicitud && (
-              <p className="error">{errors.tipo_solicitud}</p>
-            )}
-          </div>
-
-          {/* CAMPO DE FECHA DE INICIO REAL - VISIBLE SOLO SI EL USUARIO ESTÁ LOGEADO */}
-          {isLoggedIn && (
+                {(form.parentesco === "Ente de control" ||
+                  form.parentesco === "Entidad") && (
+                  <div className="floating-label">
+                    <input
+                      id="registrador_cargo"
+                      name="registrador_cargo"
+                      value={form.registrador_cargo}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      required={
+                        form.parentesco === "Ente de control" ||
+                        form.parentesco === "Entidad"
+                      }
+                    />
+                    <label htmlFor="registrador_cargo">Cargo</label>
+                    {errors.registrador_cargo && (
+                      <p className="error">{errors.registrador_cargo}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+          <h1 className="titulo-form">Datos del paciente</h1> <br />
+          <div className="pqrs-paciente">
             <div className="floating-label">
-              {" "}
               <input
-                type="datetime-local" // Correcto para fecha y hora
-                id="fecha_inicio_real"
-                name="fecha_inicio_real"
-                value={
-                  form.fecha_inicio_real
-                    ? (() => {
-                        const date = new Date(form.fecha_inicio_real); // Obtener componentes de fecha y hora local
-                        const year = date.getFullYear();
-                        const month = (date.getMonth() + 1)
-                          .toString()
-                          .padStart(2, "0");
-                        const day = date.getDate().toString().padStart(2, "0");
-                        const hours = date
-                          .getHours()
-                          .toString()
-                          .padStart(2, "0");
-                        const minutes = date
-                          .getMinutes()
-                          .toString()
-                          .padStart(2, "0");
-
-                        return `${year}-${month}-${day}T${hours}:${minutes}`;
-                      })()
-                    : ""
-                }
+                type="text"
+                name="nombre"
+                value={form.nombre}
                 onChange={handleChange}
                 onBlur={handleBlur}
-              />{" "}
-              <label htmlFor="fecha_inicio_real">
-                Fecha y Hora de Inicio Real de la PQR:{" "}
-              </label>{" "}
-              {errors.fecha_inicio_real && (
-                <p className="error">{errors.fecha_inicio_real}</p>
-              )}{" "}
+                required
+              />
+              <label htmlFor="nombre">Primer nombre</label>
+              {errors.nombre && <p className="error">{errors.nombre}</p>}
             </div>
-          )}
 
-          {isLoggedIn && (
+            <div className="floating-label">
+              <input
+                type="text"
+                name="segundo_nombre"
+                value={form.segundo_nombre}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              />
+              <label htmlFor="nombre">Segundo nombre</label>
+              {errors.segundo_nombre && (
+                <p className="error">{errors.segundo_nombre}</p>
+              )}
+            </div>
+
+            <div className="floating-label">
+              <input
+                type="text"
+                name="apellido"
+                value={form.apellido}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              />
+              <label htmlFor="apellido">Primer apellido</label>
+              {errors.apellido && <p className="error">{errors.apellido}</p>}
+            </div>
+
+            <div className="floating-label">
+              <input
+                type="text"
+                name="segundo_apellido"
+                value={form.segundo_apellido}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              />
+              <label htmlFor="apellido">Segundo apellido</label>
+              {errors.segundo_apellido && (
+                <p className="error">{errors.segundo_apellido}</p>
+              )}
+            </div>
+
             <div className="floating-label">
               <select
-                id="fuente"
-                name="fuente"
-                value={form.fuente}
+                id="documento_tipo"
+                name="documento_tipo"
+                value={form.documento_tipo}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              >
+                <option value="" disabled hidden></option>
+                <option value="CC">Cédula</option>
+                <option value="CD">Carné diplomático</option>
+                <option value="CN">Certificado nacido vivo</option>
+                <option value="CE">Cédula de extranjería</option>
+                <option value="DC">Documento Extranjero</option>
+                <option value="NIT">NIT</option>
+                <option value="PA">Pasaporte</option>
+                <option value="PE">Permiso Especial de Permanencia</option>
+                <option value="PT">Permiso por Protección Temporal</option>
+                <option value="RC">Registro Civil</option>
+                <option value="SC">Salvo Conducto</option>
+                <option value="TI">Tarjeta de identidad</option>
+              </select>
+              <label htmlFor="documento_tipo">Tipo de documento</label>
+              {errors.documento_tipo && (
+                <p className="error">{errors.documento_tipo}</p>
+              )}
+            </div>
+
+            <div className="floating-label">
+              <input
+                type="text"
+                id="documento_numero"
+                name="documento_numero"
+                value={form.documento_numero}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              />
+              <label htmlFor="documento_numero">Número de documento</label>
+              {errors.documento_numero && (
+                <p className="error">{errors.documento_numero}</p>
+              )}
+            </div>
+
+            <div className="floating-label">
+              <input
+                id="correo"
+                name="correo"
+                type="email"
+                value={form.correo}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              />
+              <label htmlFor="correo">Correo</label>
+              {errors.correo && <p className="error">{errors.correo}</p>}
+            </div>
+
+            <div className="floating-label">
+              <input
+                id="correo_confirmacion"
+                name="correo_confirmacion"
+                type="email"
+                value={form.correo_confirmacion}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              />
+              <label htmlFor="correo_confirmacion">Confirmar correo</label>
+              {errors.correo_confirmacion && (
+                <p className="error">{errors.correo_confirmacion}</p>
+              )}
+            </div>
+
+            <div className="floating-label">
+              <input
+                id="telefono"
+                name="telefono"
+                type="text"
+                value={form.telefono}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              />
+              <label htmlFor="telefono">Número de Celular</label>
+              {errors.telefono && <p className="error">{errors.telefono}</p>}
+            </div>
+
+            <div className="floating-label">
+              <select
+                id="sede"
+                name="sede"
+                value={form.sede}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              >
+                <option value="" disabled hidden></option>
+                {/* <option value="No he sido atendido">No he sido atendido</option> */}
+                <option value="Bogota-Centro">Bogotá Centro</option>
+                <option value="Bogota-Norte">Bogotá Norte</option>
+                <option value="Bogota-Sur-Occidente-Hidroterapia">
+                  Bogotá Sur Occidente Hidroterapia
+                </option>
+                <option value="Bogota-Sur-Occidente-Rehabilitación">
+                  Bogotá Sur Occidente Rehabilitación
+                </option>
+                <option value="Cedritos-Divertido">Cedritos-Divertido</option>
+                <option value="Chia">Chía</option>
+                <option value="Florencia">Florencia</option>
+                <option value="Ibague">Ibagué</option>
+              </select>
+              <label htmlFor="sede">Sede de atención</label>
+              {errors.sede && <p className="error">{errors.sede}</p>}
+            </div>
+
+            <div className="floating-label">
+              <select
+                id="regimen"
+                name="regimen"
+                value={form.regimen}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              >
+                <option value="" disabled hidden></option>
+                <option value="ARL">
+                  ARL(Administradora de Riesgos Laborales)
+                </option>
+                <option value="Contributivo">Contributivo</option>
+                <option value="Especial">
+                  Especial y de Excepción (Magisterio, Fuerzas Militares y de
+                  Policía, Universidades públicas)
+                </option>
+                <option value="Medicina prepagada">Medicina prepagada</option>
+                <option value="Particular">Particular</option>
+                <option value="Subsidiado">Subsidiado</option>
+              </select>
+              <label htmlFor="regimen">Tipo de afiliación</label>
+              {errors.regimen && <p className="error">{errors.regimen}</p>}
+            </div>
+
+            <div className="floating-label">
+              <select
+                id="servicio_prestado"
+                name="servicio_prestado"
+                value={form.servicio_prestado}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              >
+                <option value="" disabled hidden></option>
+                {(serviciosPorSede[form.sede] || []).map((servicio) => (
+                  <option key={servicio} value={servicio}>
+                    {servicio}
+                  </option>
+                ))}
+              </select>
+
+              <label htmlFor="servicio_prestado">Servicio prestado</label>
+
+              {errors.servicio_prestado && (
+                <p className="error">{errors.servicio_prestado}</p>
+              )}
+            </div>
+
+            <div className="floating-label">
+              <select
+                id="eps"
+                name="eps"
+                value={form.eps}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              >
+                <option value="" disabled hidden></option>
+                {epsOptions.map((eps) => (
+                  <option key={eps} value={eps}>
+                    {eps}
+                  </option>
+                ))}
+              </select>
+              <label htmlFor="eps">Asegurador (EPS-ARL)</label>
+              {errors.eps && <p className="error">{errors.eps}</p>}
+            </div>
+
+            <div className="floating-label">
+              <select
+                id="tipo_solicitud"
+                name="tipo_solicitud"
+                value={form.tipo_solicitud}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 required
                 disabled={readOnlyTipoSolicitud}
               >
                 <option value="" disabled hidden></option>
-                <option value="Callcenter">Callcenter</option>
-                <option value="Correo atención al usuario">
-                  Correo atención al usuario
-                </option>
-                <option value="Correo de Agendamiento NAC">
-                  Correo de Agendamiento NAC
-                </option>
-                <option value="Encuesta de satisfacción IPS">
-                  Encuesta de satisfacción IPS
-                </option>
-                <option value="Formulario de la web">
-                  Formulario de la web
-                </option>
-                <option value="Presencial">Presencial</option>
-                <option value="Correo de Notificaciones IPS">
-                  Correo de Notificaciones IPS
-                </option>
+                {(
+                  tipoSolicitudOptions || [
+                    { value: "Peticion", label: "Petición" },
+                    { value: "Queja", label: "Queja" },
+                    { value: "Reclamo", label: "Reclamo" },
+                  ]
+                ).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
-              <label htmlFor="fuente">Origen</label>
-              {errors.fuente && <p className="error">{errors.fuente}</p>}
+              <label htmlFor="tipo_solicitud">Tipo de solicitud</label>
+              {errors.tipo_solicitud && (
+                <p className="error">{errors.tipo_solicitud}</p>
+              )}
             </div>
-          )}
-        </div>
-        <div className="pqrs-textarea-full">
-          <textarea
-            name="descripcion"
-            placeholder="Describe la situación que deseas reportar"
-            value={form.descripcion}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            rows="5"
-            required
-          />
-          {errors.descripcion && <p className="error">{errors.descripcion}</p>}
-        </div>
-        <div className="file-input-group">
-          {/* <label htmlFor="file-upload" className="file-upload-button">
+
+            {/* 🟢 Renderizado condicional para el campo de clasificación de tutela */}
+            {form.tipo_solicitud === "Tutela" && (
+              <div className="floating-label">
+                <select
+                  id="clasificacion_tutela"
+                  name="clasificacion_tutela"
+                  value={form.clasificacion_tutela}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
+                >
+                  <option value="" disabled hidden></option>
+                  <option value="Acción de tutela o Avoco">
+                    Acción de tutela o Avoco
+                  </option>
+                  <option value="Sentencia o Fallo Tutela">
+                    Sentencia o Fallo Tutela
+                  </option>
+                  <option value="Incidente o apertura de Desacato">
+                    Incidente o apertura de Desacato
+                  </option>
+                  <option value="Desacato">Desacato</option>
+                </select>
+                <label htmlFor="clasificacion_tutela">
+                  Clasificación de la tutela
+                </label>
+                {errors.clasificacion_tutela && (
+                  <p className="error">{errors.clasificacion_tutela}</p>
+                )}
+              </div>
+            )}
+
+            {/* 🟢 Campo Accionado solo para tipo Tutela */}
+            {form.tipo_solicitud === "Tutela" && (
+              <div
+                className="accionado-container"
+                ref={accionadoRef}
+                style={{ position: "relative" }}
+              >
+                {/* <label className="accionado-label">Accionado</label> */}
+
+                {/* Caja que parece un select */}
+                <div
+                  className="accionado-select"
+                  onClick={() => setShowAccionadoDropdown((prev) => !prev)}
+                >
+                  <span
+                    className={
+                      Array.isArray(form.accionado) && form.accionado.length
+                        ? "selected"
+                        : "placeholder"
+                    }
+                  >
+                    {Array.isArray(form.accionado) && form.accionado.length
+                      ? form.accionado.join(", ")
+                      : "Accionado"}
+                  </span>
+                 <span className={`accionado-caret ${showAccionadoDropdown ? "open" : ""}`}></span>
+                </div>
+
+                {/* Lista desplegable; stopPropagation evita que el click cierre el menú */}
+                {showAccionadoDropdown && (
+                  <div
+                    className="accionado-options"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {["Asegurador", "Passus"].map((opcion) => (
+                      <label key={opcion} className="accionado-option">
+                        <input
+                          type="checkbox"
+                          value={opcion}
+                          checked={
+                            Array.isArray(form.accionado) &&
+                            form.accionado.includes(opcion)
+                          }
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setForm((prev) => {
+                              const current = Array.isArray(prev.accionado)
+                                ? prev.accionado
+                                : [];
+                              const updated = checked
+                                ? [...current, opcion]
+                                : current.filter((i) => i !== opcion);
+                              return { ...prev, accionado: updated };
+                            });
+                          }}
+                        />
+                        <span>{opcion}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {errors.accionado && (
+                  <p className="error">{errors.accionado}</p>
+                )}
+              </div>
+            )}
+
+            {/* CAMPO DE FECHA DE INICIO REAL - VISIBLE SOLO SI EL USUARIO ESTÁ LOGEADO */}
+            {isLoggedIn && (
+              <div className="floating-label">
+                {" "}
+                <input
+                  type="datetime-local" // Correcto para fecha y hora
+                  id="fecha_inicio_real"
+                  name="fecha_inicio_real"
+                  value={
+                    form.fecha_inicio_real
+                      ? (() => {
+                          const date = new Date(form.fecha_inicio_real); // Obtener componentes de fecha y hora local
+                          const year = date.getFullYear();
+                          const month = (date.getMonth() + 1)
+                            .toString()
+                            .padStart(2, "0");
+                          const day = date
+                            .getDate()
+                            .toString()
+                            .padStart(2, "0");
+                          const hours = date
+                            .getHours()
+                            .toString()
+                            .padStart(2, "0");
+                          const minutes = date
+                            .getMinutes()
+                            .toString()
+                            .padStart(2, "0");
+
+                          return `${year}-${month}-${day}T${hours}:${minutes}`;
+                        })()
+                      : ""
+                  }
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                />{" "}
+                <label htmlFor="fecha_inicio_real">
+                  Fecha y Hora de Inicio Real de la PQR:{" "}
+                </label>{" "}
+                {errors.fecha_inicio_real && (
+                  <p className="error">{errors.fecha_inicio_real}</p>
+                )}{" "}
+              </div>
+            )}
+
+            {isLoggedIn && (
+              <div className="floating-label">
+                <select
+                  id="fuente"
+                  name="fuente"
+                  value={form.fuente}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
+                  disabled={readOnlyTipoSolicitud}
+                >
+                  <option value="" disabled hidden></option>
+                  <option value="Callcenter">Callcenter</option>
+                  <option value="Correo atención al usuario">
+                    Correo atención al usuario
+                  </option>
+                  <option value="Correo de Agendamiento NAC">
+                    Correo de Agendamiento NAC
+                  </option>
+                  <option value="Encuesta de satisfacción IPS">
+                    Encuesta de satisfacción IPS
+                  </option>
+                  <option value="Formulario de la web">
+                    Formulario de la web
+                  </option>
+                  <option value="Presencial">Presencial</option>
+                  <option value="Correo de Notificaciones IPS">
+                    Correo de Notificaciones IPS
+                  </option>
+                </select>
+                <label htmlFor="fuente">Origen</label>
+                {errors.fuente && <p className="error">{errors.fuente}</p>}
+              </div>
+            )}
+          </div>
+          <div className="pqrs-textarea-full">
+            <textarea
+              name="descripcion"
+              placeholder="Describe la situación que deseas reportar"
+              value={form.descripcion}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              rows="5"
+              required
+            />
+            {errors.descripcion && (
+              <p className="error">{errors.descripcion}</p>
+            )}
+          </div>
+          <div className="file-input-group">
+            {/* <label htmlFor="file-upload" className="file-upload-button">
             Adjuntar Archivos (Máx. 7MB c/u)
           </label> */}
-          <input
-            id="file-upload"
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            // style={{ display: "none" }} // Oculta el input file por defecto
-          />
-        </div>
-        {archivos.length > 0 && (
-          <div className="selected-files">
-            <h3>Archivos seleccionados:</h3>
-            <ul>
-              {archivos.map((file, index) => (
-                <li key={index}>
-                  {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                  <button
-                    type="button"
-                    onClick={() => removeFile(file)}
-                    className="remove-file-button"
-                  >
-                    X
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <div className="politica-box politica-box-compact">
-          <label className="politica-label">
             <input
-              type="checkbox"
-              name="politica_aceptada"
-              checked={form.politica_aceptada}
-              onChange={handleChange} // Usa handleChange unificado
-              onBlur={handleBlur}
+              id="file-upload"
+              type="file"
+              multiple
+              onChange={handleFileChange}
+              // style={{ display: "none" }} // Oculta el input file por defecto
             />
-            <div className="politica-texto">
-              <span className="politica-descripcion">
-                Acepto la 
-                <a
-                  href="https://passusips.com/nosotros-politica-manejo-datos"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  política de tratamiento de datos personales
-                </a>{" "}
-                de Passus 👆, pues he leído y estoy de acuerdo con lo expuesto
-                en el manuscrito publicado. <br /> <br />
-                He Comprendido los{" "}
-                <a
-                  href="https://passusips.com/nosotros-politica-agendamiento-web"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {" "}
-                  Términos y condiciones de Servicio Web{" "}
-                </a>
-                de Passus 👆, pues he leído y estoy de acuerdo con lo expuesto
-                en la información publicada.
-              </span>
+          </div>
+          {archivos.length > 0 && (
+            <div className="selected-files">
+              <h3>Archivos seleccionados:</h3>
+              <ul>
+                {archivos.map((file, index) => (
+                  <li key={index}>
+                    {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                    <button
+                      type="button"
+                      onClick={() => removeFile(file)}
+                      className="remove-file-button"
+                    >
+                      X
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </label>
-          {errors.politica_aceptada && (
-            <p className="error">{errors.politica_aceptada}</p>
           )}
-        </div>
-        <button type="submit" disabled={loading}>
-          {loading ? "Enviando..." : "Enviar PQR"}
-        </button>
-      </form>
-      <Modal
-        show={showModal}
-        onClose={() => setShowModal(false)}
-        title={modalContent.title}
-        description={modalContent.description}
-      />
-    </div>
+          <div className="politica-box politica-box-compact">
+            <label className="politica-label">
+              <input
+                type="checkbox"
+                name="politica_aceptada"
+                checked={form.politica_aceptada}
+                onChange={handleChange} // Usa handleChange unificado
+                onBlur={handleBlur}
+              />
+              <div className="politica-texto">
+                <span className="politica-descripcion">
+                  Acepto la 
+                  <a
+                    href="https://passusips.com/nosotros-politica-manejo-datos"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    política de tratamiento de datos personales
+                  </a>{" "}
+                  de Passus 👆, pues he leído y estoy de acuerdo con lo expuesto
+                  en el manuscrito publicado. <br /> <br />
+                  He Comprendido los{" "}
+                  <a
+                    href="https://passusips.com/nosotros-politica-agendamiento-web"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {" "}
+                    Términos y condiciones de Servicio Web{" "}
+                  </a>
+                  de Passus 👆, pues he leído y estoy de acuerdo con lo expuesto
+                  en la información publicada.
+                </span>
+              </div>
+            </label>
+            {errors.politica_aceptada && (
+              <p className="error">{errors.politica_aceptada}</p>
+            )}
+          </div>
+          <button type="submit" disabled={loading}>
+            {loading ? "Enviando..." : "Enviar PQR"}
+          </button>
+        </form>
+        <Modal
+          show={showModal}
+          onClose={() => setShowModal(false)}
+          title={modalContent.title}
+          description={modalContent.description}
+        />
+      </div>
+      <Footer />
+    </>
   );
 }
 
@@ -1220,6 +1439,7 @@ export default PqrsForm;
 // import Swal from "sweetalert2";
 // import { pqrsSchema } from "./pqrValidation"; // Asegúrate de que esto sea pqrsValidation.js
 // import Modal from "../components/Modal/Modal";
+// import { Footer } from "../components/Footer/Footer";
 
 // // Función auxiliar para formatear la fecha a YYYY-MM-DD
 // const formatDateToISO = (date) => {
@@ -1385,7 +1605,8 @@ export default PqrsForm;
 //     registrador_correo: "",
 //     registrador_telefono: "",
 //     parentesco: "",
-//     cargo: "",
+//     registrador_cargo: "",
+//     nombre_entidad: "",
 //     fuente: "Formulario de la web",
 //     fecha_inicio_real: "", // Se inicializa como cadena vacía, se llenará en useEffect
 //   });
@@ -1471,7 +1692,8 @@ export default PqrsForm;
 //         registrador_correo: pqrData.registrador_correo || "",
 //         registrador_telefono: pqrData.registrador_telefono || "",
 //         parentesco: pqrData.parentesco || "",
-//         cargo: pqrData.cargo || "",
+//         registrador_cargo: pqrData.registrador_cargo || "",
+//         nombre_entidad: pqrData.nombre_entidad || "",
 //         politica_aceptada: pqrData.politica_aceptada === "true", // O el valor que use tu API
 //       }));
 //     }
@@ -1598,30 +1820,40 @@ export default PqrsForm;
 
 //       // Añadir campos del formulario a formData
 //       Object.entries(form).forEach(([key, value]) => {
-//         // No enviar campos del registrador si registra_otro es 'no'
-//         if (key.startsWith("registrador_") && form.registra_otro === "no") {
+//         // Evitar campos del registrador si no aplica
+//         if (key.startsWith("registrador_") && form.registra_otro === "no")
 //           return;
-//         }
-//         if (key === "parentesco" && form.registra_otro === "no") {
-//           return; // También omitir parentesco si no se registra a otro
-//         }
+//         if (key === "parentesco" && form.registra_otro === "no") return;
 
-//         // Convertir booleanos a 'true'/'false' strings si el backend lo requiere
+//         // 🔹 Solo enviar cargo si el parentesco es Ente de control o entidad
+//         if (
+//           key === "registrador_cargo" &&
+//           form.parentesco !== "Ente de control" &&
+//           form.parentesco !== "Entidad"
+//         )
+//           return;
+
+//         // 🔹 Solo enviar nombre_entidad si el parentesco es Ente de control o entidad
+//         if (
+//           key === "nombre_entidad" &&
+//           form.parentesco !== "Ente de control" &&
+//           form.parentesco !== "Entidad"
+//         )
+//           return;
+
+//         // Convertir booleanos
 //         if (key === "politica_aceptada") {
 //           formData.append(key, value ? "true" : "false");
 //           return;
 //         }
 
-//         // Manejo específico para fecha_inicio_real
+//         // Manejo fecha_inicio_real
 //         if (key === "fecha_inicio_real") {
-//           if (isLoggedIn && value) {
-//             // value ya está en YYYY-MM-DD HH:MM:SS gracias a handleChange
-//             formData.append(key, value);
-//           }
-//           return; // Siempre retornar para evitar que se añada dos veces o con valor incorrecto
+//           if (isLoggedIn && value) formData.append(key, value);
+//           return;
 //         }
 
-//         // Añadir otros campos si tienen valor
+//         // Añadir campo si tiene valor
 //         if (value !== null && value !== undefined && value !== "") {
 //           formData.append(key, value);
 //         }
@@ -1724,664 +1956,738 @@ export default PqrsForm;
 //   };
 
 //   return (
-//     <div className="pqrs-container">
-//       <div className="header-pqrs">
-//         <div>
-//           Envía tu <span>PQR</span>
+//     <>
+//       <div className="pqrs-container">
+//         <div className="header-pqrs">
+//           <div>
+//             Envía tu <span>PQR</span>
+//           </div>
 //         </div>
-//       </div>
-//       <br />
+//         <br />
 
-//       <label className="registra-otro-label">
-//         ¿Está registrando esta solicitud en nombre de otra persona o entidad?
-//       </label>
-//       <div className="radio-group">
-//         <label>
-//           <input
-//             type="radio"
-//             name="registra_otro"
-//             value="no"
-//             checked={form.registra_otro === "no"}
-//             onChange={handleChange}
-//             onBlur={handleBlur}
-//           />
-//           No
+//         <label className="registra-otro-label">
+//           ¿Está registrando esta solicitud en nombre de otra persona o entidad?
 //         </label>
-//         <label>
-//           <input
-//             type="radio"
-//             name="registra_otro"
-//             value="si"
-//             checked={form.registra_otro === "si"}
-//             onChange={handleChange}
-//             onBlur={handleBlur}
-//           />
-//           Sí
-//         </label>
-//       </div>
-//       {errors.registra_otro && <p className="error">{errors.registra_otro}</p>}
-
-//       <form className="pqrs" onSubmit={handleSubmit} noValidate>
-//         {form.registra_otro === "si" && (
-//           <>
-//             <h1 className="titulo-form">
-//               Datos de quien registra la solicitud:
-//             </h1>
-//             <br />
-//             <div className="pqrs-otro">
-//               <div className="floating-label">
-//                 <select
-//                   id="parentesco"
-//                   name="parentesco"
-//                   value={form.parentesco}
-//                   onChange={handleChange}
-//                   onBlur={handleBlur}
-//                   required
-//                 >
-//                   <option value="" disabled hidden></option>
-//                   {parentesco.map((opcion) => (
-//                     <option key={opcion} value={opcion}>
-//                       {opcion}
-//                     </option>
-//                   ))}
-//                 </select>
-//                 <label htmlFor="parentesco">Parentesco</label>
-//                 {errors.parentesco && (
-//                   <p className="error">{errors.parentesco}</p>
-//                 )}
-//               </div>
-
-//               <div className="floating-label">
-//                 <input
-//                   id="registrador_nombre"
-//                   name="registrador_nombre"
-//                   value={form.registrador_nombre}
-//                   onChange={handleChange}
-//                   onBlur={handleBlur}
-//                   required
-//                 />
-//                 <label htmlFor="registrador_nombre">
-//                   Primer nombre ó nombre de la entidad
-//                 </label>
-//                 {errors.registrador_nombre && (
-//                   <p className="error">{errors.registrador_nombre}</p>
-//                 )}
-//               </div>
-
-//               <div className="floating-label">
-//                 <input
-//                   id="registrador_segundo_nombre"
-//                   name="registrador_segundo_nombre"
-//                   value={form.registrador_segundo_nombre}
-//                   onChange={handleChange}
-//                   onBlur={handleBlur}
-//                   required
-//                 />
-//                 <label htmlFor="registrador_nombre">Segundo nombre</label>
-//                 {errors.registrador_segundo_nombre && (
-//                   <p className="error">{errors.registrador_segundo_nombre}</p>
-//                 )}
-//               </div>
-
-//               <div className="floating-label">
-//                 <input
-//                   id="registrador_apellido"
-//                   name="registrador_apellido"
-//                   value={form.registrador_apellido}
-//                   onChange={handleChange}
-//                   onBlur={handleBlur}
-//                   required
-//                 />
-//                 <label htmlFor="registrador_apellido">
-//                   Primer apellido ó razón social
-//                 </label>
-//                 {errors.registrador_apellido && (
-//                   <p className="error">{errors.registrador_apellido}</p>
-//                 )}
-//               </div>
-
-//               <div className="floating-label">
-//                 <input
-//                   id="registrador_segundo_apellido"
-//                   name="registrador_segundo_apellido"
-//                   value={form.registrador_segundo_apellido}
-//                   onChange={handleChange}
-//                   onBlur={handleBlur}
-//                   required
-//                 />
-//                 <label htmlFor="registrador_apellido">Segundo apellido</label>
-//                 {errors.registrador_segundo_apellido && (
-//                   <p className="error">{errors.registrador_segundo_apellido}</p>
-//                 )}
-//               </div>
-
-//               <div className="floating-label">
-//                 <select
-//                   id="registrador_documento_tipo"
-//                   name="registrador_documento_tipo"
-//                   value={form.registrador_documento_tipo}
-//                   onChange={handleChange}
-//                   onBlur={handleBlur}
-//                   required
-//                 >
-//                   <option value="" disabled hidden></option>
-//                   <option value="CC">Cédula</option>
-//                   <option value="CD">Carné diplomático</option>
-//                   <option value="CN">Certificado nacido vivo</option>
-//                   <option value="CE">Cédula de extranjería</option>
-//                   <option value="DC">Documento Extranjero</option>
-//                   <option value="NIT">NIT</option>
-//                   <option value="PA">Pasaporte</option>
-//                   <option value="PE">Permiso Especial de Permanencia</option>
-//                   <option value="PT">Permiso por Protección Temporal</option>
-//                   <option value="RC">Registro Civil</option>
-//                   <option value="SC">Salvo Conducto</option>
-//                   <option value="TI">Tarjeta de identidad</option>
-//                 </select>
-//                 <label htmlFor="registrador_documento_tipo">
-//                   Tipo de documento
-//                 </label>
-//                 {errors.registrador_documento_tipo && (
-//                   <p className="error">{errors.registrador_documento_tipo}</p>
-//                 )}
-//               </div>
-
-//               <div className="floating-label">
-//                 <input
-//                   id="registrador_documento_numero"
-//                   name="registrador_documento_numero"
-//                   type="text" // Mantener como text para permitir guiones/letras si NIT lo requiere
-//                   value={form.registrador_documento_numero}
-//                   onChange={handleChange}
-//                   onBlur={handleBlur}
-//                   required
-//                 />
-//                 <label htmlFor="registrador_documento_numero">
-//                   Número de documento
-//                 </label>
-//                 {errors.registrador_documento_numero && (
-//                   <p className="error">{errors.registrador_documento_numero}</p>
-//                 )}
-//               </div>
-
-//               <div className="floating-label">
-//                 <input
-//                   id="registrador_correo"
-//                   name="registrador_correo"
-//                   type="email"
-//                   value={form.registrador_correo}
-//                   onChange={handleChange}
-//                   onBlur={handleBlur}
-//                   required
-//                 />
-//                 <label htmlFor="registrador_correo">Correo</label>
-//                 {errors.registrador_correo && (
-//                   <p className="error">{errors.registrador_correo}</p>
-//                 )}
-//               </div>
-
-//               <div className="floating-label">
-//                 <input
-//                   id="registrador_telefono"
-//                   name="registrador_telefono"
-//                   type="text"
-//                   value={form.registrador_telefono}
-//                   onChange={handleChange}
-//                   onBlur={handleBlur}
-//                   required
-//                 />
-//                 <label htmlFor="registrador_telefono">Número de Celular</label>
-//                 {errors.registrador_telefono && (
-//                   <p className="error">{errors.registrador_telefono}</p>
-//                 )}
-//               </div>
-//             </div>
-//           </>
+//         <div className="radio-group">
+//           <label>
+//             <input
+//               type="radio"
+//               name="registra_otro"
+//               value="no"
+//               checked={form.registra_otro === "no"}
+//               onChange={handleChange}
+//               onBlur={handleBlur}
+//             />
+//             No
+//           </label>
+//           <label>
+//             <input
+//               type="radio"
+//               name="registra_otro"
+//               value="si"
+//               checked={form.registra_otro === "si"}
+//               onChange={handleChange}
+//               onBlur={handleBlur}
+//             />
+//             Sí
+//           </label>
+//         </div>
+//         {errors.registra_otro && (
+//           <p className="error">{errors.registra_otro}</p>
 //         )}
-//         <h1 className="titulo-form">Datos del paciente</h1> <br />
-//         <div className="pqrs-paciente">
-//           <div className="floating-label">
-//             <input
-//               type="text"
-//               name="nombre"
-//               value={form.nombre}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             />
-//             <label htmlFor="nombre">Primer nombre</label>
-//             {errors.nombre && <p className="error">{errors.nombre}</p>}
-//           </div>
 
-//           <div className="floating-label">
-//             <input
-//               type="text"
-//               name="segundo_nombre"
-//               value={form.segundo_nombre}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             />
-//             <label htmlFor="nombre">Segundo nombre</label>
-//             {errors.segundo_nombre && (
-//               <p className="error">{errors.segundo_nombre}</p>
-//             )}
-//           </div>
+//         <form className="pqrs" onSubmit={handleSubmit} noValidate>
+//           {form.registra_otro === "si" && (
+//             <>
+//               <h1 className="titulo-form">
+//                 Datos de quien registra la solicitud:
+//               </h1>
+//               <br />
+//               <div className="pqrs-otro">
+//                 <div className="floating-label">
+//                   <select
+//                     id="parentesco"
+//                     name="parentesco"
+//                     value={form.parentesco}
+//                     onChange={handleChange}
+//                     onBlur={handleBlur}
+//                     required
+//                   >
+//                     <option value="" disabled hidden></option>
+//                     {parentesco.map((opcion) => (
+//                       <option key={opcion} value={opcion}>
+//                         {opcion}
+//                       </option>
+//                     ))}
+//                   </select>
+//                   <label htmlFor="parentesco">Parentesco o entidad</label>
+//                   {errors.parentesco && (
+//                     <p className="error">{errors.parentesco}</p>
+//                   )}
+//                 </div>
+//                 {(form.parentesco === "Ente de control" ||
+//                   form.parentesco === "Entidad") && (
+//                   <div className="floating-label">
+//                     <input
+//                       id="nombre_entidad"
+//                       name="nombre_entidad"
+//                       value={form.nombre_entidad}
+//                       onChange={handleChange}
+//                       onBlur={handleBlur}
+//                       // 🔹 Solo requerido si el parentesco es "Ente de control" o "Entidad"
+//                       required={
+//                         form.parentesco === "Ente de control" ||
+//                         form.parentesco === "Entidad"
+//                       }
+//                     />
+//                     <label htmlFor="nombre_entidad">Nombre de la entidad</label>
+//                     {errors.nombre_entidad && (
+//                       <p className="error">{errors.nombre_entidad}</p>
+//                     )}
+//                   </div>
+//                 )}
 
-//           <div className="floating-label">
-//             <input
-//               type="text"
-//               name="apellido"
-//               value={form.apellido}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             />
-//             <label htmlFor="apellido">Primer apellido</label>
-//             {errors.apellido && <p className="error">{errors.apellido}</p>}
-//           </div>
+//                 <div className="floating-label">
+//                   <input
+//                     id="registrador_nombre"
+//                     name="registrador_nombre"
+//                     value={form.registrador_nombre}
+//                     onChange={handleChange}
+//                     onBlur={handleBlur}
+//                     required
+//                   />
+//                   <label htmlFor="registrador_nombre">
+//                     Primer nombre de quien registra
+//                   </label>
+//                   {errors.registrador_nombre && (
+//                     <p className="error">{errors.registrador_nombre}</p>
+//                   )}
+//                 </div>
 
-//           <div className="floating-label">
-//             <input
-//               type="text"
-//               name="segundo_apellido"
-//               value={form.segundo_apellido}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             />
-//             <label htmlFor="apellido">Segundo apellido</label>
-//             {errors.segundo_apellido && (
-//               <p className="error">{errors.segundo_apellido}</p>
-//             )}
-//           </div>
+//                 <div className="floating-label">
+//                   <input
+//                     id="registrador_segundo_nombre"
+//                     name="registrador_segundo_nombre"
+//                     value={form.registrador_segundo_nombre}
+//                     onChange={handleChange}
+//                     onBlur={handleBlur}
+//                     required
+//                   />
+//                   <label htmlFor="registrador_nombre">
+//                     Segundo nombre de quien registra
+//                   </label>
+//                   {errors.registrador_segundo_nombre && (
+//                     <p className="error">{errors.registrador_segundo_nombre}</p>
+//                   )}
+//                 </div>
 
-//           <div className="floating-label">
-//             <select
-//               id="documento_tipo"
-//               name="documento_tipo"
-//               value={form.documento_tipo}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             >
-//               <option value="" disabled hidden></option>
-//               <option value="CC">Cédula</option>
-//               <option value="CD">Carné diplomático</option>
-//               <option value="CN">Certificado nacido vivo</option>
-//               <option value="CE">Cédula de extranjería</option>
-//               <option value="DC">Documento Extranjero</option>
-//               <option value="NIT">NIT</option>
-//               <option value="PA">Pasaporte</option>
-//               <option value="PE">Permiso Especial de Permanencia</option>
-//               <option value="PT">Permiso por Protección Temporal</option>
-//               <option value="RC">Registro Civil</option>
-//               <option value="SC">Salvo Conducto</option>
-//               <option value="TI">Tarjeta de identidad</option>
-//             </select>
-//             <label htmlFor="documento_tipo">Tipo de documento</label>
-//             {errors.documento_tipo && (
-//               <p className="error">{errors.documento_tipo}</p>
-//             )}
-//           </div>
+//                 <div className="floating-label">
+//                   <input
+//                     id="registrador_apellido"
+//                     name="registrador_apellido"
+//                     value={form.registrador_apellido}
+//                     onChange={handleChange}
+//                     onBlur={handleBlur}
+//                     required
+//                   />
+//                   <label htmlFor="registrador_apellido">
+//                     Primer apellido de quien registra
+//                   </label>
+//                   {errors.registrador_apellido && (
+//                     <p className="error">{errors.registrador_apellido}</p>
+//                   )}
+//                 </div>
 
-//           <div className="floating-label">
-//             <input
-//               type="text"
-//               id="documento_numero"
-//               name="documento_numero"
-//               value={form.documento_numero}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             />
-//             <label htmlFor="documento_numero">Número de documento</label>
-//             {errors.documento_numero && (
-//               <p className="error">{errors.documento_numero}</p>
-//             )}
-//           </div>
+//                 <div className="floating-label">
+//                   <input
+//                     id="registrador_segundo_apellido"
+//                     name="registrador_segundo_apellido"
+//                     value={form.registrador_segundo_apellido}
+//                     onChange={handleChange}
+//                     onBlur={handleBlur}
+//                     required
+//                   />
+//                   <label htmlFor="registrador_apellido">
+//                     Segundo apellido de quien registra
+//                   </label>
+//                   {errors.registrador_segundo_apellido && (
+//                     <p className="error">
+//                       {errors.registrador_segundo_apellido}
+//                     </p>
+//                   )}
+//                 </div>
 
-//           <div className="floating-label">
-//             <input
-//               id="correo"
-//               name="correo"
-//               type="email"
-//               value={form.correo}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             />
-//             <label htmlFor="correo">Correo</label>
-//             {errors.correo && <p className="error">{errors.correo}</p>}
-//           </div>
+//                 {form.parentesco !== "Ente de control" &&
+//                   form.parentesco !== "Entidad" && (
+//                     <div className="floating-label">
+//                       <select
+//                         id="registrador_documento_tipo"
+//                         name="registrador_documento_tipo"
+//                         value={form.registrador_documento_tipo}
+//                         onChange={handleChange}
+//                         onBlur={handleBlur}
+//                         required
+//                       >
+//                         <option value="" disabled hidden></option>
+//                         <option value="CC">Cédula</option>
+//                         <option value="CD">Carné diplomático</option>
+//                         <option value="CN">Certificado nacido vivo</option>
+//                         <option value="CE">Cédula de extranjería</option>
+//                         <option value="DC">Documento Extranjero</option>
+//                         <option value="NIT">NIT</option>
+//                         <option value="PA">Pasaporte</option>
+//                         <option value="PE">
+//                           Permiso Especial de Permanencia
+//                         </option>
+//                         <option value="PT">
+//                           Permiso por Protección Temporal
+//                         </option>
+//                         <option value="RC">Registro Civil</option>
+//                         <option value="SC">Salvo Conducto</option>
+//                         <option value="TI">Tarjeta de identidad</option>
+//                       </select>
+//                       <label htmlFor="registrador_documento_tipo">
+//                         Tipo de documento
+//                       </label>
+//                       {errors.registrador_documento_tipo && (
+//                         <p className="error">
+//                           {errors.registrador_documento_tipo}
+//                         </p>
+//                       )}
+//                     </div>
+//                   )}
 
-//           <div className="floating-label">
-//             <input
-//               id="correo_confirmacion"
-//               name="correo_confirmacion"
-//               type="email"
-//               value={form.correo_confirmacion}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             />
-//             <label htmlFor="correo_confirmacion">Confirmar correo</label>
-//             {errors.correo_confirmacion && (
-//               <p className="error">{errors.correo_confirmacion}</p>
-//             )}
-//           </div>
+//                 {form.parentesco !== "Ente de control" &&
+//                   form.parentesco !== "Entidad" && (
+//                     <div className="floating-label">
+//                       <input
+//                         id="registrador_documento_numero"
+//                         name="registrador_documento_numero"
+//                         type="text" // Mantener como text para permitir guiones/letras si NIT lo requiere
+//                         value={form.registrador_documento_numero}
+//                         onChange={handleChange}
+//                         onBlur={handleBlur}
+//                         required
+//                       />
+//                       <label htmlFor="registrador_documento_numero">
+//                         Número de documento
+//                       </label>
+//                       {errors.registrador_documento_numero && (
+//                         <p className="error">
+//                           {errors.registrador_documento_numero}
+//                         </p>
+//                       )}
+//                     </div>
+//                   )}
 
-//           <div className="floating-label">
-//             <input
-//               id="telefono"
-//               name="telefono"
-//               type="text"
-//               value={form.telefono}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             />
-//             <label htmlFor="telefono">Número de Celular</label>
-//             {errors.telefono && <p className="error">{errors.telefono}</p>}
-//           </div>
+//                 <div className="floating-label">
+//                   <input
+//                     id="registrador_correo"
+//                     name="registrador_correo"
+//                     type="email"
+//                     value={form.registrador_correo}
+//                     onChange={handleChange}
+//                     onBlur={handleBlur}
+//                     required
+//                   />
+//                   <label htmlFor="registrador_correo">Correo</label>
+//                   {errors.registrador_correo && (
+//                     <p className="error">{errors.registrador_correo}</p>
+//                   )}
+//                 </div>
 
-//           <div className="floating-label">
-//             <select
-//               id="sede"
-//               name="sede"
-//               value={form.sede}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             >
-//               <option value="" disabled hidden></option>
-//               {/* <option value="No he sido atendido">No he sido atendido</option> */}
-//               <option value="Bogota-Centro">Bogotá Centro</option>
-//               <option value="Bogota-Norte">Bogotá Norte</option>
-//               <option value="Bogota-Sur-Occidente-Hidroterapia">
-//                 Bogotá Sur Occidente Hidroterapia
-//               </option>
-//               <option value="Bogota-Sur-Occidente-Rehabilitación">
-//                 Bogotá Sur Occidente Rehabilitación
-//               </option>
-//               <option value="Cedritos-Divertido">Cedritos-Divertido</option>
-//               <option value="Chia">Chía</option>
-//               <option value="Florencia">Florencia</option>
-//               <option value="Ibague">Ibagué</option>
-//             </select>
-//             <label htmlFor="sede">Sede de atención</label>
-//             {errors.sede && <p className="error">{errors.sede}</p>}
-//           </div>
+//                 <div className="floating-label">
+//                   <input
+//                     id="registrador_telefono"
+//                     name="registrador_telefono"
+//                     type="text"
+//                     value={form.registrador_telefono}
+//                     onChange={handleChange}
+//                     onBlur={handleBlur}
+//                     required
+//                   />
+//                   <label htmlFor="registrador_telefono">
+//                     Número de Celular
+//                   </label>
+//                   {errors.registrador_telefono && (
+//                     <p className="error">{errors.registrador_telefono}</p>
+//                   )}
+//                 </div>
 
-//           <div className="floating-label">
-//             <select
-//               id="regimen"
-//               name="regimen"
-//               value={form.regimen}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             >
-//               <option value="" disabled hidden></option>
-//               <option value="ARL">
-//                 ARL(Administradora de Riesgos Laborales)
-//               </option>
-//               <option value="Contributivo">Contributivo</option>
-//               <option value="Especial">
-//                 Especial y de Excepción (Magisterio, Fuerzas Militares y de
-//                 Policía, Universidades públicas)
-//               </option>
-//               <option value="Medicina prepagada">Medicina prepagada</option>
-//               <option value="Particular">Particular</option>
-//               <option value="Subsidiado">Subsidiado</option>
-//             </select>
-//             <label htmlFor="regimen">Tipo de afiliación</label>
-//             {errors.regimen && <p className="error">{errors.regimen}</p>}
-//           </div>
-
-//           <div className="floating-label">
-//             <select
-//               id="servicio_prestado"
-//               name="servicio_prestado"
-//               value={form.servicio_prestado}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             >
-//               <option value="" disabled hidden></option>
-//               {(serviciosPorSede[form.sede] || []).map((servicio) => (
-//                 <option key={servicio} value={servicio}>
-//                   {servicio}
-//                 </option>
-//               ))}
-//             </select>
-
-//             <label htmlFor="servicio_prestado">Servicio prestado</label>
-
-//             {errors.servicio_prestado && (
-//               <p className="error">{errors.servicio_prestado}</p>
-//             )}
-//           </div>
-
-//           <div className="floating-label">
-//             <select
-//               id="eps"
-//               name="eps"
-//               value={form.eps}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//             >
-//               <option value="" disabled hidden></option>
-//               {epsOptions.map((eps) => (
-//                 <option key={eps} value={eps}>
-//                   {eps}
-//                 </option>
-//               ))}
-//             </select>
-//             <label htmlFor="eps">Asegurador (EPS-ARL)</label>
-//             {errors.eps && <p className="error">{errors.eps}</p>}
-//           </div>
-
-//           <div className="floating-label">
-//             <select
-//               id="tipo_solicitud"
-//               name="tipo_solicitud"
-//               value={form.tipo_solicitud}
-//               onChange={handleChange}
-//               onBlur={handleBlur}
-//               required
-//               disabled={readOnlyTipoSolicitud}
-//             >
-//               <option value="" disabled hidden></option>
-//               {(
-//                 tipoSolicitudOptions || [
-//                   { value: "Peticion", label: "Petición" },
-//                   { value: "Queja", label: "Queja" },
-//                   { value: "Reclamo", label: "Reclamo" },
-//                 ]
-//               ).map((option) => (
-//                 <option key={option.value} value={option.value}>
-//                   {option.label}
-//                 </option>
-//               ))}
-//             </select>
-//             <label htmlFor="tipo_solicitud">Tipo de solicitud</label>
-//             {errors.tipo_solicitud && (
-//               <p className="error">{errors.tipo_solicitud}</p>
-//             )}
-//           </div>
-
-//           {/* CAMPO DE FECHA DE INICIO REAL - VISIBLE SOLO SI EL USUARIO ESTÁ LOGEADO */}
-//           {isLoggedIn && (
+//                 {(form.parentesco === "Ente de control" ||
+//                   form.parentesco === "Entidad") && (
+//                   <div className="floating-label">
+//                     <input
+//                       id="registrador_cargo"
+//                       name="registrador_cargo"
+//                       value={form.registrador_cargo}
+//                       onChange={handleChange}
+//                       onBlur={handleBlur}
+//                       required={
+//                         form.parentesco === "Ente de control" ||
+//                         form.parentesco === "Entidad"
+//                       }
+//                     />
+//                     <label htmlFor="registrador_cargo">Cargo</label>
+//                     {errors.registrador_cargo && (
+//                       <p className="error">{errors.registrador_cargo}</p>
+//                     )}
+//                   </div>
+//                 )}
+//               </div>
+//             </>
+//           )}
+//           <h1 className="titulo-form">Datos del paciente</h1> <br />
+//           <div className="pqrs-paciente">
 //             <div className="floating-label">
-//               {" "}
 //               <input
-//                 type="datetime-local" // Correcto para fecha y hora
-//                 id="fecha_inicio_real"
-//                 name="fecha_inicio_real"
-//                 value={
-//                   form.fecha_inicio_real
-//                     ? (() => {
-//                         const date = new Date(form.fecha_inicio_real); // Obtener componentes de fecha y hora local
-//                         const year = date.getFullYear();
-//                         const month = (date.getMonth() + 1)
-//                           .toString()
-//                           .padStart(2, "0");
-//                         const day = date.getDate().toString().padStart(2, "0");
-//                         const hours = date
-//                           .getHours()
-//                           .toString()
-//                           .padStart(2, "0");
-//                         const minutes = date
-//                           .getMinutes()
-//                           .toString()
-//                           .padStart(2, "0");
-
-//                         return `${year}-${month}-${day}T${hours}:${minutes}`;
-//                       })()
-//                     : ""
-//                 }
+//                 type="text"
+//                 name="nombre"
+//                 value={form.nombre}
 //                 onChange={handleChange}
 //                 onBlur={handleBlur}
-//               />{" "}
-//               <label htmlFor="fecha_inicio_real">
-//                 Fecha y Hora de Inicio Real de la PQR:{" "}
-//               </label>{" "}
-//               {errors.fecha_inicio_real && (
-//                 <p className="error">{errors.fecha_inicio_real}</p>
-//               )}{" "}
+//                 required
+//               />
+//               <label htmlFor="nombre">Primer nombre</label>
+//               {errors.nombre && <p className="error">{errors.nombre}</p>}
 //             </div>
-//           )}
 
-//           {isLoggedIn && (
+//             <div className="floating-label">
+//               <input
+//                 type="text"
+//                 name="segundo_nombre"
+//                 value={form.segundo_nombre}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 required
+//               />
+//               <label htmlFor="nombre">Segundo nombre</label>
+//               {errors.segundo_nombre && (
+//                 <p className="error">{errors.segundo_nombre}</p>
+//               )}
+//             </div>
+
+//             <div className="floating-label">
+//               <input
+//                 type="text"
+//                 name="apellido"
+//                 value={form.apellido}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 required
+//               />
+//               <label htmlFor="apellido">Primer apellido</label>
+//               {errors.apellido && <p className="error">{errors.apellido}</p>}
+//             </div>
+
+//             <div className="floating-label">
+//               <input
+//                 type="text"
+//                 name="segundo_apellido"
+//                 value={form.segundo_apellido}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 required
+//               />
+//               <label htmlFor="apellido">Segundo apellido</label>
+//               {errors.segundo_apellido && (
+//                 <p className="error">{errors.segundo_apellido}</p>
+//               )}
+//             </div>
+
 //             <div className="floating-label">
 //               <select
-//                 id="fuente"
-//                 name="fuente"
-//                 value={form.fuente}
+//                 id="documento_tipo"
+//                 name="documento_tipo"
+//                 value={form.documento_tipo}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 required
+//               >
+//                 <option value="" disabled hidden></option>
+//                 <option value="CC">Cédula</option>
+//                 <option value="CD">Carné diplomático</option>
+//                 <option value="CN">Certificado nacido vivo</option>
+//                 <option value="CE">Cédula de extranjería</option>
+//                 <option value="DC">Documento Extranjero</option>
+//                 <option value="NIT">NIT</option>
+//                 <option value="PA">Pasaporte</option>
+//                 <option value="PE">Permiso Especial de Permanencia</option>
+//                 <option value="PT">Permiso por Protección Temporal</option>
+//                 <option value="RC">Registro Civil</option>
+//                 <option value="SC">Salvo Conducto</option>
+//                 <option value="TI">Tarjeta de identidad</option>
+//               </select>
+//               <label htmlFor="documento_tipo">Tipo de documento</label>
+//               {errors.documento_tipo && (
+//                 <p className="error">{errors.documento_tipo}</p>
+//               )}
+//             </div>
+
+//             <div className="floating-label">
+//               <input
+//                 type="text"
+//                 id="documento_numero"
+//                 name="documento_numero"
+//                 value={form.documento_numero}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 required
+//               />
+//               <label htmlFor="documento_numero">Número de documento</label>
+//               {errors.documento_numero && (
+//                 <p className="error">{errors.documento_numero}</p>
+//               )}
+//             </div>
+
+//             <div className="floating-label">
+//               <input
+//                 id="correo"
+//                 name="correo"
+//                 type="email"
+//                 value={form.correo}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 required
+//               />
+//               <label htmlFor="correo">Correo</label>
+//               {errors.correo && <p className="error">{errors.correo}</p>}
+//             </div>
+
+//             <div className="floating-label">
+//               <input
+//                 id="correo_confirmacion"
+//                 name="correo_confirmacion"
+//                 type="email"
+//                 value={form.correo_confirmacion}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 required
+//               />
+//               <label htmlFor="correo_confirmacion">Confirmar correo</label>
+//               {errors.correo_confirmacion && (
+//                 <p className="error">{errors.correo_confirmacion}</p>
+//               )}
+//             </div>
+
+//             <div className="floating-label">
+//               <input
+//                 id="telefono"
+//                 name="telefono"
+//                 type="text"
+//                 value={form.telefono}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 required
+//               />
+//               <label htmlFor="telefono">Número de Celular</label>
+//               {errors.telefono && <p className="error">{errors.telefono}</p>}
+//             </div>
+
+//             <div className="floating-label">
+//               <select
+//                 id="sede"
+//                 name="sede"
+//                 value={form.sede}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 required
+//               >
+//                 <option value="" disabled hidden></option>
+//                 {/* <option value="No he sido atendido">No he sido atendido</option> */}
+//                 <option value="Bogota-Centro">Bogotá Centro</option>
+//                 <option value="Bogota-Norte">Bogotá Norte</option>
+//                 <option value="Bogota-Sur-Occidente-Hidroterapia">
+//                   Bogotá Sur Occidente Hidroterapia
+//                 </option>
+//                 <option value="Bogota-Sur-Occidente-Rehabilitación">
+//                   Bogotá Sur Occidente Rehabilitación
+//                 </option>
+//                 <option value="Cedritos-Divertido">Cedritos-Divertido</option>
+//                 <option value="Chia">Chía</option>
+//                 <option value="Florencia">Florencia</option>
+//                 <option value="Ibague">Ibagué</option>
+//               </select>
+//               <label htmlFor="sede">Sede de atención</label>
+//               {errors.sede && <p className="error">{errors.sede}</p>}
+//             </div>
+
+//             <div className="floating-label">
+//               <select
+//                 id="regimen"
+//                 name="regimen"
+//                 value={form.regimen}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 required
+//               >
+//                 <option value="" disabled hidden></option>
+//                 <option value="ARL">
+//                   ARL(Administradora de Riesgos Laborales)
+//                 </option>
+//                 <option value="Contributivo">Contributivo</option>
+//                 <option value="Especial">
+//                   Especial y de Excepción (Magisterio, Fuerzas Militares y de
+//                   Policía, Universidades públicas)
+//                 </option>
+//                 <option value="Medicina prepagada">Medicina prepagada</option>
+//                 <option value="Particular">Particular</option>
+//                 <option value="Subsidiado">Subsidiado</option>
+//               </select>
+//               <label htmlFor="regimen">Tipo de afiliación</label>
+//               {errors.regimen && <p className="error">{errors.regimen}</p>}
+//             </div>
+
+//             <div className="floating-label">
+//               <select
+//                 id="servicio_prestado"
+//                 name="servicio_prestado"
+//                 value={form.servicio_prestado}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 required
+//               >
+//                 <option value="" disabled hidden></option>
+//                 {(serviciosPorSede[form.sede] || []).map((servicio) => (
+//                   <option key={servicio} value={servicio}>
+//                     {servicio}
+//                   </option>
+//                 ))}
+//               </select>
+
+//               <label htmlFor="servicio_prestado">Servicio prestado</label>
+
+//               {errors.servicio_prestado && (
+//                 <p className="error">{errors.servicio_prestado}</p>
+//               )}
+//             </div>
+
+//             <div className="floating-label">
+//               <select
+//                 id="eps"
+//                 name="eps"
+//                 value={form.eps}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 required
+//               >
+//                 <option value="" disabled hidden></option>
+//                 {epsOptions.map((eps) => (
+//                   <option key={eps} value={eps}>
+//                     {eps}
+//                   </option>
+//                 ))}
+//               </select>
+//               <label htmlFor="eps">Asegurador (EPS-ARL)</label>
+//               {errors.eps && <p className="error">{errors.eps}</p>}
+//             </div>
+
+//             <div className="floating-label">
+//               <select
+//                 id="tipo_solicitud"
+//                 name="tipo_solicitud"
+//                 value={form.tipo_solicitud}
 //                 onChange={handleChange}
 //                 onBlur={handleBlur}
 //                 required
 //                 disabled={readOnlyTipoSolicitud}
 //               >
 //                 <option value="" disabled hidden></option>
-//                 <option value="Callcenter">Callcenter</option>
-//                 <option value="Correo atención al usuario">
-//                   Correo atención al usuario
-//                 </option>
-//                 <option value="Correo de Agendamiento NAC">
-//                   Correo de Agendamiento NAC
-//                 </option>
-//                 <option value="Encuesta de satisfacción IPS">
-//                   Encuesta de satisfacción IPS
-//                 </option>
-//                 <option value="Formulario de la web">
-//                   Formulario de la web
-//                 </option>
-//                 <option value="Presencial">Presencial</option>
-//                  <option value="Correo de Notificaciones IPS">
-//                   Correo de Notificaciones IPS
-//                 </option>
+//                 {(
+//                   tipoSolicitudOptions || [
+//                     { value: "Peticion", label: "Petición" },
+//                     { value: "Queja", label: "Queja" },
+//                     { value: "Reclamo", label: "Reclamo" },
+//                   ]
+//                 ).map((option) => (
+//                   <option key={option.value} value={option.value}>
+//                     {option.label}
+//                   </option>
+//                 ))}
 //               </select>
-//               <label htmlFor="fuente">Origen</label>
-//               {errors.fuente && <p className="error">{errors.fuente}</p>}
+//               <label htmlFor="tipo_solicitud">Tipo de solicitud</label>
+//               {errors.tipo_solicitud && (
+//                 <p className="error">{errors.tipo_solicitud}</p>
+//               )}
 //             </div>
-//           )}
-//         </div>
-//         <div className="pqrs-textarea-full">
-//           <textarea
-//             name="descripcion"
-//             placeholder="Describe la situación que deseas reportar"
-//             value={form.descripcion}
-//             onChange={handleChange}
-//             onBlur={handleBlur}
-//             rows="5"
-//             required
-//           />
-//           {errors.descripcion && <p className="error">{errors.descripcion}</p>}
-//         </div>
-//         <div className="file-input-group">
-//           {/* <label htmlFor="file-upload" className="file-upload-button">
+
+//             {/* CAMPO DE FECHA DE INICIO REAL - VISIBLE SOLO SI EL USUARIO ESTÁ LOGEADO */}
+//             {isLoggedIn && (
+//               <div className="floating-label">
+//                 {" "}
+//                 <input
+//                   type="datetime-local" // Correcto para fecha y hora
+//                   id="fecha_inicio_real"
+//                   name="fecha_inicio_real"
+//                   value={
+//                     form.fecha_inicio_real
+//                       ? (() => {
+//                           const date = new Date(form.fecha_inicio_real); // Obtener componentes de fecha y hora local
+//                           const year = date.getFullYear();
+//                           const month = (date.getMonth() + 1)
+//                             .toString()
+//                             .padStart(2, "0");
+//                           const day = date
+//                             .getDate()
+//                             .toString()
+//                             .padStart(2, "0");
+//                           const hours = date
+//                             .getHours()
+//                             .toString()
+//                             .padStart(2, "0");
+//                           const minutes = date
+//                             .getMinutes()
+//                             .toString()
+//                             .padStart(2, "0");
+
+//                           return `${year}-${month}-${day}T${hours}:${minutes}`;
+//                         })()
+//                       : ""
+//                   }
+//                   onChange={handleChange}
+//                   onBlur={handleBlur}
+//                 />{" "}
+//                 <label htmlFor="fecha_inicio_real">
+//                   Fecha y Hora de Inicio Real de la PQR:{" "}
+//                 </label>{" "}
+//                 {errors.fecha_inicio_real && (
+//                   <p className="error">{errors.fecha_inicio_real}</p>
+//                 )}{" "}
+//               </div>
+//             )}
+
+//             {isLoggedIn && (
+//               <div className="floating-label">
+//                 <select
+//                   id="fuente"
+//                   name="fuente"
+//                   value={form.fuente}
+//                   onChange={handleChange}
+//                   onBlur={handleBlur}
+//                   required
+//                   disabled={readOnlyTipoSolicitud}
+//                 >
+//                   <option value="" disabled hidden></option>
+//                   <option value="Callcenter">Callcenter</option>
+//                   <option value="Correo atención al usuario">
+//                     Correo atención al usuario
+//                   </option>
+//                   <option value="Correo de Agendamiento NAC">
+//                     Correo de Agendamiento NAC
+//                   </option>
+//                   <option value="Encuesta de satisfacción IPS">
+//                     Encuesta de satisfacción IPS
+//                   </option>
+//                   <option value="Formulario de la web">
+//                     Formulario de la web
+//                   </option>
+//                   <option value="Presencial">Presencial</option>
+//                   <option value="Correo de Notificaciones IPS">
+//                     Correo de Notificaciones IPS
+//                   </option>
+//                 </select>
+//                 <label htmlFor="fuente">Origen</label>
+//                 {errors.fuente && <p className="error">{errors.fuente}</p>}
+//               </div>
+//             )}
+//           </div>
+//           <div className="pqrs-textarea-full">
+//             <textarea
+//               name="descripcion"
+//               placeholder="Describe la situación que deseas reportar"
+//               value={form.descripcion}
+//               onChange={handleChange}
+//               onBlur={handleBlur}
+//               rows="5"
+//               required
+//             />
+//             {errors.descripcion && (
+//               <p className="error">{errors.descripcion}</p>
+//             )}
+//           </div>
+//           <div className="file-input-group">
+//             {/* <label htmlFor="file-upload" className="file-upload-button">
 //             Adjuntar Archivos (Máx. 7MB c/u)
 //           </label> */}
-//           <input
-//             id="file-upload"
-//             type="file"
-//             multiple
-//             onChange={handleFileChange}
-//             // style={{ display: "none" }} // Oculta el input file por defecto
-//           />
-//         </div>
-//         {archivos.length > 0 && (
-//           <div className="selected-files">
-//             <h3>Archivos seleccionados:</h3>
-//             <ul>
-//               {archivos.map((file, index) => (
-//                 <li key={index}>
-//                   {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-//                   <button
-//                     type="button"
-//                     onClick={() => removeFile(file)}
-//                     className="remove-file-button"
-//                   >
-//                     X
-//                   </button>
-//                 </li>
-//               ))}
-//             </ul>
-//           </div>
-//         )}
-//         <div className="politica-box politica-box-compact">
-//           <label className="politica-label">
 //             <input
-//               type="checkbox"
-//               name="politica_aceptada"
-//               checked={form.politica_aceptada}
-//               onChange={handleChange} // Usa handleChange unificado
-//               onBlur={handleBlur}
+//               id="file-upload"
+//               type="file"
+//               multiple
+//               onChange={handleFileChange}
+//               // style={{ display: "none" }} // Oculta el input file por defecto
 //             />
-//             <div className="politica-texto">
-//               <span className="politica-descripcion">
-//                 Acepto la
-//                 <a
-//                   href="https://passusips.com/nosotros-politica-manejo-datos"
-//                   target="_blank"
-//                   rel="noopener noreferrer"
-//                 >
-//                   política de tratamiento de datos personales
-//                 </a>{" "}
-//                 de Passus 👆, pues he leído y estoy de acuerdo con lo expuesto
-//                 en el manuscrito publicado. <br /> <br />
-//                 He Comprendido los{" "}
-//                 <a
-//                   href="https://passusips.com/nosotros-politica-agendamiento-web"
-//                   target="_blank"
-//                   rel="noopener noreferrer"
-//                 >
-//                   {" "}
-//                   Términos y condiciones de Servicio Web{" "}
-//                 </a>
-//                 de Passus 👆, pues he leído y estoy de acuerdo con lo expuesto
-//                 en la información publicada.
-//               </span>
+//           </div>
+//           {archivos.length > 0 && (
+//             <div className="selected-files">
+//               <h3>Archivos seleccionados:</h3>
+//               <ul>
+//                 {archivos.map((file, index) => (
+//                   <li key={index}>
+//                     {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+//                     <button
+//                       type="button"
+//                       onClick={() => removeFile(file)}
+//                       className="remove-file-button"
+//                     >
+//                       X
+//                     </button>
+//                   </li>
+//                 ))}
+//               </ul>
 //             </div>
-//           </label>
-//           {errors.politica_aceptada && (
-//             <p className="error">{errors.politica_aceptada}</p>
 //           )}
-//         </div>
-//         <button type="submit" disabled={loading}>
-//           {loading ? "Enviando..." : "Enviar PQR"}
-//         </button>
-//       </form>
-//       <Modal
-//         show={showModal}
-//         onClose={() => setShowModal(false)}
-//         title={modalContent.title}
-//         description={modalContent.description}
-//       />
-//     </div>
+//           <div className="politica-box politica-box-compact">
+//             <label className="politica-label">
+//               <input
+//                 type="checkbox"
+//                 name="politica_aceptada"
+//                 checked={form.politica_aceptada}
+//                 onChange={handleChange} // Usa handleChange unificado
+//                 onBlur={handleBlur}
+//               />
+//               <div className="politica-texto">
+//                 <span className="politica-descripcion">
+//                   Acepto la
+//                   <a
+//                     href="https://passusips.com/nosotros-politica-manejo-datos"
+//                     target="_blank"
+//                     rel="noopener noreferrer"
+//                   >
+//                     política de tratamiento de datos personales
+//                   </a>{" "}
+//                   de Passus 👆, pues he leído y estoy de acuerdo con lo expuesto
+//                   en el manuscrito publicado. <br /> <br />
+//                   He Comprendido los{" "}
+//                   <a
+//                     href="https://passusips.com/nosotros-politica-agendamiento-web"
+//                     target="_blank"
+//                     rel="noopener noreferrer"
+//                   >
+//                     {" "}
+//                     Términos y condiciones de Servicio Web{" "}
+//                   </a>
+//                   de Passus 👆, pues he leído y estoy de acuerdo con lo expuesto
+//                   en la información publicada.
+//                 </span>
+//               </div>
+//             </label>
+//             {errors.politica_aceptada && (
+//               <p className="error">{errors.politica_aceptada}</p>
+//             )}
+//           </div>
+//           <button type="submit" disabled={loading}>
+//             {loading ? "Enviando..." : "Enviar PQR"}
+//           </button>
+//         </form>
+//         <Modal
+//           show={showModal}
+//           onClose={() => setShowModal(false)}
+//           title={modalContent.title}
+//           description={modalContent.description}
+//         />
+//       </div>
+//       <Footer/>
+//     </>
 //   );
 // }
 

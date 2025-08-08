@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar/Navbar";
 import Swal from "sweetalert2";
 import PqrsFilters from "./components/PqrsFilters";
 import CountdownTimer from "./components/CountDownTimer";
+import { Version } from "../components/Footer/Version";
 
 function PqrsAsignadas() {
   const [pqrsBrutas, setPqrsBrutas] = useState([]);
@@ -304,6 +305,7 @@ function PqrsAsignadas() {
           </table>
         </div>
       </div>
+      <Version/>
     </>
   );
 }
