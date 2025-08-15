@@ -57,6 +57,8 @@ const Navbar = () => {
                         className={({ isActive }) =>
                           isActive ? "active-link" : ""
                         }
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         Registrar PQR
                       </NavLink>
@@ -67,6 +69,8 @@ const Navbar = () => {
                         className={({ isActive }) =>
                           isActive ? "active-link" : ""
                         }
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         Registrar una solicitud
                       </NavLink>
@@ -77,6 +81,8 @@ const Navbar = () => {
                         className={({ isActive }) =>
                           isActive ? "active-link" : ""
                         }
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         Registrar felicitación
                       </NavLink>
@@ -87,6 +93,8 @@ const Navbar = () => {
                         className={({ isActive }) =>
                           isActive ? "active-link" : ""
                         }
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         Registrar tutela
                       </NavLink>
@@ -97,6 +105,8 @@ const Navbar = () => {
                         className={({ isActive }) =>
                           isActive ? "active-link" : ""
                         }
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         Registrar Der. Petición
                       </NavLink>

@@ -117,17 +117,22 @@ class PqrController extends Controller
 
             $uploadedFilesData = [];
             // Guardar archivos si se enviaron (solo si el Content-Type es multipart/form-data)
-            if ($request->hasFile('archivos')) {
-                foreach ($request->file('archivos') as $file) {
-                    $path = $file->store('pqrs_files', 'public');
-                    $originalName = $file->getClientOriginalName();
+          // Guardar archivos si se enviaron
+if ($request->hasFile('archivos')) {
+    foreach ($request->file('archivos') as $file) {
+        // Guarda en storage/app/public/pqrs_files
+        $path = $file->store('pqrs_files', 'public');
+        $originalName = $file->getClientOriginalName();
 
-                    $uploadedFilesData[] = [
-                        'path' => $path,
-                        'original_name' => $originalName,
-                    ];
-                }
-            }
+        $uploadedFilesData[] = [
+            'path' => $path,
+            'original_name' => $originalName,
+            // URL pública usando el enlace simbólico de Laravel (storage:link)
+            'url' => asset("storage/{$path}"),
+        ];
+    }
+}
+
 
             // Generar el código único de la PQR
             $codigoPqr = $codigoService->generarCodigoPqr($validated['tipo_solicitud'], $validated['documento_numero']);
@@ -179,6 +184,8 @@ class PqrController extends Controller
             // Crear la PQR
             $pqr = Pqr::create($dataToCreate);
 
+        
+
             // Enviar correo al paciente
             Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
 
@@ -219,6 +226,7 @@ class PqrController extends Controller
     // {
     //     try {
     //         $registra_otro = $request->input('registra_otro') === 'si';
+    //         $tipo_solicitud = $request->input('tipo_solicitud');
 
     //         // Reglas de validación base
     //         $rules = [
@@ -275,6 +283,20 @@ class PqrController extends Controller
     //             }
     //         }
 
+    //         // Regla condicional para 'clasificacion_tutela'
+    //         if ($tipo_solicitud === 'Tutela') {
+    //             $rules['clasificacion_tutela'] = 'required|string';
+    //         } else {
+    //             $rules['clasificacion_tutela'] = 'nullable';
+    //         }
+
+    //         if ($tipo_solicitud === 'Tutela') {
+    //             $rules['accionado'] = 'required|array|min:1';
+    //             $rules['accionado.*'] = 'in:Asegurador,Passus';
+    //         } else {
+    //             $rules['accionado'] = 'nullable|array';
+    //             $rules['accionado.*'] = 'in:Asegurador,Passus';
+    //         }
 
     //         // Lógica condicional para 'fecha_inicio_real' y 'fuente'
     //         // Esto asume que tienes alguna forma de saber si el usuario está "logeado" en el backend.
@@ -328,6 +350,8 @@ class PqrController extends Controller
     //             'eps' => $validated['eps'],
     //             'regimen' => $validated['regimen'],
     //             'tipo_solicitud' => $validated['tipo_solicitud'],
+    //             'clasificacion_tutela' => $validated['clasificacion_tutela'] ?? null,
+    //             'accionado' => $request->input('accionado', []),
     //             'fuente' => $validated['fuente'] ?? null,
     //             'descripcion' => $validated['descripcion'],
     //             'archivo' => $uploadedFilesData,
@@ -393,6 +417,8 @@ class PqrController extends Controller
     //         ], 500);
     //     }
     // }
+
+
 
 
 
@@ -640,58 +666,64 @@ class PqrController extends Controller
     //     }
     // }
 
+public function show($pqr_codigo)
+{
+    try {
+        $pqr = Pqr::where('pqr_codigo', $pqr_codigo)
+            ->with([
+                'asignados',
+                'respuestas.autor',
+                'clasificaciones',
+                'eventLogs'
+            ])
+            ->firstOrFail();
 
-    public function show($pqr_codigo)
-    {
-        try {
-            // No es estrictamente necesario autenticar al usuario aquí si solo vas a mostrar la PQR,
-            // pero si tu lógica de negocio lo requiere, déjalo.
-            // $user = JWTAuth::parseToken()->authenticate();
+        // 🔹 Calcular y actualizar estado_tiempo
+        if ($pqr->respuesta_enviada == 0) {
+            $tiempoService = new PqrTiempoService();
+            $resultado = $tiempoService->calcularEstadoTiempo($pqr);
+            $nuevoEstado = $resultado['estado'];
 
-            $pqr = Pqr::where('pqr_codigo', $pqr_codigo)
-                ->with([
-                    'asignados',
-                    'respuestas.autor',
-                    'clasificaciones',
-                    'eventLogs'
-                ])
-                ->firstOrFail();
-
-            // 🔹 Calcular y actualizar estado_tiempo antes de retornar
-            if ($pqr->respuesta_enviada == 0) {
-                $tiempoService = new PqrTiempoService();
-                $resultado = $tiempoService->calcularEstadoTiempo($pqr);
-                $nuevoEstado = $resultado['estado'];
-
-                if ($pqr->estado_tiempo !== $nuevoEstado) {
-                    $pqr->estado_tiempo = $nuevoEstado;
-                    $pqr->save();
-                }
+            if ($pqr->estado_tiempo !== $nuevoEstado) {
+                $pqr->estado_tiempo = $nuevoEstado;
+                $pqr->save();
             }
-
-            // Calcular tiempo_respondido usando Carbon
-            $tiempoRespondido = null;
-            if ($pqr->respondido_en) {
-                $createdAt = Carbon::parse($pqr->created_at);
-                $respondidoEn = Carbon::parse($pqr->respondido_en);
-
-                $diffInMinutes = $createdAt->diffInMinutes($respondidoEn);
-                $diffInHours = intdiv($diffInMinutes, 60);
-
-                $tiempoRespondido = $diffInHours . ' horas';
-            }
-
-            // Adjuntar al objeto pqr (como atributo dinámico)
-            $pqr->tiempo_respondido = $tiempoRespondido;
-
-            // Retorna la PQR ya con todas las relaciones cargadas
-            return response()->json(['pqr' => $pqr]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error al obtener la PQR: ' . $e->getMessage()
-            ], 500);
         }
+
+        // Calcular tiempo_respondido
+        $tiempoRespondido = null;
+        if ($pqr->respondido_en) {
+            $createdAt = Carbon::parse($pqr->created_at);
+            $respondidoEn = Carbon::parse($pqr->respondido_en);
+
+            $diffInMinutes = $createdAt->diffInMinutes($respondidoEn);
+            $diffInHours = intdiv($diffInMinutes, 60);
+
+            $tiempoRespondido = $diffInHours . ' horas';
+        }
+        $pqr->tiempo_respondido = $tiempoRespondido;
+
+        // 🔹 Agregar URL pública a cada archivo si existe el campo archivo
+        if (!empty($pqr->archivo) && is_array($pqr->archivo)) {
+            $pqr->archivo = array_map(function ($file) {
+                return [
+                    'path' => $file['path'] ?? null,
+                    'original_name' => $file['original_name'] ?? null,
+                    'url' => !empty($file['path']) 
+                        ? asset('storage/' . $file['path']) 
+                        : null
+                ];
+            }, $pqr->archivo);
+        }
+
+        return response()->json(['pqr' => $pqr]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Error al obtener la PQR: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     // public function show($pqr_codigo)
     // {

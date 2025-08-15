@@ -39,6 +39,8 @@ Route::post('/encuesta', [EncuestaController::class, 'store']);
 
 
 
+
+
 // RUTAS PROTEGIDAS POR AUTENTICACIÓN Y ROLES ESPECÍFICOS
 
 Route::middleware(['auth:api', 'check.role:Administrador,Supervisor,Gestor,Consultor,Digitador'])->group(function () {

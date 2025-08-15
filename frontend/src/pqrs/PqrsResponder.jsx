@@ -127,60 +127,58 @@ const PqrsResponder = () => {
           )}
 
           {/* Mostrar archivos adjuntos de la PQRS original si existen */}
-          {pqr.archivo && pqr.archivo.length > 0 && (
-            <div className="archivos-adjuntos" style={{ marginTop: "10px" }}>
-              <strong>Archivos adjuntos de la PQRS:</strong>{" "}
-              {pqr.archivo.map((fileItem, index) => {
-                // Asume que fileItem es un objeto { path: "...", original_name: "..." }
-                // const urlArchivo = `http://localhost:8000/storage/${fileItem.path}`;
-                const urlArchivo = ` http://192.168.1.30:8000/storage/${fileItem.path}`;
 
-                const fileName = fileItem.original_name;
+{pqr.archivo && pqr.archivo.length > 0 && (
+  <div className="archivos-adjuntos" style={{ marginTop: "10px" }}>
+    <strong>Archivos adjuntos de la PQRS:</strong>{" "}
+    {pqr.archivo.map((fileItem, index) => {
+      // Usa la URL completa que viene del backend, ya no la construyas manualmente
+      const urlArchivo = fileItem.url; // <-- AQUI ESTA EL CAMBIO CLAVE
 
-                return (
-                  <div
-                    key={`pqr-file-${index}`}
-                    style={{ marginBottom: "10px" }}
-                  >
-                    {/* Enlace para descargar o ver */}
-                    <a
-                      href={urlArchivo}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: "inline-block", marginRight: "10px" }}
-                    >
-                      {fileName}
-                    </a>
-                    {/* Previsualización si es imagen o PDF */}
-                    {fileItem.path.match(/\.(jpeg|jpg|png|gif)$/i) ? (
-                      <div>
-                        <img
-                          src={urlArchivo}
-                          alt={`Adjunto ${index + 1}`}
-                          style={{
-                            maxWidth: "300px",
-                            marginTop: "5px",
-                            display: "block",
-                          }}
-                        />
-                      </div>
-                    ) : fileItem.path.match(/\.pdf$/i) ? (
-                      <div style={{ marginTop: "5px" }}>
-                        <iframe
-                          src={urlArchivo}
-                          title={`PDF Adjunto ${index + 1}`}
-                          width="100%"
-                          height="200px"
-                          style={{ border: "1px solid #ccc" }}
-                        ></iframe>
-                      </div>
-                    ) : null}{" "}
-                    {/* No hay previsualización para otros tipos */}
-                  </div>
-                );
-              })}
+      const fileName = fileItem.original_name;
+
+      return (
+        <div
+          key={`pqr-file-${index}`}
+          style={{ marginBottom: "10px" }}
+        >
+          <a
+            href={urlArchivo}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: "inline-block", marginRight: "10px" }}
+          >
+            {fileName}
+          </a>
+          {fileItem.path.match(/\.(jpeg|jpg|png|gif)$/i) ? (
+            <div>
+              <img
+                src={urlArchivo}
+                alt={`Adjunto ${index + 1}`}
+                style={{
+                  maxWidth: "300px",
+                  marginTop: "5px",
+                  display: "block",
+                }}
+              />
             </div>
-          )}
+          ) : fileItem.path.match(/\.pdf$/i) ? (
+            <div style={{ marginTop: "5px" }}>
+              <iframe
+                src={urlArchivo}
+                title={`PDF Adjunto ${index + 1}`}
+                width="100%"
+                height="200px"
+                style={{ border: "1px solid #ccc" }}
+              ></iframe>
+            </div>
+          ) : null}
+        </div>
+      );
+    })}
+  </div>
+)}
+
         </div>
 
         {yaRespondida ? (
@@ -302,22 +300,6 @@ export default PqrsResponder;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // import { useState, useEffect } from "react";
 // import { useParams, useNavigate } from "react-router-dom";
 // import { getPqrsAsignadas, registrarRespuesta } from "./pqrsService";
@@ -325,6 +307,7 @@ export default PqrsResponder;
 // import Navbar from "../components/Navbar/Navbar";
 // import Swal from "sweetalert2";
 // import CountdownTimer from "./components/CountDownTimer";
+// import { Version } from "../components/Footer/Version";
 
 // const PqrsResponder = () => {
 //   const { pqr_codigo } = useParams();
@@ -340,44 +323,48 @@ export default PqrsResponder;
 //     pqr?.estado_respuesta === "Cerrado";
 
 //   useEffect(() => {
-//     const fetchPqrs = async () => {
-//       try {
-//         if (!pqr_codigo) {
-//           setError("Código de PQRS no proporcionado en la URL.");
-//           return;
-//         }
-
-//         const asignadas = await getPqrsAsignadas();
-//         const encontrada = asignadas.find(
-//           (item) => item.pqr_codigo === pqr_codigo
-//         );
-
-//         if (!encontrada) {
-//           throw new Error("PQRS no encontrada o no asignada a usted.");
-//         }
-//         setPqr(encontrada);
-
-//         if (
-//           encontrada.estado_respuesta === "Preliminar" ||
-//           encontrada.estado_respuesta === "Cerrado"
-//         ) {
-//           const result = await Swal.fire({
-//             icon: "info",
-//             title: "Respuesta ya registrada",
-//             text: "Esta PQRS ya tiene una respuesta o ha sido finalizada.",
-//             confirmButtonText: "Aceptar",
-//           });
-//           if (result.isConfirmed) {
-//             navigate(`/pqrs/${pqr_codigo}`);
-//           }
-//         }
-//       } catch (err) {
-//         setError(err.message);
+//   const fetchPqrs = async () => {
+//     try {
+//       if (!pqr_codigo) {
+//         setError("Código de PQRS no proporcionado en la URL.");
+//         return;
 //       }
-//     };
 
-//     fetchPqrs();
-//   }, [pqr_codigo, navigate]);
+//       const asignadas = await getPqrsAsignadas();
+//       const encontrada = asignadas.find(
+//         (item) => item.pqr_codigo === pqr_codigo
+//       );
+
+//       if (!encontrada) {
+//         throw new Error("PQRS no encontrada o no asignada a usted.");
+//       }
+
+//       setPqr(encontrada);
+
+//       const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
+//       const yaRespondio = encontrada.respuestas?.some(
+//         (r) => r.user_id === usuarioId
+//       );
+
+//       if (yaRespondio) {
+//         const result = await Swal.fire({
+//           icon: "info",
+//           title: "Ya has respondido",
+//           text: "Ya registraste una respuesta para esta PQR.",
+//           confirmButtonText: "Aceptar",
+//         });
+//         if (result.isConfirmed) {
+//           navigate(`/pqrs/${pqr_codigo}`);
+//         }
+//       }
+
+//     } catch (err) {
+//       setError(err.message);
+//     }
+//   };
+
+//   fetchPqrs();
+// }, [pqr_codigo, navigate]);
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
@@ -448,7 +435,11 @@ export default PqrsResponder;
 //               {pqr.archivo.map((fileItem, index) => {
 //                 // Asume que fileItem es un objeto { path: "...", original_name: "..." }
 //                 // const urlArchivo = `http://localhost:8000/storage/${fileItem.path}`;
-//                 const urlArchivo = ` http://192.168.1.30:8000/storage/${fileItem.path}`;
+//                 // const urlArchivo = ` http://192.168.1.30:8000/storage/${fileItem.path}`;
+//                 // const urlArchivo = `https://test-pqrs.passusips.com/storage/${fileItem.path}`;
+//                   const urlArchivo = `https://test-pqrs.passus.cloud/storage/${fileItem.path}`;
+
+
 
 //                 const fileName = fileItem.original_name;
 
@@ -590,8 +581,36 @@ export default PqrsResponder;
 //           </form>
 //         )}
 //       </div>
+//       <Version/>
 //     </>
 //   );
 // };
 
 // export default PqrsResponder;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

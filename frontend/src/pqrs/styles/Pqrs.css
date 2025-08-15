@@ -95,6 +95,17 @@
     height: 160px;
     resize: vertical;
 }
+.pqrs-textarea-full small.contador-caracteres {
+  display: block;
+  text-align: right;
+  margin-bottom: 25px;
+  font-size: 13px;
+  color: #555;
+}
+
+.pqrs-textarea-full small.contador-caracteres.alerta {
+  color: red;
+}
 
 
 .pqrs button {

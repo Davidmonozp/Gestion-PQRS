@@ -748,7 +748,8 @@ function PqrsDetail() {
 
                         return (
                           <li key={log.id}>
-                            <strong>{log.description}</strong><br />
+                            <strong>{log.description}</strong>
+                            <br />
                             <strong>Estado anterior: </strong>{" "}
                             {log.estado_anterior} <br />
                             <strong>Estado nuevo: </strong>
@@ -934,60 +935,65 @@ function PqrsDetail() {
             <div className="pqr-description-text">{pqr.descripcion}</div>
 
             {/* Mostrar archivos adjuntos de la PQRS original si existen */}
-            {pqr.archivo && pqr.archivo.length > 0 && (
-              <div className="archivos-adjuntos" style={{ marginTop: "10px" }}>
-                <strong>Archivos adjuntos de la PQRS:</strong>{" "}
-                {pqr.archivo.map((fileItem, index) => {
-                  // Asume que fileItem es un objeto { path: "...", original_name: "..." }
-                  // const urlArchivo = `http://localhost:8000/storage/${fileItem.path}`;
-                  const urlArchivo = `http://192.168.1.15:8000/storage/${fileItem.path}`;
+{pqr.archivo && pqr.archivo.length > 0 && (
+  <div className="archivos-adjuntos" style={{ marginTop: "10px" }}>
+    <strong>Archivos adjuntos de la PQRS:</strong>{" "}
+    {pqr.archivo.map((fileItem, index) => {
+      const urlArchivo = fileItem.url; // ✅ ya viene lista desde Laravel
+      const fileName = fileItem.original_name;
 
-                  const fileName = fileItem.original_name;
+      return (
+        <div
+          key={`pqr-file-${index}`}
+          style={{ marginBottom: "10px" }}
+        >
+          {/* Enlace para descargar o ver */}
+          {urlArchivo && (
+            <a
+              href={urlArchivo}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: "inline-block", marginRight: "10px" }}
+            >
+              {fileName}
+            </a>
+          )}
 
-                  return (
-                    <div
-                      key={`pqr-file-${index}`}
-                      style={{ marginBottom: "10px" }}
-                    >
-                      {/* Enlace para descargar o ver */}
-                      <a
-                        href={urlArchivo}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ display: "inline-block", marginRight: "10px" }}
-                      >
-                        {fileName}
-                      </a>
-                      {/* Previsualización si es imagen o PDF */}
-                      {fileItem.path.match(/\.(jpeg|jpg|png|gif)$/i) ? (
-                        <div>
-                          <img
-                            src={urlArchivo}
-                            alt={`Adjunto ${index + 1}`}
-                            style={{
-                              maxWidth: "300px",
-                              marginTop: "5px",
-                              display: "block",
-                            }}
-                          />
-                        </div>
-                      ) : fileItem.path.match(/\.pdf$/i) ? (
-                        <div style={{ marginTop: "5px" }}>
-                          <iframe
-                            src={urlArchivo}
-                            title={`PDF Adjunto ${index + 1}`}
-                            width="100%"
-                            height="500px"
-                            style={{ border: "1px solid #ccc" }}
-                          ></iframe>
-                        </div>
-                      ) : null}{" "}
-                      {/* No hay previsualización para otros tipos */}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+          {/* Previsualización si es imagen o PDF */}
+          {fileItem.path.match(/\.(jpeg|jpg|png|gif)$/i) ? (
+            <div>
+              <img
+                src={urlArchivo}
+                alt={`Adjunto ${index + 1}`}
+                style={{
+                  maxWidth: "300px",
+                  marginTop: "5px",
+                  display: "block",
+                }}
+              />
+            </div>
+          ) : fileItem.path.match(/\.pdf$/i) ? (
+            <div style={{ marginTop: "5px" }}>
+              <iframe
+                src={urlArchivo}
+                title={`PDF Adjunto ${index + 1}`}
+                width="100%"
+                height="500px"
+                style={{ border: "1px solid #ccc" }}
+              ></iframe>
+            </div>
+          ) : null}
+        </div>
+      );
+    })}
+  </div>
+)}
+
+
+
+
+
+
           </div>
 
           {/* Nueva Columna para Historial de Respuestas y Formulario de Respuesta Final */}
@@ -1055,27 +1061,27 @@ function PqrsDetail() {
                         />
                       </div>
 
-                      {respuesta.adjuntos && respuesta.adjuntos.length > 0 && (
-                        <div className="respuesta-adjuntos-list">
-                          <h4>
-                            🗂️ Archivos adjuntos de la respuesta preliminar:
-                          </h4>
-                          <ul>
-                            {respuesta.adjuntos.map((adj, idx) => (
-                              <li key={idx} className="adjunto-item">
-                                <a
-                                  // href={`http://127.0.0.1:8000/storage/${adj.path}`}
-                                  href={`http://192.168.1.15:8000/storage/${adj.path}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  {adj.original_name}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                     {respuesta.adjuntos && respuesta.adjuntos.length > 0 && (
+  <div className="respuesta-adjuntos-list">
+    <h4>
+      🗂️ Archivos adjuntos de la respuesta preliminar:
+    </h4>
+    <ul>
+      {respuesta.adjuntos.map((adj, idx) => (
+        <li key={idx} className="adjunto-item">
+          <a
+            // Use the full URL provided by the backend
+            href={adj.url} 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {adj.original_name}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
                       <hr className="respuesta-divider" />
                     </div>
                   ))}
@@ -1249,40 +1255,41 @@ function PqrsDetail() {
                   {adjuntosExistentesRespuestaFinal.length > 0 && (
                     <div className="adjuntos-final-respuesta-existentes">
                       <h3>🗂️ Archivos adjuntos actuales de la respuesta:</h3>
-                      <ul>
-                        {adjuntosExistentesRespuestaFinal.map(
-                          (fileItem, index) => (
-                            <div
-                              key={`existing-adj-${index}`}
-                              className="adjunto-item"
-                            >
-                              <a
-                                href={`http://192.168.1.15:8000/storage/${fileItem.path}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                {fileItem.original_name ||
-                                  `Archivo ${index + 1}`}
-                              </a>
-                              {editandoRespuestaFinal &&
-                                tienePermiso([
-                                  "Supervisor",
-                                  "Administrador",
-                                ]) && (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleRemoveExistingAttachment(index)
-                                    }
-                                    className="remove-adjunto-button"
-                                  >
-                                    X
-                                  </button>
-                                )}
-                            </div>
-                          )
-                        )}
-                      </ul>
+                    <ul>
+    {adjuntosExistentesRespuestaFinal.map(
+      (fileItem, index) => (
+        <div
+          key={`existing-adj-${index}`}
+          className="adjunto-item"
+        >
+          <a
+            // ¡CAMBIO AQUÍ! Usa fileItem.url directamente
+            href={fileItem.url} 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {fileItem.original_name ||
+              `Archivo ${index + 1}`}
+          </a>
+          {editandoRespuestaFinal &&
+            tienePermiso([
+              "Supervisor",
+              "Administrador",
+            ]) && (
+              <button
+                type="button"
+                onClick={() =>
+                  handleRemoveExistingAttachment(index)
+                }
+                className="remove-adjunto-button"
+              >
+                X
+              </button>
+            )}
+        </div>
+      )
+    )}
+</ul>
                     </div>
                   )}
 

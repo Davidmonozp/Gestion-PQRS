@@ -243,10 +243,9 @@ function PqrsAsignadas() {
                       <td className="pqr-status-cell">
                         <ul className="pqr-status-list">
                           {pqr.asignados?.map((usuario) => {
+                            // ✅ Línea corregida: Eliminamos la condición "r.es_respuesta_usuario === 0"
                             const respondio = (pqr.respuestas ?? []).some(
-                              (r) =>
-                                r.user_id === usuario.id &&
-                                r.es_respuesta_usuario === 0
+                              (r) => r.user_id === usuario.id
                             );
 
                             return (
@@ -305,7 +304,7 @@ function PqrsAsignadas() {
           </table>
         </div>
       </div>
-      <Version/>
+      <Version />
     </>
   );
 }

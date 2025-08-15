@@ -70,54 +70,57 @@ class RespuestaController extends Controller
     //     return response()->json(['mensaje' => 'Respuesta preliminar guardada']);
     // }
 
- public function registrarRespuesta(Request $request, $pqr_codigo)
-    {
-        $request->validate([
-            'contenido' => 'required|string',
-            'adjuntos' => 'nullable|array',
-            'adjuntos.*' => 'file|max:8000',
-        ]);
+public function registrarRespuesta(Request $request, $pqr_codigo)
+{
+    $request->validate([
+        'contenido' => 'required|string',
+        'adjuntos' => 'nullable|array',
+        'adjuntos.*' => 'file|max:8000',
+    ]);
 
-        $pqrs = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+    $pqrs = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
 
-        if (!$pqrs->asignados->contains(Auth::id())) {
-            return response()->json(['error' => 'No autorizado'], 403);
-        }
-
-
-        $respuestaExistente = Respuesta::where('pqrs_id', $pqrs->id)
-            ->where('user_id', Auth::id())
-            ->exists();
-
-        if ($respuestaExistente) {
-            return response()->json(['error' => 'Ya has registrado una respuesta para esta PQRS'], 400);
-        }
-
-        $adjuntosData = [];
-        if ($request->hasFile('adjuntos')) {
-            foreach ($request->file('adjuntos') as $file) {
-                $path = $file->store('respuestas', 'public');
-                $adjuntosData[] = [
-                    'path' => str_replace('public/', '', $path),
-                    'original_name' => $file->getClientOriginalName(),
-                ];
-            }
-        }
-
-        Respuesta::create([
-            'pqrs_id' => $pqrs->id,
-            'user_id' => Auth::id(),
-            'contenido' => $request->contenido,
-            'adjuntos' => $adjuntosData,
-        ]);
-
-        if ($pqrs->estado_respuesta === 'Asignado') {
-            $pqrs->estado_respuesta = 'En proceso';
-            $pqrs->save();
-        }
-
-        return response()->json(['mensaje' => 'Respuesta preliminar guardada']);
+    if (!$pqrs->asignados->contains(Auth::id())) {
+        return response()->json(['error' => 'No autorizado'], 403);
     }
+
+    $respuestaExistente = Respuesta::where('pqrs_id', $pqrs->id)
+        ->where('user_id', Auth::id())
+        ->exists();
+
+    if ($respuestaExistente) {
+        return response()->json(['error' => 'Ya has registrado una respuesta para esta PQRS'], 400);
+    }
+
+    $adjuntosData = [];
+    if ($request->hasFile('adjuntos')) {
+        foreach ($request->file('adjuntos') as $file) {
+            // Guarda en storage/app/public/respuestas
+            $path = $file->store('respuestas', 'public');
+
+            $adjuntosData[] = [
+                'path' => $path, // Ej: "respuestas/archivo.pdf"
+                'original_name' => $file->getClientOriginalName(),
+                'url' => asset("storage/{$path}"), // URL pública directa
+            ];
+        }
+    }
+
+    Respuesta::create([
+        'pqrs_id' => $pqrs->id,
+        'user_id' => Auth::id(),
+        'contenido' => $request->contenido,
+        'adjuntos' => $adjuntosData,
+    ]);
+
+    if ($pqrs->estado_respuesta === 'Asignado') {
+        $pqrs->estado_respuesta = 'En proceso';
+        $pqrs->save();
+    }
+
+    return response()->json(['mensaje' => 'Respuesta preliminar guardada']);
+}
+
 
     // public function registrarRespuestaFinal(Request $request, $pqr_codigo)
     // {
@@ -172,51 +175,50 @@ class RespuestaController extends Controller
             ->where('es_final', true)
             ->first();
 
-        $adjuntosData = []; // Array to store paths and original names
+        $adjuntosData = []; // Array para almacenar los datos de los nuevos archivos adjuntos
 
-        // --- File Handling Logic ---
+        // --- Lógica para manejar archivos adjuntos ---
         Log::info('Checking for attachments in the request for PQR: ' . $pqrs->pqr_codigo);
 
         if ($request->hasFile('adjuntos')) {
             foreach ($request->file('adjuntos') as $file) {
-                // *** CAMBIO AQUÍ: Usar 'respuestas' como carpeta y 'public' como disco explícito ***
-                $path = $file->store('respuestas', 'public'); // Guarda el archivo en storage/app/public/respuestas
-                // $path ahora será 'respuestas/nombre_unico.png' directamente, relativo al disco 'public'
-
-                // Ya no necesitas str_replace si el path ya viene sin 'public/'
-                // Sin embargo, mantenerlo es inofensivo si quieres ser redundante o si el comportamiento de store() cambia
+                // Guarda el archivo en storage/app/public/respuestas
+                $path = $file->store('respuestas', 'public');
+                
+                // *** ESTO ES LO QUE NECESITAS AGREGAR ***
+                // Creamos un array con la ruta, nombre original y la URL completa
                 $adjuntosData[] = [
-                    'path' => $path, // El path ya está correcto aquí
+                    'path' => $path,
                     'original_name' => $file->getClientOriginalName(),
+                    'url' => asset("storage/{$path}"), // Genera la URL pública completa
                 ];
             }
         }
-        // --- End of File Handling Logic ---
+        // --- Fin de la lógica de manejo de archivos ---
 
         // Log the final adjuntosData array that will be saved
         Log::info('Final attachments data to be saved for PQR ' . $pqrs->pqr_codigo . ': ' . json_encode($adjuntosData));
 
-
         // 4. Update or Create Final Response
         if ($respuestaFinal) {
-            // If response exists, update content and author
+            // Si la respuesta existe, actualiza el contenido y el autor
             $respuestaFinal->contenido = $request->contenido;
             $respuestaFinal->user_id = Auth::id();
-
-            // Append new attachments to existing ones
-            $existingAdjuntos = $respuestaFinal->adjuntos ?? []; // Ensure it's an array
+            
+            // Usamos Arr::wrap para asegurarnos de que el valor existente sea siempre un array
+            $existingAdjuntos = Arr::wrap($respuestaFinal->adjuntos);
             $respuestaFinal->adjuntos = array_merge($existingAdjuntos, $adjuntosData);
-
+            
             $respuestaFinal->save();
             Log::info('Final response updated for PQR ' . $pqrs->pqr_codigo . '. All attachments: ' . json_encode($respuestaFinal->adjuntos));
         } else {
-            // If response doesn't exist, create a new final response
+            // Si la respuesta no existe, crea una nueva respuesta final
             $respuestaFinal = Respuesta::create([
                 'pqrs_id' => $pqrs->id,
                 'user_id' => Auth::id(),
                 'contenido' => $request->contenido,
                 'es_final' => true,
-                'adjuntos' => $adjuntosData, // Save the attachments here
+                'adjuntos' => $adjuntosData, // Guarda los archivos aquí
             ]);
             Log::info('Final response created for PQR ' . $pqrs->pqr_codigo . '. All attachments: ' . json_encode($respuestaFinal->adjuntos));
         }
@@ -228,27 +230,24 @@ class RespuestaController extends Controller
         return response()->json([
             'mensaje' => 'Respuesta final registrada correctamente',
             'respuesta' => $respuestaFinal,
-        ], 200); // Changed to 200 as it's often an update/register
+        ], 200);
     }
 
 
-
-
-
-
-    public function enviarRespuesta($pqr_codigo)
+ public function enviarRespuesta($pqr_codigo)
     {
         $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
 
+        // 1. Obtener la respuesta final
         $respuesta = $pqr->respuestas()->where('es_final', true)->latest()->first();
 
         if (!$respuesta) {
             return response()->json(['error' => 'No hay respuesta final registrada para esta PQRS.'], 400);
         }
 
-        $adjuntosRespuesta = $respuesta->adjuntos;
+        // 2. Extraer los adjuntos. Si no existen, se usa un array vacío.
+        $adjuntosRespuesta = $respuesta->adjuntos ?? [];
 
-        // Validar correos válidos y enviar
         try {
             $correoCiudadanoValido = !empty($pqr->correo) && filter_var($pqr->correo, FILTER_VALIDATE_EMAIL);
             $correoRegistradorValido = !empty($pqr->registrador_correo) && filter_var($pqr->registrador_correo, FILTER_VALIDATE_EMAIL);
@@ -257,18 +256,22 @@ class RespuestaController extends Controller
                 return response()->json(['error' => 'No se pudo enviar el correo: ambas direcciones son inválidas.'], 400);
             }
 
+            // 3. Crear una única instancia del Mailable con los datos y adjuntos
+            $mailable = new RespuestaFinalPQRSMail($pqr, $respuesta, $adjuntosRespuesta);
+
             if ($correoCiudadanoValido) {
-                Mail::to($pqr->correo)->send(new RespuestaFinalPQRSMail($pqr, $respuesta, $adjuntosRespuesta));
+                Mail::to($pqr->correo)->send($mailable);
             }
 
             if ($correoRegistradorValido) {
-                Mail::to($pqr->registrador_correo)->send(new RespuestaFinalPQRSMail($pqr, $respuesta, $adjuntosRespuesta));
+                Mail::to($pqr->registrador_correo)->send($mailable);
             }
         } catch (\Exception $e) {
+            Log::error("Error al enviar correos para PQRS {$pqr_codigo}: " . $e->getMessage());
             return response()->json(['error' => 'Error al enviar correos.'], 500);
         }
 
-        // Marcar como respondida
+        // 4. Marcar como respondida
         $fechaRespuesta = Carbon::parse($respuesta->created_at, 'America/Bogota');
 
         $pqr->estado_respuesta = 'Cerrado';
@@ -374,12 +377,10 @@ class RespuestaController extends Controller
     // }
 
 
-
-    public function updateRespuestaFinal(Request $request, Respuesta $respuesta)
+public function updateRespuestaFinal(Request $request, Respuesta $respuesta)
     {
         try {
             // Check if it's a final response and associated with a PQR
-            // Assuming the relationship from Respuesta to Pqr is named 'pqr'
             if (!$respuesta->es_final || !$respuesta->pqr) {
                 Log::warning('Intento de actualizar una respuesta no final o sin PQRS asociada. Respuesta ID: ' . $respuesta->id);
                 return response()->json(['error' => 'La respuesta no es final o no está asociada a una PQRS válida.'], 404);
@@ -393,10 +394,24 @@ class RespuestaController extends Controller
                 'adjuntos_existentes' => 'nullable|array', // Paths of existing files that should be kept
                 'adjuntos_existentes.*.path' => 'required|string',
                 'adjuntos_existentes.*.original_name' => 'required|string',
+                // 'adjuntos_existentes.*.url' => 'required|string', // Se asume que el front-end también envía la URL
             ]);
 
-            $respuesta->contenido = $request->contenido;
-            $respuesta->user_id = Auth::id(); // The last editor becomes the author
+            // Obtiene los adjuntos que ya están en la respuesta
+            // Esto es crucial para no sobrescribir los archivos existentes.
+            $existingAdjuntos = $respuesta->adjuntos ?? [];
+
+            // Identifica los adjuntos que el front-end quiere mantener
+            $keptAdjuntos = $request->input('adjuntos_existentes', []);
+            $keptAdjuntoPaths = collect($keptAdjuntos)->pluck('path')->toArray();
+            
+            // Filtra los adjuntos existentes para quedarte solo con los que el front-end quiere mantener
+            $finalAdjuntos = collect($existingAdjuntos)
+                ->filter(function ($adjunto) use ($keptAdjuntoPaths) {
+                    return in_array($adjunto['path'], $keptAdjuntoPaths);
+                })
+                ->values()
+                ->toArray();
 
             $newAdjuntosData = [];
             Log::info('Checking for new attachments during update for Respuesta ID: ' . $respuesta->id);
@@ -404,16 +419,15 @@ class RespuestaController extends Controller
             if ($request->hasFile('adjuntos_nuevos')) {
                 Log::info('New attachments found for update. Respuesta ID: ' . $respuesta->id);
                 foreach ($request->file('adjuntos_nuevos') as $file) {
-                    // *** CRITICAL CHANGE: Use 'respuestas' folder and 'public' disk explicitly ***
-                    // This stores the file in storage/app/public/respuestas/unique_name.ext
+                    // Guarda el archivo en storage/app/public/respuestas
                     $path = $file->store('respuestas', 'public');
                     Log::info('New file stored at: ' . $path . ' for Respuesta ID: ' . $respuesta->id);
 
-                    // The $path returned from store() when using a disk is already relative to the disk's root (e.g., 'respuestas/unique_name.png')
-                    // So, str_replace('public/', '', $path) is no longer needed here.
+                    // Añadir la URL completa
                     $newAdjuntosData[] = [
-                        'path' => $path, // Path is already correct: 'respuestas/unique_name.png'
+                        'path' => $path,
                         'original_name' => $file->getClientOriginalName(),
+                        'url' => asset("storage/{$path}"), // Genera la URL pública completa
                     ];
                 }
             } else {
@@ -421,11 +435,13 @@ class RespuestaController extends Controller
             }
 
             // Combine existing attachments (those kept by the frontend) with the newly uploaded ones.
-            // The frontend should send back the 'path' and 'original_name' of existing files it wants to keep.
-            $keptAdjuntos = $request->input('adjuntos_existentes', []);
-            Log::info('Existing attachments to be kept for Respuesta ID ' . $respuesta->id . ': ' . json_encode($keptAdjuntos));
+            Log::info('Existing attachments to be kept for Respuesta ID ' . $respuesta->id . ': ' . json_encode($finalAdjuntos));
+            Log::info('New attachments to be added for Respuesta ID ' . $respuesta->id . ': ' . json_encode($newAdjuntosData));
 
-            $respuesta->adjuntos = array_merge($keptAdjuntos, $newAdjuntosData);
+            $respuesta->contenido = $request->contenido;
+            $respuesta->user_id = Auth::id(); // The last editor becomes the author
+            $respuesta->adjuntos = array_merge($finalAdjuntos, $newAdjuntosData);
+            
             Log::info('Final attachments array after merge for Respuesta ID ' . $respuesta->id . ': ' . json_encode($respuesta->adjuntos));
 
             $respuesta->save();

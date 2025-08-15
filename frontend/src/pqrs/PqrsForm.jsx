@@ -190,6 +190,7 @@ function PqrsForm({
     title: "",
     description: "",
   });
+  const MAX_CARACTERES_DESCRIPCION = 3000;
 
   const accionadoRef = useRef(null);
   useEffect(() => {
@@ -1208,7 +1209,11 @@ function PqrsForm({
                       ? form.accionado.join(", ")
                       : "Accionado"}
                   </span>
-                 <span className={`accionado-caret ${showAccionadoDropdown ? "open" : ""}`}></span>
+                  <span
+                    className={`accionado-caret ${
+                      showAccionadoDropdown ? "open" : ""
+                    }`}
+                  ></span>
                 </div>
 
                 {/* Lista desplegable; stopPropagation evita que el click cierre el menú */}
@@ -1340,11 +1345,23 @@ function PqrsForm({
               onBlur={handleBlur}
               rows="5"
               required
+              maxLength={MAX_CARACTERES_DESCRIPCION}
             />
             {errors.descripcion && (
               <p className="error">{errors.descripcion}</p>
             )}
+            <small
+              className={`contador-caracteres ${
+                form.descripcion.length > MAX_CARACTERES_DESCRIPCION * 0.9
+                  ? "alerta"
+                  : ""
+              }`}
+            >
+              {form.descripcion.length} / {MAX_CARACTERES_DESCRIPCION}{" "}
+              caracteres
+            </small>
           </div>
+          
           <div className="file-input-group">
             {/* <label htmlFor="file-upload" className="file-upload-button">
             Adjuntar Archivos (Máx. 7MB c/u)

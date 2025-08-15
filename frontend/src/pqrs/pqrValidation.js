@@ -111,17 +111,16 @@ export const pqrsSchema = Yup.object().shape({
     is: "Tutela",
     then: (schema) =>
       schema.required("Debes seleccionar una clasificación para la tutela."),
-    otherwise: (schema) => schema.Required(),
+    otherwise: (schema) => schema.notRequired().nullable(), // <-- Esta es la línea corregida
   }),
 
-accionado: Yup.array()
-  .when("tipo_solicitud", {
+  accionado: Yup.array().when("tipo_solicitud", {
     is: "Tutela",
     then: (schema) =>
       schema
         .min(1, "Debes seleccionar al menos un accionado para la tutela.")
         .required("Debes seleccionar al menos un accionado para la tutela."),
-    otherwise: (schema) => schema.Required(),
+    otherwise: (schema) => schema.notRequired().nullable(), // <-- Esta es la línea corregida
   }),
 
 
@@ -148,7 +147,7 @@ accionado: Yup.array()
   descripcion: Yup.string()
     .required("La descripción es obligatoria")
     .min(10, "La descripción debe tener al menos 10 caracteres")
-    .max(5000, "La descripción no puede exceder los 5000 caracteres"),
+    .max(3000, "La descripción no puede exceder los 3000 caracteres"),
 
   politica_aceptada: Yup.boolean().oneOf(
     [true],
