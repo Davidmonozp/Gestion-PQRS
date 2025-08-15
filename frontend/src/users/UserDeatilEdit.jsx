@@ -140,7 +140,7 @@ const UserDetailEdit = () => {
     { id: 5, name: "Chia" },
     { id: 6, name: "Florencia" },
     { id: 7, name: "Ibague" },
-    { id: 8, name: "Cedritos-Divertido" },
+    // { id: 8, name: "Cedritos-Divertido" },
   ];
 
   // --- Formik Definition (MUST come before useMemo hooks that depend on it) ---
@@ -190,6 +190,9 @@ const UserDetailEdit = () => {
       try {
         const payload = {
           name: values.name,
+          segundo_nombre: values.segundo_nombre,
+          primer_apellido: values.primer_apellido,
+          segundo_apellido: values.segundo_apellido,
           email: values.email,
           role: values.role,
           cargo: values.cargo,
@@ -667,7 +670,7 @@ const UserDetailEdit = () => {
           </div>
         )}
       </div>
-      <Version/>
+      <Version />
     </>
   );
 };

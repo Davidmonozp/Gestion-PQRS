@@ -27,7 +27,7 @@ const RegisterUser = () => {
     { id: 5, name: "Chia" },
     { id: 6, name: "Florencia" },
     { id: 7, name: "Ibague" },
-    { id: 8, name: "Cedritos-Divertido" },
+    // { id: 8, name: "Cedritos-Divertido" },
   ];
   const documentos = [
     { id: 1, nombre: "CC" },
