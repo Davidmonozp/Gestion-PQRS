@@ -57,8 +57,10 @@ td {
     padding: 15px;
     background-color: transparent;
     color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.507)
+    border: 1px solid rgba(255, 255, 255, 0.507);
+    text-transform: uppercase;
 }
+
 
 
 
@@ -224,7 +226,7 @@ tbody td:hover::before {
 
 .container-table th,
 .container-table td {
-    border: 1px solid #00933f;
+    border: 1px solid #c5c5c5;
     /* Bordes internos de celdas */
     padding: 8px;
     text-align: center;
@@ -351,7 +353,13 @@ tbody td:hover::before {
 }
 
 /* FIN ESTILO RESPUESTA PRELIMINAR */
-
+.descripcion {
+  max-width: 150px;      
+  white-space: nowrap;    
+  overflow: hidden;       
+  text-overflow: ellipsis; 
+  cursor: pointer;        
+}
 
 /* FIN PAGINACION */
 @media (max-width: 1365px) {

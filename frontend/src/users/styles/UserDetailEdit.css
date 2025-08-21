@@ -192,7 +192,9 @@
 
 /* FIN ESTILOS INPUT SEDES */
 
-
+.formulario-user {
+    margin-bottom: 87px;
+}
 
 /* Responsive */
 @media (max-width: 767px) {

@@ -2,35 +2,17 @@ import React from "react";
 import PqrsForm from "./PqrsForm";
 
 export default function Solicitud() {
-  const tipoSolicitudOptions = [
-    { value: "Solicitud", label: "Solicitud" },
-  ];
+  const tipoSolicitudOptions = [{ value: "Solicitud", label: "Solicitud" }];
 
   return (
-    <PqrsForm
-      defaultTipoSolicitud="Solicitud"
-      tipoSolicitudOptions={tipoSolicitudOptions}
-    />
+    <>
+      <PqrsForm
+        defaultTipoSolicitud="Solicitud"
+        tipoSolicitudOptions={tipoSolicitudOptions}
+      />
+    </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import React, { useState, useEffect, useCallback } from "react";
 // import { createPqr } from "./pqrsService"; // Asegúrate de tener createPqr y updatePqr si los usas
@@ -1114,7 +1096,7 @@ export default function Solicitud() {
 //             />
 //             <div className="politica-texto">
 //               <span className="politica-descripcion">
-//                 Acepto la 
+//                 Acepto la
 //                 <a
 //                   href="https://passusips.com/nosotros-politica-manejo-datos"
 //                   target="_blank"

@@ -54,7 +54,7 @@
     line-height: 25px;
     margin-bottom: 12px;
     color: #0087cd;
-    margin-top: 3px;
+    margin-top: 16px;
     font-family: 'Oxygen', sans-serif;
 }
 
@@ -149,22 +149,26 @@
 }
 
 #modal-container .modal.modal-citas-grande {
-    max-width: 1031px; 
+    max-width: 1031px;
     max-height: 290vh;
 }
+
 #modal-container .modal.modal-citas-grande h2 {
-    font-size: 30px; 
+    font-size: 30px;
 }
 
 #modal-container .modal.modal-citas-grande p {
-    font-size: 20px; 
+    font-size: 17px;
 }
+
 .titulo-verde {
     color: #00933f;
 }
+
 .titulo-azul {
     color: #0087cd;
 }
+
 /* Cards Grid */
 .buttons {
     display: flex;
@@ -202,9 +206,11 @@
     background-color: #03235e;
 }
 
+
 .card img {
     width: 447px;
     margin-top: -82px;
+    pointer-events: none;
 }
 
 .icon {
@@ -221,7 +227,7 @@
 }
 
 .reembolsos {
-    margin-top: -101px !important;
+    margin-top: -84px !important;
 }
 
 .historia {
@@ -248,8 +254,8 @@ h6 {
 
 .parrafo-solicitudes {
     font-size: 18px;
-    font-weight: 600;
-    margin-bottom: -20px;
+    font-weight: 500;
+    margin-bottom: 0px;
     color: #333;
 }
 
@@ -363,6 +369,7 @@ h6 {
     padding: 0;
     list-style: none;
     color: white;
+    justify-content: center;
 }
 
 /* Opcional: Estilos para el texto y los enlaces dentro del <li> */
@@ -377,7 +384,7 @@ h6 {
 
 .opciones-decision li .enlace-simulado {
     display: block;
-    margin-top: 10px;
+    margin-top: -1px;
     cursor: pointer;
     font-weight: bold;
 }
@@ -405,7 +412,7 @@ h6 {
 
 /* Opcional: Estilos para el texto del enlace si quieres manipularlo por separado */
 .enlace-simulado span {
-    color: rgb(182 201 219);
+    color: rgb(255, 255, 255);
     font-weight: 400;
 }
 

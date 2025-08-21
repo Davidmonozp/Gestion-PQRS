@@ -70,14 +70,17 @@ const InicioPQRS = () => {
       <div className="pqrs-container-pqrs">
         <div className="header-pqrs">
           <div>
-            Consulta tu <span>PQR</span>
+            CONSULTA TU <span>F-PQRS</span>
           </div>
         </div>
 
         <div className="card-inicio-radicado">
           <i className="fa-solid fa-magnifying-glass card-icon"></i>
-          <h2>Consultar Radicado</h2>
-          <p>Consulta el estado de tu PQR, solicitud o felicitación.</p>
+          <p>
+            Copia y pega el número de radicado exactamente como aparece en el
+            correo de confirmación. <br /><br />
+            Ejemplo: <strong>QJ00001-100010101</strong> 
+          </p>
           <input
             type="text"
             placeholder="Ingresa el número de radicado"
@@ -90,7 +93,7 @@ const InicioPQRS = () => {
           </button>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </>
   );
 };

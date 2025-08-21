@@ -1,10 +1,13 @@
 .header-pqrs {
+    display: flex;
+    flex-direction: column;
     text-align: center;
     font-size: 24px;
     font-weight: bold;
     margin-top: 20px;
-    margin-bottom: 10px;
+    margin-bottom: -11px;
     color: #333;
+    gap: 12px;
 }
 
 .header-pqrs div {
@@ -20,7 +23,15 @@
 }
 
 .pqrs-container {
-    display: flex;
+    /* display: flex; */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.pqrs-container-felicitacion {
+    /* display: flex; */
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -44,7 +55,7 @@
     grid-template-columns: 1fr 1fr; */
     /* gap: 1rem; */
     width: 90%;
-    max-width: 800px;
+    max-width: 697px;
     padding: 2rem;
     border-radius: 10px;
     /* background: rgba(255, 255, 255, 0.1); 
@@ -54,6 +65,21 @@
     border: 1px solid rgba(255, 255, 255, 0.3); 
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);  
     margin: 0 auto; */
+}
+
+.pqrs-solicitudes {
+    max-width: 400px;
+    flex: 1;
+    background: #f9f9f9;
+    /* ejemplo de recuadro */
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+
+    /* ✅ lo importante */
+    height: 697px;
+    overflow: visible;
+    margin-top: 150px;
 }
 
 /* Responsive grid layout interno, si hay elementos hijos */
@@ -95,16 +121,17 @@
     height: 160px;
     resize: vertical;
 }
+
 .pqrs-textarea-full small.contador-caracteres {
-  display: block;
-  text-align: right;
-  margin-bottom: 25px;
-  font-size: 13px;
-  color: #555;
+    display: block;
+    text-align: right;
+    margin-bottom: 25px;
+    font-size: 13px;
+    color: #555;
 }
 
 .pqrs-textarea-full small.contador-caracteres.alerta {
-  color: red;
+    color: red;
 }
 
 
@@ -172,6 +199,7 @@
 
 .radio-group {
     display: flex;
+    justify-content: center;
     gap: 20px;
     /* espacio entre opciones */
     margin: 8px 0 16px 0;
@@ -364,6 +392,13 @@
     color: #0087cd;
 }
 
+.floating-label.regimen-select select:focus+label,
+.floating-label.regimen-select.has-value select+label {
+    top: -19px;
+    font-size: 14px;
+    color: #0087cd;
+}
+
 /* Pqrs.css */
 
 
@@ -434,6 +469,7 @@
     align-items: center;
     cursor: pointer;
     min-height: 38px;
+    margin-bottom: 27px;
 }
 
 .accionado-select:hover {
@@ -460,10 +496,9 @@
 .accionado-options {
     position: absolute;
     top: 100%;
-    left: 0;
+    left: -1px;
     width: 100%;
     border: 1px solid #ccc;
-    border-radius: 4px;
     background: #007aa1;
     margin-top: 4px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -474,22 +509,25 @@
 }
 
 .accionado-option {
-  display: flex;
-  align-items: center;
-  padding: 4px 8px;    /* un poco de padding lateral */
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    /* un poco de padding lateral */
 }
 
 .accionado-option input[type="checkbox"] {
-  margin: -162px;           /* elimina márgenes por defecto */
-  flex-shrink: 0;      /* evita que se encoja */
+    margin: -162px;
+    /* elimina márgenes por defecto */
+    flex-shrink: 0;
+    /* evita que se encoja */
 }
 
 .accionado-option span {
-  margin: 0;
-  flex: 1;   
-  font-size: 16px;  
-  font-weight: 400;
-  color: white;       
+    margin: 0;
+    flex: 1;
+    font-size: 16px;
+    font-weight: 400;
+    color: white;
 }
 
 
@@ -531,6 +569,166 @@
 }
 
 
+
+
+
+/* Dropdown con checkboxes - Clasificaciones */
+/* Contenedor principal */
+
+.clasificaciones-container {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+/* Caja que parece un select */
+.clasificaciones-select {
+    border: 1px solid #00933f;
+    padding: 10px 12px;
+    cursor: pointer;
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 35px;
+}
+
+.clasificaciones-select .selected {
+    color: #333;
+}
+
+.clasificaciones-select .placeholder {
+    color: #aaa;
+}
+
+/* Icono caret */
+.clasificaciones-caret {
+    border: solid #666;
+    border-width: 0 2px 2px 0;
+    display: inline-block;
+    padding: 4px;
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+}
+
+.clasificaciones-caret.open {
+    transform: rotate(-135deg);
+}
+
+/* Dropdown con checkboxes */
+.clasificaciones-options {
+    position: absolute;
+    width: 384px;
+    /* 🔹 ancho más compacto */
+    max-height: 185px;
+    overflow-y: auto;
+    background: #007aa1;
+    border: 1px solid #ccc;
+    margin-top: 4px;
+    z-index: 1000;
+    padding: 4px;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.clasificaciones-option {
+    display: flex;
+    /* 🔹 para alinear checkbox + texto */
+    align-items: center;
+    /* 🔹 vertical centrado */
+    padding: 4px 6px;
+    font-size: 15px;
+    font-weight: 400;
+    color: white;
+    cursor: pointer;
+}
+
+.clasificaciones-option:hover {
+    background: #0a5fc0;
+    /* 🔹 efecto hover */
+}
+
+.clasificaciones-option input {
+    margin-right: 6px;
+}
+
+.clasificaciones-option input[type="checkbox"] {
+    margin-right: 8px;
+    height: 16px;
+    width: 16px;
+    flex-shrink: 0;
+}
+
+.section-clasificaciones {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.titulo-clasificaciones {
+    font-size: 20px;
+    font-weight: 600;
+    color: rgb(4, 61, 126);
+    margin-top: 37px;
+    margin-left: 61px;
+}
+
+.pqrs-solicitudes ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.pqrs-solicitudes ul li {
+    position: relative;
+    margin-bottom: 10px;
+    padding-left: 24px;
+}
+
+.pqrs-solicitudes ul li::before {
+    content: "🔹";
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.parrafo-clasificacion {
+    font-size: 14px;
+}
+
+.pqrs-main {
+    display: flex;
+    gap: 2rem;
+    /* espacio entre columnas */
+    align-items: flex-start;
+    margin-top: 44px;
+    justify-content: center;
+}
+
+.file-upload-button {
+    font-size: 16px;
+    color: rgb(6, 55, 95);
+}
+
+.lista-archivos{
+    font-weight: 400;
+}
+
+@media (max-width: 575px) {
+    .pqrs-solicitudes {
+        display: none;
+
+    }
+}
+
+@media (min-width: 576px) and (max-width: 900px) {
+    .pqrs-solicitudes {
+        height: 1067px;
+        margin-top: 70px;
+    }
+
+    .titulo-clasificaciones {
+        margin-left: 18px;
+    }
+}
 
 @media (max-width: 768px) {
 

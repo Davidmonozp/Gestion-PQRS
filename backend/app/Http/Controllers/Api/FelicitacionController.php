@@ -23,8 +23,13 @@ class FelicitacionController extends Controller
             'documento_numero' => 'required|string',
             'correo' => 'required|email',
             'correo_confirmacion' => 'required|same:correo',
+            'telefono' => 'required|string',
             'descripcion' => 'required|string',
             'sede' => 'required|string|max:100',
+            'servicio_prestado' => 'required|string',
+            'eps' => 'required|string',
+            'clasificaciones' => 'required|array',
+            'clasificaciones.*' => 'exists:clasificaciones,id',
         ]);
 
 
@@ -40,10 +45,10 @@ class FelicitacionController extends Controller
             'documento_tipo' => $validated['documento_tipo'],
             'documento_numero' => $validated['documento_numero'],
             'correo' => $validated['correo'],
-            'telefono' => null,
+            'telefono' => $validated['telefono'],
             'sede' => $validated['sede'],
-            'servicio_prestado' => 'No aplica',
-            'eps' => 'No aplica',
+            'servicio_prestado' => $validated['servicio_prestado'],
+            'eps' => $validated['eps'],
             'regimen' => 'No aplica',
             'tipo_solicitud' => 'Felicitacion',
             'descripcion' => $validated['descripcion'],
@@ -60,14 +65,15 @@ class FelicitacionController extends Controller
             'respondido_en' => Carbon::now(),
         ]);
 
-
+        // 🔹 Guardar relación con clasificaciones
+        $pqr->clasificaciones()->sync($validated['clasificaciones']);
 
         // Enviar correo
         Mail::to($pqr->correo)->send(new FelicitacionRecibida($pqr));
 
         return response()->json([
             'message' => 'Felicitación registrada exitosamente',
-            'pqr' => $pqr,
+            'pqr' => $pqr->load('clasificaciones'),
         ], 201);
     }
 }

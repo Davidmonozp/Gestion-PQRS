@@ -41,14 +41,24 @@ const commonContactFields = {
 
   documento_tipo: Yup.string().required("Selecciona un tipo de documento"),
 
-  documento_numero: Yup.string()
-    .required("El número de documento es obligatorio")
-    .matches(
-      /^[a-zA-Z0-9-]+$/,
-      "El número de documento solo puede contener letras, números y guiones, sin espacios en blanco"
-    )
-    .min(5, "El número de documento debe tener al menos 5 dígitos")
-    .max(15, "El número de documento no puede exceder los 15 dígitos"),
+documento_numero: Yup.string()
+  .required("El número de documento es obligatorio")
+  .transform((value) => (value ? value.toUpperCase() : value)) 
+  .when("documento_tipo", {
+    is: (tipo) => ["PA", "PT", "CE"].includes(tipo), 
+    then: (schema) =>
+      schema
+        .matches(/^[A-Z0-9]+$/, "Solo puede contener letras (A-Z) y números")
+        .min(5, "Debe tener al menos 5 caracteres")
+        .max(15, "No puede exceder los 15 caracteres"),
+    otherwise: (schema) =>
+      schema
+        .matches(/^[0-9]+$/, "Solo puede contener números")
+        .min(5, "Debe tener al menos 5 dígitos")
+        .max(15, "No puede exceder los 15 dígitos"),
+  }),
+
+
 
   correo: Yup.string()
     .email("Formato de correo electrónico inválido")
@@ -113,6 +123,11 @@ export const pqrsSchema = Yup.object().shape({
       schema.required("Debes seleccionar una clasificación para la tutela."),
     otherwise: (schema) => schema.notRequired().nullable(), // <-- Esta es la línea corregida
   }),
+
+  clasificaciones: Yup.array()
+    .min(1, "Debes seleccionar al menos una clasificación.")
+    .required("Debes seleccionar al menos una clasificación."),
+
 
   accionado: Yup.array().when("tipo_solicitud", {
     is: "Tutela",

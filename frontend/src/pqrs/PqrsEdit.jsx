@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/api";
 import Swal from "sweetalert2";
@@ -27,6 +27,10 @@ function PqrsEdit() {
   const [pqr, setPqr] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(false);
+  
+  // Nuevo estado y referencia para el dropdown de usuarios
+  const [showUsuariosDropdown, setShowUsuariosDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,6 +48,25 @@ function PqrsEdit() {
     fetchData();
   }, [pqr_codigo]);
 
+  // Hook para detectar y manejar el clic fuera del dropdown
+  useEffect(() => {
+    // Si el dropdown no está visible, no necesitamos un listener
+    if (!showUsuariosDropdown) return;
+
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowUsuariosDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Función de limpieza para remover el listener
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showUsuariosDropdown]);
+
   const handleChange = (e) => {
     let value = e.target.value;
     if (e.target.name === "asignado_a") {
@@ -60,9 +83,12 @@ function PqrsEdit() {
         atributo_calidad: pqr.atributo_calidad,
         fuente: pqr.fuente,
         asignado_a: pqr.asignado_a,
-        // Si necesitas más campos los agregas aquí
       });
-      Swal.fire("Actualizado", "PQRS actualizada correctamente", "success").then(() => {
+      Swal.fire(
+        "Actualizado",
+        "PQRS actualizada correctamente",
+        "success"
+      ).then(() => {
         navigate(`/pqrs/${pqr_codigo}`);
       });
     } catch (err) {
@@ -111,20 +137,34 @@ function PqrsEdit() {
           </select>
         </div>
 
-        <div>
+        {/* Aquí está el menú desplegable personalizado para Asignado a */}
+        <div ref={dropdownRef} className="dropdown">
           <label>Asignado a:</label>
-          <select
-            name="asignado_a"
-            value={pqr.asignado_a !== null ? pqr.asignado_a : ""}
-            onChange={handleChange}
+          <button
+            type="button"
+            className="dropdown-toggle"
+            onClick={() => setShowUsuariosDropdown(!showUsuariosDropdown)}
           >
-            <option value="">Seleccione un usuario</option>
-            {usuarios.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name}
-              </option>
-            ))}
-          </select>
+            {pqr.asignado_a
+              ? usuarios.find((u) => u.id === pqr.asignado_a)?.name
+              : "Seleccione un usuario"}
+          </button>
+          
+          {showUsuariosDropdown && (
+            <ul className="dropdown-menu">
+              {usuarios.map((user) => (
+                <li
+                  key={user.id}
+                  onClick={() => {
+                    setPqr({ ...pqr, asignado_a: user.id });
+                    setShowUsuariosDropdown(false);
+                  }}
+                >
+                  {user.name}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <button type="submit" disabled={loading}>

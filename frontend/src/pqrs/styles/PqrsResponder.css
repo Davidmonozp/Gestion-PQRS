@@ -1,18 +1,13 @@
 .pqrs-res-container {
     width: 80%;
-    margin: 210px auto;
+    margin: 70px auto;  
     background: #f7f7f7;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    /* font-family: 'Arial', sans-serif; */
     color: rgb(7, 139, 148);
     font-size: 20px;
     backdrop-filter: blur(170px);
-    position: absolute;
-    top: 46%;
-    left: 50%;
-    transform: translate(-50%, -50%);
 }
 
 .pqrs-res-title {

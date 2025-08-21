@@ -38,11 +38,11 @@ export const Solicitudes = () => {
     citas: {
       title: (
         <>
-          <span className="titulo-verde">Agendar</span>{" "}
-          <span className="titulo-azul">citas</span>
+          <span className="titulo-verde">Agendamiento</span>{" "}
+          {/* <span className="titulo-azul">citas</span> */}
         </>
       ),
-      text: "<strong> Estimado usuario:</strong><br/> Recuerda que puedes agendar tu cita directamente desde nuestra página web en la opción <a href='https://oficinavirtual.passusips.com/login' target='_blank' rel='noopener noreferrer'>Agéndate aqui</a> sin necesidad de registrar una solicitud.",
+      text: "<strong> Agenda tus citas de Hidroterapia + Valoraciones iniciales de Programa de Rehabilitación + Consultas especializadas + Clases de natación </strong><br/><br/> Estimado usuario: <br/>  Recuerda que puedes agendar tus citas directamente desde nuestra página web en la opción Agéndate aquí sin filas ni llamadas y <strong>sin registrar una solicitud.</strong>",
     },
     valoraciones: {
       title: (
@@ -71,15 +71,15 @@ export const Solicitudes = () => {
             2. Tercero autorizado:<br />
               • Fotocopia de la cédula del paciente y del autorizado.<br />
               • Soporte que acredite el parentesco (registro civil, acta de matrimonio).<br />
-              • Diligenciar el siguiente formato: <a href='  https://passusips.com/uploads/GPS-FT-15%20Formato%20de%20Solicitud%20de%20Historia%20Clinica%20por%20tercero..pdf
-            'target='_blank' rel='noopener noreferrer'>Formato de Solicitud por Tercero</a>.<br /><br />
+              • Diligenciar el siguiente formato: <a href='https://passusips.com/uploads/GPS-FT-15%20Formato%20de%20Solicitud%20de%20Historia%20Clinica%20por%20tercero..pdf'
+            target='_blank' rel='noopener noreferrer'>Formato de Solicitud por Tercero</a>.<br /><br />
 
             3. Paciente menor de edad:<br />
               • Registro civil o tarjeta de identidad (según edad).<br />
               • Registro civil que acredite el parentesco o documento que certifique la representación legal.<br />
               • Cédula de ciudadanía de los padres.<br />
               • Diligenciar el siguiente formato: <a href='https://passusips.com/uploads/GPS-FT-15%20Formato%20de%20Solicitud%20de%20Historia%20Clinica%20por%20tercero..pdf' target='_blank' rel='noopener noreferrer'>LINK</a>.<br /><br />
-            <a>Nota</a>: Si el tercero no es familiar, debe presentar una autorización expresa o poder firmado por el paciente, en el que se manifieste la voluntad de otorgar acceso a su historia clínica.<br /><br />
+            <strong>Nota</strong>: Si el tercero no es familiar, debe presentar una autorización expresa o poder firmado por el paciente, en el que se manifieste la voluntad de otorgar acceso a su historia clínica.<br /><br />
 
             4. Paciente incapacitado o declarado interdicto:<br />
               • Certificado médico que evidencie el estado de salud del paciente.<br />
@@ -92,70 +92,96 @@ export const Solicitudes = () => {
     multa: {
       title: (
         <>
-          <span className="titulo-verde">Exoneración de</span>{" "}
-          <span className="titulo-azul">multa</span>
+          <span className="titulo-verde">Políticas de Multas</span>{" "}
+          <span className="titulo-azul">por Inasistencia</span>
         </>
       ),
-      text: `Estimado usuario: <strong>¡Recuerde!</strong> <br /><br />
+      text: `<strong>Estimado usuario, recuerde:</strong> <br /><br />
 
-            Las multas por inasistencia solo podrán ser exoneradas si se presenta una justificación médica válida dentro de las 24 horas siguientes a la cita.<br /><br />
+           Las multas por inasistencia únicamente podrán ser exoneradas en los siguientes casos:<br />
 
-            Adicionalmente, le informamos que PASSUS IPS únicamente realiza reembolsos en los siguientes casos específicos:<br /><br />
+           <ol> 
+            <li><strong>Justificación médica válida</strong>, presentada dentro de las 24 horas siguientes a la cita.</li>
+            <li> <strong>Situaciones de fuerza mayor</strong>, como calamidad familiar por fallecimiento, siempre que estén debidamente soportadas y presentadas en la misma fecha de la cita asignada.</li>
+           </ol>
 
-            • Cuando, durante la valoración inicial se determina que el paciente no es apto para ingresar al programa de hidroterapia.<br />
-            • Cuando, por criterio médico debidamente soportado, se considera que el paciente no debe continuar con terapias en agua, siempre y cuando no haya asistido a más de dos (2) sesiones acuáticas.<br /><br />
+           <strong>Forma de pago: </strong>en efectivo y en su totalidad, en cualquiera de las sedes de <strong>PASSUS.</strong><br /><br />
 
-            Agradecemos su comprensión y compromiso con el cumplimiento de nuestras políticas.<br /><br />
+           En <strong>PASSUS IPS</strong> valoramos profundamente la importancia de su tratamiento y la continuidad de su proceso terapéutico. Estas políticas <strong>no tienen un carácter sancionatorio,</strong> sino que buscan:<br /><br />
 
-            Si desea realizar la <strong>solicitud</strong> por favor adjuntar los soportes médicos según corresponda.`,
+           <ul style="margin-left: 2.5rem; padding-left: 1.2rem; list-style-type: disc; line-height: 0.8;">
+            <li>Fomentar la adherencia a las sesiones.</li>
+            <li>Garantizar la oportunidad en la atención.</li>
+            <li>Contribuir al logro de los mejores resultados para su bienestar integral.</li>
+          </ul></br>
+
+          Como institución prestadora de servicios de salud, nos acogemos a la <strong>Ley 1438 de 2011.</strong><br /><br />
+
+          Para gestionar una <strong>solicitud de exoneración</strong>, por favor adjunte los soportes correspondientes según su caso.
+          <strong>Agradecemos su comprensión y compromiso con su proceso de recuperación.</strong>        
+
+            `,
     },
     reprogramacion: {
       title: (
         <>
-          <span className="titulo-verde">Reprogramación ó</span>{" "}
-          <span className="titulo-azul">cancelación</span>
+          <span className="titulo-verde">Cancelación y </span>{" "}
+          <span className="titulo-azul">Reprogramación de Citas</span>
         </>
       ),
-      text: `Estimado usuario: <br /><br />
-            Su mejoría depende directamente de la asistencia, constancia y disciplina durante el tratamiento. Por esta razón, PASSUS IPS no realiza cancelaciones ni reprogramaciones de citas de forma libre, ya que buscamos promover la adherencia al tratamiento ordenado y continuo.<br /><br />
-            La cancelación o inasistencia a citas puede afectar negativamente su progreso y reducir la efectividad del proceso de recuperación.<br /><br />
+      text: `<strong>Estimado usuario:</strong><br /><br />
+           En PASSUS IPS su recuperación depende de la asistencia, constancia y disciplina en el tratamiento; por ello, <strong>no se realizan cancelaciones ni reprogramaciones de manera libre, dado que nuestro propósito es garantizar la adherencia al tratamiento ordenado y continuo.</strong><br /><br />
 
-            Solo se permite la reprogramación de citas en caso de incapacidad médica.<br /><br />
+           La <strong>reprogramación de citas</strong> únicamente procede en los siguientes casos:
 
-            Si usted no asistió o no podrá asistir por motivos médicos, debe enviar la incapacidad al correo electrónico correspondiente.
+          <ul style="margin-left: 2.5rem; padding-left: 1.2rem; list-style-type: disc; line-height: 0.8;">
+            <li><strong>Incapacidad médica</strong> debidamente soportada y coherente con las fechas de inasistencia o con las citas programadas.</li>
+          </ul>
 
-            Esta debe ser coherente con los días de inasistencia o con las citas ya programadas que no podrá tomar.<br /><br />
-            Recuerde que cuenta con un número de sesiones asignadas que deben ser tomadas dentro del periodo de vigencia autorizado por el profesional tratante o la entidad de salud.<br /><br />
+          Recuerde:<br />
 
-            Si aún cuenta con vigencia activa y envía la incapacidad dentro del tiempo establecido, se procederá con la reprogramación de las sesiones pendientes.<br /><br />
+          <ul style="margin-left: 2.5rem; padding-left: 1.2rem; list-style-type: disc; line-height: 0.8;">
+            <li>Las sesiones asignadas deben cumplirse dentro del periodo de vigencia autorizado por su entidad de salud o profesional tratante.</li>
+            <li>Si cuenta con vigencia activa y presenta el soporte dentro del tiempo establecido, se reprogramarán las sesiones pendientes.</li>
+          </ul>
 
-            Si desea registrar una solicitud, por favor adjunte los soportes médicos correspondientes o exponga claramente el motivo en el detalle de la solicitud.`,
+          <strong>Para registrar una solicitud:</strong>
+          <ul style="margin-left: 2.5rem; padding-left: 1.2rem; list-style-type: disc; line-height: 0.8;">
+            <li>Adjunte soporte de la incapacidad.</li>
+          </ul>
+          `,
     },
     info: {
       title: "Información general",
       text: "Por favor revisa nuestro centro de ayuda o chatbot, donde respondemos preguntas frecuentes.  <a href='/solicitud'>  ¿Deseas continuar con una solicitud personalizada?</a>",
     },
-    reembolsos: {
+    tesoreria: {
       title: (
         <>
-          <span className="titulo-verde">Reembolsos</span>{" "}
+          <span className="titulo-verde">Solicitudes</span>{" "}
+          <span className="titulo-azul">de Tesorería</span>
         </>
       ),
       text: `
-            <strong>Por favor, lea atentamente antes de continuar con su solicitud.</strong> <br /><br />
+            <strong>Por favor, lea atentamente antes de continuar con tu solicitud.</strong> <br /><br />
 
-            <strong>Solicitud de Reembolso</strong> <br /><br />
+            <strong>En PASSUS los reembolsos se realizan únicamente en los siguientes casos:</strong>
+            <ol>
+              <li>Cuando, durante la valoración inicial, se determina que no eres apto para ingresar al programa de hidroterapia.</li>
+              <li>Cuando, por criterio médico debidamente soportado, se establece que no debes continuar con terapias acuáticas, siempre y cuando no hayas asistido a más de dos (2) sesiones.</li>
+            </ol>
 
-            <strong>En PASSUS IPS los reembolsos se realizan únicamente en los siguientes casos:</strong><br /><br />
-            1. Cuando, durante la valoración inicial, se determina que el paciente <strong>no es apto</strong> para ingresar al programa de hidroterapia.<br />
-            2. Cuando, por criterio médico debidamente soportado, se establece que el paciente <strong>no debe continuar con terapias acuáticas</strong>, siempre y cuando <strong>no haya asistido a más de dos (2) sesiones</strong>.<br /><br />
+            <strong>Documentos requeridos para tu solicitud de reembolso:</strong>
+            <ul style="margin-left: 2.5rem; padding-left: 1.2rem; list-style-type: disc; line-height: 0.8;">
+              <li>Certificación bancaria.</li>
+              <li>Carta de autorización de consignación a un tercero (si aplica).</li>
+              <li>Soporte médico.</li>
+              <li>Soporte de pago o transacción.</li>
+            </ul>
+           
+            Si tu situación corresponde a alguno de los casos mencionados, por favor registra tu solicitud, adjunta los documentos requeridos y describe claramente el motivo.<br /><br />
 
-            <strong>Documentos requeridos para la solicitud de reembolso:</strong><br /><br />
-            • Certificación bancaria.<br />
-            • Carta de autorización de consignación a un tercero (si aplica).<br />
-            • Soporte médico.<br />
-            • Soporte de pago o transacción. <br /><br />
-            Si su situación corresponde a alguno de los casos mencionados, por favor registre su <strong>solicitud</strong>, adjunte los documentos requeridos y describa claramente el motivo.
+            ADJUNTAR CADA DOCUMENTO EL DE <strong>Carta de autorización de consignación a un tercero (si aplica)</strong> NO es obligatorio.
           `,
     },
   };
@@ -248,8 +274,8 @@ export const Solicitudes = () => {
                   <br />
                   <ul className="opciones-decision">
                     <li>
-                      Entendí la información y tengo todos los documentos
-                      requeridos. <br />
+                      {/* Entendí la información y tengo todos los documentos
+                      requeridos. <br /> */}
                       <span
                         onClick={() => {
                           enviarEncuesta("diligenciar");
@@ -265,6 +291,18 @@ export const Solicitudes = () => {
                       </span>
                     </li>
                     <li>
+                      <span
+                        onClick={() => {
+                          enviarEncuesta("cerrar");
+                          handleCloseModal();
+                        }}
+                        className="enlace-simulado"
+                      >
+                        <img src="../../cerrar.png" alt="" />
+                        <span>[Cerrar]</span>
+                      </span>
+                    </li>
+                    {/* <li>
                       Entendí la información, pero no tengo los documentos
                       requeridos. <br />
                       <span
@@ -294,7 +332,7 @@ export const Solicitudes = () => {
                           [Diligenciar el formulario para la solicitud]
                         </span>
                       </span>
-                    </li>
+                    </li> */}
                   </ul>
                 </div>
               )}
@@ -337,18 +375,16 @@ export const Solicitudes = () => {
           <div className="header-pqrs">
             <div>
               <i className="fas fa-file-pen big-icon"></i>
-              Registra tus <span>Solicitudes</span>
-              <div className="solicitud">
-                <p className="parrafo-solicitud">
-                  Una solicitud es el interés que tiene un usuario para acceder
-                  a un servicio, documento, información o gestión administrativa
-                  con la IPS, sin que hayan sido vulnerados sus derechos.
-                </p>
-              </div>
-              <h6>Tipos de solicitudes</h6>
+              Selecciona tu <span>Solicitud:</span>
               <p className="parrafo-solicitudes">
-                Por favor lee atentamente las descripciones de los tipos de
-                SOLICITUDES y cuéntanos tu experiencia
+                Antes de continuar, revisa las opciones de{" "}
+                <strong>SOLICITUDES </strong> y elige la que mejor se ajuste a
+                lo que necesitas. Una <strong>solicitud</strong> es cuando
+                quieres acceder a un servicio, documento, información o realizar
+                un trámite administrativo,{" "}
+                <strong>
+                  sin que esto signifique que se hayan vulnerado tus derechos.
+                </strong>
               </p>
             </div>
           </div>
@@ -357,36 +393,9 @@ export const Solicitudes = () => {
         <div className="buttons">
           <div className="card" onClick={() => handleOpenModal("citas")}>
             <img src="../asignacion.png" alt="Asignación de citas" />
-            <span>Asignación de citas</span>
+            <span>Agendamiento</span>
           </div>
-          <div className="card" onClick={() => handleOpenModal("reembolsos")}>
-            <img
-              src="../reembolsos.png"
-              alt="Reembolsos"
-              className="reembolsos"
-            />
-            <span>Reembolsos</span>
-          </div>
-          <div className="card" onClick={() => handleOpenModal("historia")}>
-            <img
-              src="../Historia-clinica.png"
-              alt="Historia clínica"
-              className="historia"
-            />
-            <span>Envío de Historia Clínica ó Informes Finales</span>
-          </div>
-          {/* <div className="card" onClick={() => handleOpenModal("valoraciones")}>
-            <i className="fas fa-user-clock icon"></i>
-            <span>Envío de Historia Clínica o informes finales</span>
-          </div> */}
-          <div className="card" onClick={() => handleOpenModal("multa")}>
-            <img
-              src="../exoneracion.png"
-              alt="Exoneración de multas"
-              className="exoneracion"
-            />
-            <span>Exoneración de Multa por Inasistencia</span>
-          </div>
+
           <div
             className="card"
             onClick={() => handleOpenModal("reprogramacion")}
@@ -396,8 +405,40 @@ export const Solicitudes = () => {
               alt="Reprogramación ó Cancelación"
               className="reprogramacion"
             />
-            <span>Reprogramación ó Cancelación de Citas</span>
+            <span>Reprogramación de citas</span>
           </div>
+
+          <div className="card" onClick={() => handleOpenModal("historia")}>
+            <img
+              src="../Historia-clinica.png"
+              alt="Historia clínica"
+              className="historia"
+            />
+            <span>Envío de Historia Clínica ó Informes Finales</span>
+          </div>
+
+          <div className="card" onClick={() => handleOpenModal("multa")}>
+            <img
+              src="../exoneracion.png"
+              alt="Exoneración de multas"
+              className="exoneracion"
+            />
+            <span>Política de Multas por inasistencia</span>
+          </div>
+
+          <div className="card" onClick={() => handleOpenModal("tesoreria")}>
+            <img
+              src="../reembolsos.png"
+              alt="Reembolsos"
+              className="reembolsos"
+            />
+            <span>Solicitudes de Tesorería</span>
+          </div>
+
+          {/* <div className="card" onClick={() => handleOpenModal("valoraciones")}>
+            <i className="fas fa-user-clock icon"></i>
+            <span>Envío de Historia Clínica o informes finales</span>
+          </div> */}
         </div>
       </div>
 

@@ -238,6 +238,7 @@ function PqrsList() {
                   {/* <th>Apellido</th> */}
                   <th>EPS</th>
                   <th>Servicio prestado</th>
+                  <th>Descripcion</th>
                   <th>Atributo de calidad</th>
                   <th>Asignado a</th>
                   <th>Fecha de cierre</th>
@@ -299,6 +300,9 @@ function PqrsList() {
                       </td>
                       <td>{pqr.eps}</td>
                       <td>{pqr.servicio_prestado}</td>
+                      <td className="descripcion" title={pqr.descripcion}>
+                        {pqr.descripcion}
+                      </td>
                       <td>{pqr.atributo_calidad}</td>
                       <td className="pqr-status-cell">
                         <ul className="pqr-status-list">
@@ -417,8 +421,8 @@ function PqrsList() {
             </ul>
           </nav>
         </div>
-      </div>  
-      <Version/> 
+      </div>
+      <Version />
     </>
   );
 }

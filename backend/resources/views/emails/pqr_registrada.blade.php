@@ -196,10 +196,10 @@
                             </div>
 
                             <p>Agradecemos su paciencia mientras procesamos su solicitud. Haremos todo lo posible por brindarle una respuesta oportuna.</p>
-                            <p>Puede hacer seguimiento al estado de su PQR ingresando el código de radicado en nuestra página web:</p>
+                            <p>Puede realizar el seguimiento de su {{ $pqr->tipo_solicitud }} dando clic en el siguiente botón e ingresando el código de radicado.</p>
 
                             <div class="button-container">
-                                <a href="{{ url('http://localhost:5173/inicio-pqrs') }}" target="_blank">Consultar Estado de PQR</a> 
+                                <a href="{{ url('https://test-fpqrs.passus.cloud/consultar-radicado') }}" target="_blank">Consultar Estado de PQR</a> 
                             </div>
 
                             <hr class="divider">

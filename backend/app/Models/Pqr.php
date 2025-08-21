@@ -152,4 +152,46 @@ class Pqr extends Model
     {
         return $this->hasMany(EventLog::class, 'pqr_codigo', 'pqr_codigo')->orderBy('created_at', 'desc');
     }
+
+    // 🔹 Mutators para nombres y apellidos en mayúsculas
+       public function setNombreAttribute($value)
+    {
+        $this->attributes['nombre'] = strtoupper($value);
+    }
+
+    public function setSegundoNombreAttribute($value)
+    {
+        $this->attributes['segundo_nombre'] = $value ? strtoupper($value) : null;
+    }
+
+    public function setApellidoAttribute($value)
+    {
+        $this->attributes['apellido'] = strtoupper($value);
+    }
+
+    public function setSegundoApellidoAttribute($value)
+    {
+        $this->attributes['segundo_apellido'] = $value ? strtoupper($value) : null;
+    }
+
+    // 🔹 Mutators para datos del registrador
+    public function setRegistradorNombreAttribute($value)
+    {
+        $this->attributes['registrador_nombre'] = $value ? strtoupper($value) : null;
+    }
+
+    public function setRegistradorSegundoNombreAttribute($value)
+    {
+        $this->attributes['registrador_segundo_nombre'] = $value ? strtoupper($value) : null;
+    }
+
+    public function setRegistradorApellidoAttribute($value)
+    {
+        $this->attributes['registrador_apellido'] = $value ? strtoupper($value) : null;
+    }
+
+    public function setRegistradorSegundoApellidoAttribute($value)
+    {
+        $this->attributes['registrador_segundo_apellido'] = $value ? strtoupper($value) : null;
+    }
 }

@@ -22,8 +22,8 @@ class CodigoPqrService
 
         $conteo = Pqr::where('tipo_solicitud', $tipoSolicitud)->count() + 1;
 
-        $consecutivo = str_pad($conteo, 7, '0', STR_PAD_LEFT);
+        $consecutivo = str_pad($conteo, 5, '0', STR_PAD_LEFT);
 
-        return "{$prefijo}_{$consecutivo}_{$documento}";
+        return "{$prefijo}{$consecutivo}-{$documento}";
     }
 }

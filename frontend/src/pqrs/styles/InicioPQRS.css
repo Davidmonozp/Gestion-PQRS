@@ -92,3 +92,21 @@
 .card-input::placeholder {
     color: white;
 }
+
+@media (min-width: 375px) and (max-width: 475px) {
+    .card-inicio-radicado {
+        width: 297px;
+    }
+}
+
+@media (min-width: 476px) and (max-width: 600px) {
+    .card-inicio-radicado {
+        width: 397px;
+    }
+}
+@media (min-width: 601px) and (max-width: 787px) {
+    .card-inicio-radicado {
+        width: 517px;
+    }
+}
+

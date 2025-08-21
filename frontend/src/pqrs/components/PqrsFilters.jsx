@@ -96,6 +96,7 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
     "Ibague",
     "Chia",
     "Florencia",
+    "Cedritos-Divertido"
   ];
 
   const epsOptions = [

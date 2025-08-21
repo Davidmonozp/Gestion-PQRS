@@ -8,9 +8,9 @@ function PqrsSidebar() {
 
   useEffect(() => {
     // fetch("http://127.0.0.1:8000/api/pqrs/alertas-tiempo")
-    // fetch("http://192.168.1.15:8000/api/pqrs/alertas-tiempo")
+    fetch("http://192.168.1.15:8000/api/pqrs/alertas-tiempo")
     // fetch("https://pqrs.passusips.com/api/pqrs/alertas-tiempo")
-    fetch("https://test-pqrs.passus.cloud/api/pqrs/alertas-tiempo")
+    // fetch("https://test-pqrs.passus.cloud/api/pqrs/alertas-tiempo")
     // fetch("https://pqrs.passus.cloud/api/pqrs/alertas-tiempo")
 
 

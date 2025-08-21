@@ -1,10 +1,10 @@
 import axios from "axios";
 
 // const API_URL = "http://127.0.0.1:8000/api";
-// const API_URL = "http://192.168.1.15:8000/api";
+const API_URL = "http://192.168.1.15:8000/api";
 // const API_URL = "https://pqrs.passusips.com/api";
 // const API_URL = "https://test-pqrs.passusips.com/api";
-const API_URL = "https://test-pqrs.passus.cloud/api";
+// const API_URL = "https://test-pqrs.passus.cloud/api";
 // const API_URL = "https://pqrs.passus.cloud/api";
 
 

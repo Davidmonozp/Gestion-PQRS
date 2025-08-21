@@ -30,11 +30,7 @@ Route::post('/felicitaciones', [FelicitacionController::class, 'store']);
 Route::get('/pqrs/alertas-tiempo', [PqrAlertaController::class, 'alertas']);
 Route::post('/pqrs/consultar-radicado', [PqrController::class, 'consultarRadicado']);
 Route::post('/encuesta', [EncuestaController::class, 'store']);
-
-
-
-
-
+Route::get('/clasificaciones', [ClasificacionController::class, 'index']);
 
 
 
@@ -48,7 +44,6 @@ Route::middleware(['auth:api', 'check.role:Administrador,Supervisor,Gestor,Consu
     // Rutas de visualización de PQRS (solo roles autorizados pueden ver la lista o detalles)
     Route::get('pqrs', [PqrController::class, 'index']);
     Route::get('pqrs/codigo/{pqr_codigo}', [PqrController::class, 'show']);
-    Route::get('/clasificaciones', [ClasificacionController::class, 'index']);
     Route::get('/pqrs/estado', [PqrController::class, 'filtros_estado_respuesta'])->middleware('auth:api');
     Route::get('/pqrs/{pqr}/clasificaciones', [ClasificacionController::class, 'obtenerClasificacionesPorPqr']);
 });

@@ -140,7 +140,7 @@ const UserDetailEdit = () => {
     { id: 5, name: "Chia" },
     { id: 6, name: "Florencia" },
     { id: 7, name: "Ibague" },
-    // { id: 8, name: "Cedritos-Divertido" },
+    { id: 8, name: "Cedritos-Divertido" },
   ];
 
   // --- Formik Definition (MUST come before useMemo hooks that depend on it) ---
@@ -314,7 +314,7 @@ const UserDetailEdit = () => {
       </div>
 
       <div className="details-user">
-        <form onSubmit={formik.handleSubmit}>
+        <form onSubmit={formik.handleSubmit} className="formulario-user">
           {/* Campo Primer Nombre */}
           <div>
             <label htmlFor="name">Nombre:</label>
@@ -649,8 +649,7 @@ const UserDetailEdit = () => {
               </button>
             </div>
           )}
-        </form>
-        {/* Botones de Editar y Volver */}
+           {/* Botones de Editar y Volver */}
         {!editMode && (
           <div className="mt-3">
             <button
@@ -669,6 +668,7 @@ const UserDetailEdit = () => {
             </button>
           </div>
         )}
+        </form>       
       </div>
       <Version />
     </>

@@ -236,7 +236,7 @@
 
                     <tr>
                         <td class="body-content">
-                            <h1>Respuesta a su PQR</h1>
+                            <h1>Respuesta a su {{ $pqr->tipo_solicitud }}</h1>
 
                             <p>Estimado/a <strong>{{ $pqr->nombre }} {{ $pqr->apellido }}</strong>:</p>
 
