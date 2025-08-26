@@ -147,7 +147,9 @@ class PqrController extends Controller
             $dataToCreate = [
                 'pqr_codigo' => $codigoPqr,
                 'nombre' => $validated['nombre'],
+                'segundo_nombre' => $validated['segundo_nombre'] ?? null,
                 'apellido' => $validated['apellido'],
+                'segundo_apellido' => $validated['segundo_apellido'] ?? null,
                 'documento_tipo' => $validated['documento_tipo'],
                 'documento_numero' => $validated['documento_numero'],
                 'correo' => $validated['correo'],
@@ -164,7 +166,9 @@ class PqrController extends Controller
                 'archivo' => $uploadedFilesData,
                 'registra_otro' => $validated['registra_otro'] === 'si',
                 'registrador_nombre' => $validated['registrador_nombre'] ?? null,
+                'registrador_segundo_nombre' => $validated['registrador_segundo_nombre'] ?? null,
                 'registrador_apellido' => $validated['registrador_apellido'] ?? null,
+                'registrador_segundo_apellido' => $validated['registrador_segundo_apellido'] ?? null,
                 'registrador_documento_tipo' =>
                 in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Entidad'])
                     ? null

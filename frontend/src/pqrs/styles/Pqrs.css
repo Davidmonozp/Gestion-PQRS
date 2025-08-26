@@ -73,13 +73,10 @@
     background: #f9f9f9;
     /* ejemplo de recuadro */
     border-radius: 8px;
-    padding: 20px;
+    padding: 0px 20px 20px 20px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-
-    /* ✅ lo importante */
     height: 697px;
     overflow: visible;
-    margin-top: 150px;
 }
 
 /* Responsive grid layout interno, si hay elementos hijos */
@@ -120,7 +117,9 @@
 .pqrs textarea[name="descripcion"] {
     height: 160px;
     resize: vertical;
+    margin-top: 25px;
 }
+
 
 .pqrs-textarea-full small.contador-caracteres {
     display: block;
@@ -704,13 +703,96 @@
 }
 
 .file-upload-button {
+    width: 100px;
     font-size: 16px;
     color: rgb(6, 55, 95);
+    cursor: pointer;
+    margin-bottom: 10px;
 }
 
-.lista-archivos{
+.lista-archivos {
     font-weight: 400;
 }
+
+.archivo-subido {
+    margin-left: 25px;
+    font-style: italic;
+    display: inline-block;
+    font-size: 15px;
+}
+
+.remove-file-button {
+    width: 27px !important;
+    height: 27px !important;
+    background-color: #ef4444 !important;
+    padding: 2px 0 0 0 !important;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px !important;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease-in-out;
+    margin-left: 10px;
+    margin-bottom: 10px;
+}
+
+.file-upload-text {
+    font-size: 15px;
+    color: rgb(6, 55, 95);
+    font-weight: 700;
+}
+
+.enlace-sin-subrayado {
+    /* text-decoration: none; */
+    color: rgb(6, 55, 95);
+    font-size: 18px;
+}
+
+/* Efecto al pasar el mouse por encima */
+.remove-file-button:hover {
+    background-color: #bb1919 !important;
+    /* Un rojo más oscuro */
+}
+
+.requisito-con-archivo {
+    font-size: 15px;
+}
+
+.file-input-group {
+    border: 1px solid #00933f;
+    padding: 8px;
+    margin-top: 10px;
+    border-radius: 6px;
+}
+.icono-carga-archivo {
+    font-size: 17px;
+}
+.requisito-item {
+  border: 1px solid #00933f; /* gris claro */
+  border-radius: 6px;
+  padding: 8px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  list-style: none;
+  margin-left: -40px;
+}
+
+
+
+.label-historia {
+  color: rgb(6, 55, 95);     /* color de texto */
+  font-size: 15px;    /* tamaño de texto */
+  font-weight: 500;   /* peso de fuente */
+}
+.file-input-group li {
+  list-style: none;
+}
+
 
 @media (max-width: 575px) {
     .pqrs-solicitudes {

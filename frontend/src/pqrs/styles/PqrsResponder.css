@@ -58,7 +58,7 @@
 
 .pqrs-res-button {
     height: 37px;
-    background-color: #030f54;
+    background-color: #00933f;
     color: white;
     border: none;
     padding: 0.6rem 1.2rem;
@@ -66,6 +66,8 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 1rem;
+     display: block;
+    margin: 0 auto;
 }
 
 .pqrs-res-button:hover {

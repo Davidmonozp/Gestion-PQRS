@@ -131,7 +131,7 @@ function PqrsAsignadas() {
                 <th>Estado de la PQR</th>
                 <th>Tipo Doc.</th>
                 <th>Número Doc.</th>
-                <th>Nombre</th>
+                <th>Nombres y Apellidos</th>
                 <th>EPS</th>
                 <th>Servicio</th>
                 <th>Fecha de cierre</th>
@@ -218,7 +218,7 @@ function PqrsAsignadas() {
                       <td>{pqr.documento_tipo}</td>
                       <td>{pqr.documento_numero}</td>
                       <td>
-                        {pqr.nombre} {pqr.apellido}
+                        {pqr.nombre} {pqr.segundo_nombre} {pqr.apellido} {pqr.segundo_apellido}
                       </td>
                       <td>{pqr.eps}</td>
                       <td>{pqr.servicio_prestado}</td>

@@ -202,7 +202,8 @@ button[type="submit"] {
 
 .sedes-register {
   width: 300px;
-  height: 40px;
+  height: auto;
+  min-height: 40px;
   background: transparent;
   border: 1px solid #00933f;
   border-radius: 2px;

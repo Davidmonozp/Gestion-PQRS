@@ -7,20 +7,54 @@ import "./styles/Pqrs.css";
 
 
 const felicitacionSchema = Yup.object().shape({
-  nombre: Yup.string()
-    .required("El nombre es obligatorio")
-    .min(2, "El nombre debe tener al menos 2 caracteres")
-    .max(50, "El nombre no puede exceder los 50 caracteres"),
-  segundo_nombre: Yup.string()
-    .max(50, "El segundo nombre no puede exceder los 50 caracteres")
-    .nullable(),
+   nombre: Yup.string()
+     .matches(
+       /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/,
+       "El nombre no puede contener espacios en blanco"
+     )
+     // .trim("El nombre no puede consistir solo en espacios en blanco")
+     .required("El nombre es obligatorio")
+     .min(2, "El nombre debe tener al menos 2 caracteres")
+     .max(20, "El nombre no puede exceder los 50 caracteres"),
+   segundo_nombre: Yup.string()
+    .nullable()
+    .notRequired()
+    .test(
+      "validar-segundo-nombre",
+      "El segundo nombre debe tener entre 2 y 20 caracteres y no contener espacios en blanco",
+      (value) => {
+        if (!value) return true; // ✅ Si está vacío, pasa
+        return (
+          /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/.test(value) &&
+          value.length >= 2 &&
+          value.length <= 50
+        );
+      }
+    ),
   apellido: Yup.string()
+    .matches(
+      /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/,
+      "El apellido no puede contener espacios en blanco"
+    )
+    // .trim("El apellido no puede consistir solo en espacios en blanco")
     .required("El apellido es obligatorio")
     .min(2, "El apellido debe tener al menos 2 caracteres")
     .max(50, "El apellido no puede exceder los 50 caracteres"),
-  segundo_apellido: Yup.string()
-    .max(50, "El segundo apellido no puede exceder los 50 caracteres")
-    .nullable(),
+   segundo_apellido: Yup.string()
+    .nullable()
+   .notRequired()
+   .test(
+     "validar-segundo-apellido",
+     "El segundo apellido debe tener entre 2 y 20 caracteres y no contener espacios en blanco",
+     (value) => {
+       if (!value) return true; // ✅ Si está vacío, pasa
+       return (
+         /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/.test(value) &&
+         value.length >= 2 &&
+         value.length <= 20
+       );
+     }
+   ),
   documento_tipo: Yup.string().required("Selecciona un tipo de documento"),
   documento_numero: Yup.string()
     .required("El número de documento es obligatorio")
@@ -94,6 +128,17 @@ export default function FelicitacionForm() {
   const [showClasificacionesDropdown, setShowClasificacionesDropdown] =
     useState(false);
   const [listaClasificaciones, setListaClasificaciones] = useState([]);
+
+  // 🔹 Detectar clic fuera
+useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (clasificacionesRef.current && !clasificacionesRef.current.contains(e.target)) {
+      setShowClasificacionesDropdown(false);
+    }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, []);
 
   useEffect(() => {
     const fetchClasificaciones = async () => {
@@ -348,7 +393,7 @@ export default function FelicitacionForm() {
               onChange={handleChange}
             >
               <option value="">Tipo de documento</option>
-              <option value="CC">Cédula</option>
+              <option value="CC">Cédula de ciudadanía</option>
               <option value="CD">Carné diplomático</option>
               <option value="CN">Certificado nacido vivo</option>
               <option value="CE">Cédula de extranjería</option>
