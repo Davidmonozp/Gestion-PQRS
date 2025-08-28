@@ -195,6 +195,18 @@
     color: rgb(4, 61, 126);
 }
 
+.titulo-form-felicitacion {
+    /* font-family: 'Exo', sans-serif; */
+    font-size: 20px;
+    font-weight: 600;
+    color: rgb(4, 61, 126);
+    margin-top: 56px;
+    margin-bottom: -37px;
+    margin-left: -495px;
+}
+
+
+
 
 .radio-group {
     display: flex;
@@ -748,7 +760,7 @@
 
 .enlace-sin-subrayado {
     /* text-decoration: none; */
-    color: rgb(6, 55, 95);
+    color: #00933f;
     font-size: 18px;
 }
 
@@ -768,37 +780,55 @@
     margin-top: 10px;
     border-radius: 6px;
 }
+
 .icono-carga-archivo {
     font-size: 17px;
 }
+
 .requisito-item {
-  border: 1px solid #00933f; /* gris claro */
-  border-radius: 6px;
-  padding: 8px;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  list-style: none;
-  margin-left: -40px;
+    border: 1px solid #00933f;
+    /* gris claro */
+    border-radius: 6px;
+    padding: 8px;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    list-style: none;
+    margin-left: -40px;
 }
 
 
 
 .label-historia {
-  color: rgb(6, 55, 95);     /* color de texto */
-  font-size: 15px;    /* tamaño de texto */
-  font-weight: 500;   /* peso de fuente */
+    color: rgb(6, 55, 95);
+    /* color de texto */
+    font-size: 15px;
+    /* tamaño de texto */
+    font-weight: 500;
+    /* peso de fuente */
 }
+
 .file-input-group li {
-  list-style: none;
+    list-style: none;
 }
 
 
 @media (max-width: 575px) {
+    .cabecera h2 {
+        font-size: 19px !important;
+    }
+
     .pqrs-solicitudes {
         display: none;
-
     }
+
+    .titulo-form {
+        font-size: 17px;
+    }
+
+    .titulo-form-felicitacion {
+        margin-left: 4px;
+    }   
 }
 
 @media (min-width: 576px) and (max-width: 900px) {
@@ -810,10 +840,13 @@
     .titulo-clasificaciones {
         margin-left: 18px;
     }
+
+    .titulo-form-felicitacion {
+        margin-left: -370px;
+    }
 }
 
 @media (max-width: 768px) {
-
     .pqrs-paciente {
         display: grid;
         grid-template-columns: 1fr;

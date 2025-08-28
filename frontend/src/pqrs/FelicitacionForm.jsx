@@ -344,9 +344,11 @@ useEffect(() => {
           <div>
             Envía tu <span>Felicitación</span>
           </div>
+            <h1 className="titulo-form-felicitacion">DATOS DEL PACIENTE-USUARIO:</h1>
         </div>
+
         <div className="pqrs-main">
-          <form onSubmit={handleSubmit} className="pqrs" noValidate>
+          <form onSubmit={handleSubmit} className="pqrs" noValidate>            
             <input
               type="text"
               name="nombre"

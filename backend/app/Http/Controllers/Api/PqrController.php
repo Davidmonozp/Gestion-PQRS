@@ -65,6 +65,8 @@ class PqrController extends Controller
                 'descripcion' => 'required|string',
                 'archivos' => 'nullable|array',
                 'archivos.*' => 'file|max:8000',
+                'archivos_adicionales' => 'nullable|array',
+                'archivos_adicionales.*' => 'file|max:8000',
                 'registra_otro' => 'required|in:si,no',
                 'politica_aceptada' => 'required',
 
@@ -91,7 +93,7 @@ class PqrController extends Controller
                     'parentesco' => 'required|string|max:50',
                 ]);
 
-                if ($parentesco === 'Ente de control' || $parentesco === 'Entidad') {
+                if ($parentesco === 'Ente de control' || $parentesco === 'Asegurador') {
                     $rules['registrador_cargo'] = 'required|string|max:100';
                     $rules['registrador_documento_tipo'] = 'nullable|string';
                     $rules['registrador_documento_numero'] = 'nullable|string';
@@ -140,6 +142,18 @@ class PqrController extends Controller
                 }
             }
 
+            // ✨ NUEVO: Guardar archivos adicionales
+            if ($request->hasFile('archivos_adicionales')) {
+                foreach ($request->file('archivos_adicionales') as $file) {
+                    $path = $file->store('pqrs_files', 'public');
+                    $uploadedFilesData[] = [
+                        'path' => $path,
+                        'original_name' => $file->getClientOriginalName(),
+                        'url' => asset("storage/{$path}"),
+                    ];
+                }
+            }
+
             // Generar código PQR
             $codigoPqr = $codigoService->generarCodigoPqr($validated['tipo_solicitud'], $validated['documento_numero']);
 
@@ -170,11 +184,11 @@ class PqrController extends Controller
                 'registrador_apellido' => $validated['registrador_apellido'] ?? null,
                 'registrador_segundo_apellido' => $validated['registrador_segundo_apellido'] ?? null,
                 'registrador_documento_tipo' =>
-                in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Entidad'])
+                in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Asegurador'])
                     ? null
                     : ($validated['registrador_documento_tipo'] ?? null),
                 'registrador_documento_numero' =>
-                in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Entidad'])
+                in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Asegurador'])
                     ? null
                     : ($validated['registrador_documento_numero'] ?? null),
                 'registrador_correo' => $validated['registrador_correo'] ?? null,
@@ -183,7 +197,7 @@ class PqrController extends Controller
                 'parentesco' => $validated['parentesco'] ?? null,
                 'fecha_inicio_real' => $validated['fecha_inicio_real'] ?? null,
                 'nombre_entidad' =>
-                in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Entidad'])
+                in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Asegurador'])
                     ? ($validated['nombre_entidad'] ?? null)
                     : null,
             ];
@@ -196,11 +210,37 @@ class PqrController extends Controller
                 $pqr->clasificaciones()->sync($request->clasificaciones);
             }
 
-            // Enviar correos
-            Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
-            if (!empty($pqr->registrador_correo)) {
-                Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
-            }
+            // Enviar correos a paciente y registrador
+            // Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
+            // if (!empty($pqr->registrador_correo)) {
+            //     Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+            // }
+
+
+
+            // if (!empty($pqr->registrador_correo)) {
+            //     Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+            // } else {
+            //     Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
+            // }
+
+
+            // Comprueba si el parentesco de la PQR es "Asegurador" o "Ente de control"
+if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control') {
+    // Si la condición es verdadera, solo se envía el correo al registrador (si existe)
+    if (!empty($pqr->registrador_correo)) {
+        Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+    }
+} else {
+    // Si la condición es falsa, el correo se envía tanto al paciente como al registrador (si existe)
+    Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
+    
+    if (!empty($pqr->registrador_correo)) {
+        Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+    }
+}
+
+
 
             // Agregar URLs de archivo
             $pqr->archivo_urls = collect($pqr->archivo)->map(function ($fileItem) {
@@ -446,64 +486,64 @@ class PqrController extends Controller
             }
 
             // Filtros con AND (no OR)
-        if ($request->filled('pqr_codigo')) {
-            $query->where('pqr_codigo', 'like', '%' . $request->pqr_codigo . '%');
-        }
-
-        if ($request->filled('documento_numero')) {
-            $query->where('documento_numero', 'like', '%' . $request->documento_numero . '%');
-        }
-
-        if ($request->has('servicio_prestado')) {
-            $servicios = $request->input('servicio_prestado');
-            if (is_array($servicios)) {
-                $query->whereIn('servicio_prestado', $servicios);
-            } else {
-                $query->where('servicio_prestado', 'like', '%' . $servicios . '%');
+            if ($request->filled('pqr_codigo')) {
+                $query->where('pqr_codigo', 'like', '%' . $request->pqr_codigo . '%');
             }
-        }
 
-        if ($request->has('tipo_solicitud')) {
-            $tipos = $request->input('tipo_solicitud');
-            if (is_array($tipos)) {
-                $query->whereIn('tipo_solicitud', $tipos);
-            } else {
-                $query->where('tipo_solicitud', 'like', '%' . $tipos . '%');
+            if ($request->filled('documento_numero')) {
+                $query->where('documento_numero', 'like', '%' . $request->documento_numero . '%');
             }
-        }
 
-        if ($request->filled('sede')) {
-            $query->whereIn('sede', (array) $request->sede);
-        }
-
-        if ($request->has('eps')) {
-            $epsOptions = $request->input('eps');
-            if (is_array($epsOptions)) {
-                $query->whereIn('eps', $epsOptions);
-            } else {
-                $query->where('eps', 'like', '%' . $epsOptions . '%');
-            }
-        }
-
-        if ($request->filled('fecha_inicio') || $request->filled('fecha_fin')) {
-            $query->where(function ($qDate) use ($request) {
-                if ($request->filled('fecha_inicio')) {
-                    $qDate->whereDate('created_at', '>=', $request->fecha_inicio);
+            if ($request->has('servicio_prestado')) {
+                $servicios = $request->input('servicio_prestado');
+                if (is_array($servicios)) {
+                    $query->whereIn('servicio_prestado', $servicios);
+                } else {
+                    $query->where('servicio_prestado', 'like', '%' . $servicios . '%');
                 }
-                if ($request->filled('fecha_fin')) {
-                    $qDate->whereDate('created_at', '<=', $request->fecha_fin);
-                }
-            });
-        }
-
-        if ($request->has('respuesta_enviada')) {
-            $respuestas = $request->input('respuesta_enviada');
-            if (is_array($respuestas)) {
-                $query->whereIn('respuesta_enviada', $respuestas);
-            } else {
-                $query->where('respuesta_enviada', $respuestas);
             }
-        }
+
+            if ($request->has('tipo_solicitud')) {
+                $tipos = $request->input('tipo_solicitud');
+                if (is_array($tipos)) {
+                    $query->whereIn('tipo_solicitud', $tipos);
+                } else {
+                    $query->where('tipo_solicitud', 'like', '%' . $tipos . '%');
+                }
+            }
+
+            if ($request->filled('sede')) {
+                $query->whereIn('sede', (array) $request->sede);
+            }
+
+            if ($request->has('eps')) {
+                $epsOptions = $request->input('eps');
+                if (is_array($epsOptions)) {
+                    $query->whereIn('eps', $epsOptions);
+                } else {
+                    $query->where('eps', 'like', '%' . $epsOptions . '%');
+                }
+            }
+
+            if ($request->filled('fecha_inicio') || $request->filled('fecha_fin')) {
+                $query->where(function ($qDate) use ($request) {
+                    if ($request->filled('fecha_inicio')) {
+                        $qDate->whereDate('created_at', '>=', $request->fecha_inicio);
+                    }
+                    if ($request->filled('fecha_fin')) {
+                        $qDate->whereDate('created_at', '<=', $request->fecha_fin);
+                    }
+                });
+            }
+
+            if ($request->has('respuesta_enviada')) {
+                $respuestas = $request->input('respuesta_enviada');
+                if (is_array($respuestas)) {
+                    $query->whereIn('respuesta_enviada', $respuestas);
+                } else {
+                    $query->where('respuesta_enviada', $respuestas);
+                }
+            }
 
             // 🔹 Antes de paginar, obtenemos todas las PQRs que se van a mostrar y actualizamos estado_tiempo
             $pqrsSinRespuesta = (clone $query)

@@ -60,7 +60,7 @@ export function AppRouter() {
             allowedRoles={[
               "Administrador",
               "Consultor",
-              "Supervisor",
+              "Supervisor/Atencion al usuario",
               "Gestor",
               "Digitador",
             ]}
@@ -76,7 +76,7 @@ export function AppRouter() {
             allowedRoles={[
               "Administrador",
               "Consultor",
-              "Supervisor",
+              "Supervisor/Atencion al usuario",
               "Gestor",
               "Digitador",
             ]}
@@ -93,7 +93,7 @@ export function AppRouter() {
             allowedRoles={[
               "Administrador",
               "Consultor",
-              "Supervisor",
+              "Supervisor/Atencion al usuario",
               "Gestor",
               "Digitador",
             ]}
@@ -105,7 +105,7 @@ export function AppRouter() {
       <Route
         path="/users"
         element={
-          <ProtectedRoute allowedRoles={["Administrador", "Supervisor", "Gestor"]}>
+          <ProtectedRoute allowedRoles={["Administrador", "Supervisor/Atencion al usuario", "Gestor"]}>
             <UserList />
           </ProtectedRoute>
         }
@@ -129,7 +129,7 @@ export function AppRouter() {
       <Route
         path="/pqrs/asignadas"
         element={
-          <ProtectedRoute allowedRoles={["Administrador", "Supervisor", "Gestor"]}>
+          <ProtectedRoute allowedRoles={["Administrador", "Supervisor/Atencion al usuario", "Gestor"]}>
             <PqrsAsignadas />
           </ProtectedRoute>
         }

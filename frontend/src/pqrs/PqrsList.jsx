@@ -271,7 +271,7 @@ function PqrsList() {
                         {tienePermiso([
                           "Administrador",
                           "Consultor",
-                          "Supervisor",
+                          "Supervisor/Atencion al usuario",
                           "Gestor",
                           "Digitador",
                         ]) && (

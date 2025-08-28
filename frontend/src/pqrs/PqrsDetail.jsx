@@ -189,7 +189,7 @@ function PqrsDetail() {
     if (
       !tienePermiso([
         "Administrador",
-        "Supervisor",
+        "Supervisor/Atencion al usuario",
         "Gestor",
         "Consultor",
         "Digitador",
@@ -546,10 +546,13 @@ function PqrsDetail() {
         <h2>Descripción y clasificación de la {pqr.pqr_codigo}</h2>
         <div className="pqr-card-columns">
           {/* Columna de datos simples (izquierda) */}
-          <div className="pqr-card-col">
+          <div className="pqr-card-col">               
             {/* SI SOLICITANTE EXISTE MOSTRAR SUS DATOS */}
             {pqr.registrador_nombre && (
               <div className="solicitante">
+                 <p>
+                  <strong>Parentesco:</strong> {pqr.parentesco}{" "}
+                </p>
                 {pqr.nombre_entidad && (
                   <p>
                     <strong>Nombre de la entidad:</strong> {pqr.nombre_entidad}
@@ -645,7 +648,7 @@ function PqrsDetail() {
               )}
             </p>
 
-            {tienePermiso(["Administrador", "Supervisor"]) && (
+            {tienePermiso(["Administrador", "Supervisor/Atencion al usuario"]) && (
               <p>
                 <strong>⏱ Tiempo de usuario:</strong>{" "}
                 {pqr.estado_respuesta === "Cerrado" ? (
@@ -673,7 +676,7 @@ function PqrsDetail() {
               </p>
             )}
 
-            {tienePermiso(["Supervisor", "Administrador"]) &&
+            {tienePermiso(["Supervisor/Atencion al usuario", "Administrador"]) &&
               pqr.rol !== "Gestor" && (
                 <ClasificacionesPqrs
                   pqrId={pqr.id}
@@ -726,7 +729,7 @@ function PqrsDetail() {
               {pqr.estado_respuesta}
             </p>
 
-            {tienePermiso(["Administrador", "Supervisor"]) && (
+            {tienePermiso(["Administrador", "Supervisor/Atencion al usuario"]) && (
               <>
                 <p>
                   <strong>Histórico: </strong>
@@ -771,7 +774,7 @@ function PqrsDetail() {
             )}
 
             {/* Campos bloqueados para roles específicos */}
-            {!["Administrador", "Supervisor"].includes(
+            {!["Administrador", "Supervisor/Atencion al usuario"].includes(
               localStorage.getItem("role")
             ) && (
               <>
@@ -1098,7 +1101,7 @@ function PqrsDetail() {
               pqr?.estado_respuesta
             ) &&
               // Mostrar siempre para Supervisor y Administrador
-              (tienePermiso(["Supervisor", "Administrador"]) ||
+              (tienePermiso(["Supervisor/Atencion al usuario", "Administrador"]) ||
                 // Para Gestor, Consultor y Digitador, solo si ya hay respuesta final
                 (tienePermiso(["Gestor", "Consultor", "Digitador"]) &&
                   yaTieneFinal)) && (
@@ -1209,7 +1212,7 @@ function PqrsDetail() {
                   />
 
                   {/* NUEVO: Sección para adjuntar y mostrar archivos para la RESPUESTA FINAL */}
-                  {tienePermiso(["Supervisor", "Administrador"]) &&
+                  {tienePermiso(["Supervisor/Atencion al usuario", "Administrador"]) &&
                     (!yaTieneFinal || editandoRespuestaFinal) && (
                       <div className="adjuntos-final-respuesta-container">
                         <input
@@ -1271,7 +1274,7 @@ function PqrsDetail() {
                               </a>
                               {editandoRespuestaFinal &&
                                 tienePermiso([
-                                  "Supervisor",
+                                  "Supervisor/Atencion al usuario",
                                   "Administrador",
                                 ]) && (
                                   <button
@@ -1291,7 +1294,7 @@ function PqrsDetail() {
                     </div>
                   )}
 
-                  {tienePermiso(["Supervisor", "Administrador"]) && (
+                  {tienePermiso(["Supervisor/Atencion al usuario", "Administrador"]) && (
                     <div
                       style={{
                         display: "flex",
@@ -1335,7 +1338,7 @@ function PqrsDetail() {
                     </div>
                   )}
 
-                  {tienePermiso(["Supervisor", "Administrador"]) &&
+                  {tienePermiso(["Supervisor/Atencion al usuario", "Administrador"]) &&
                     yaTieneFinal &&
                     !mailEnviado && (
                       <div style={{ marginTop: "20px" }}>

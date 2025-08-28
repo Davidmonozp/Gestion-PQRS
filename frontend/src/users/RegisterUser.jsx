@@ -15,7 +15,7 @@ const RegisterUser = () => {
   const roles = [
     { id: 1, name: "Administrador" },
     { id: 2, name: "Consultor" },
-    { id: 3, name: "Supervisor" },
+    { id: 3, name: "Supervisor/Atencion al usuario" },
     { id: 4, name: "Gestor" },
     { id: 5, name: "Digitador" },
   ];

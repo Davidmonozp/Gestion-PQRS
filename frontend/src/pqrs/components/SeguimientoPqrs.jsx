@@ -250,7 +250,7 @@ export default function SeguimientoPqrs({
         tienePermiso([
           "Digitador",
           "Gestor",
-          "Supervisor",
+          "Supervisor/Atencion al usuario",
           "Administrador",
         ]) && (
           <form onSubmit={handleSubmit} className="seguimiento-form">

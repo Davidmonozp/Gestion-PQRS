@@ -12,7 +12,7 @@ const AutoLogout = () => {
   };
 
   useIdleTimer({
-    timeout: 10 * 60 * 1000, 
+    timeout: 20 * 60 * 1000, 
     onIdle: handleOnIdle,
     debounce: 500,
   });

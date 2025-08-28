@@ -28,7 +28,7 @@ class PqrRegistrada extends Mailable
     public function envelope(): Envelope
     {
        return new Envelope(
-            from: new Address('info@passusips.com', 'Passus IPS'), // <-- ¡ESTA ES LA LÍNEA CLAVE!
+            from: new Address('comunicaciones@passusips.com', 'Passus IPS'), // <-- ¡ESTA ES LA LÍNEA CLAVE!
         );
     }
 }

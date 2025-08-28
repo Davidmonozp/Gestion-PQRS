@@ -37,7 +37,7 @@ class RespuestaFinalPQRSMail extends Mailable
     {
         // Define el asunto del correo y el remitente aquí, siguiendo la sintaxis moderna.
         return new Envelope(
-            from: new Address('info@passusips.com', 'Passus IPS'),
+            from: new Address('comunicaciones@passusips.com', 'Passus IPS'),
             subject: 'Respuesta a su PQRS: ' . $this->pqr->pqr_codigo,
         );
     }

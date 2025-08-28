@@ -116,8 +116,8 @@ const commonContactFields = {
   telefono: Yup.string()
     .required("El teléfono es obligatorio")
     .matches(
-      /^\d{7,10}$/,
-      "El teléfono debe tener entre 7 y 10 dígitos numéricos"
+      /^\d{10}$/,
+      "El teléfono debe tener 10 dígitos numéricos"
     ),
 };
 
@@ -321,7 +321,7 @@ export const pqrsSchema = Yup.object().shape({
 
   registrador_documento_tipo: Yup.string().when(["registra_otro", "parentesco"], {
     is: (registra_otro, parentesco) =>
-      registra_otro === "si" && parentesco !== "Ente de control" && parentesco !== "Entidad",
+      registra_otro === "si" && parentesco !== "Ente de control" && parentesco !== "Asegurador",
     then: (schema) =>
       schema.required("Selecciona el tipo de documento del solicitante"),
     otherwise: (schema) =>
@@ -335,7 +335,7 @@ export const pqrsSchema = Yup.object().shape({
 
   registrador_documento_numero: Yup.string().when(["registra_otro", "parentesco"], {
     is: (registra_otro, parentesco) =>
-      registra_otro === "si" && parentesco !== "Ente de control" && parentesco !== "Entidad",
+      registra_otro === "si" && parentesco !== "Ente de control" && parentesco !== "Asegurador",
     then: (schema) =>
       schema
         .required("El número de documento del solicitante es obligatorio")
@@ -392,14 +392,14 @@ export const pqrsSchema = Yup.object().shape({
         ),
   }),
   registrador_cargo: Yup.string().when("parentesco", {
-    is: (val) => val === "Ente de control" || val === "Entidad",
+    is: (val) => val === "Ente de control" || val === "Asegurador",
     then: (schema) =>
       schema.required("El cargo es obligatorio"),
     otherwise: (schema) => schema.nullable(),
   }),
 
   nombre_entidad: Yup.string().when("parentesco", {
-    is: (val) => val === "Ente de control" || val === "Entidad",
+    is: (val) => val === "Ente de control" || val === "Asegurador",
     then: (schema) =>
       schema.required("El nombre de la entidad es obligatorio").max(100),
     otherwise: (schema) => schema.nullable(),

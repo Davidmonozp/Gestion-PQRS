@@ -3,11 +3,11 @@ import Swal from 'sweetalert2';
 
 
 // const API = "http://127.0.0.1:8000/api/auth/";
-const API = "http://192.168.1.15:8000/api/auth/";
+// const API = "http://192.168.1.15:8000/api/auth/";
 // const API = "https://pqrs.passusips.com/api/auth/";
 // const API = "https://test-pqrs.passusips.com/api/auth/";
 // const API = "https://test-pqrs.passus.cloud/api/auth/";
-// const API = "https://pqrs.passus.cloud/api/auth/";
+const API = "https://pqrs.passus.cloud/api/auth/";
 
 
 

@@ -278,7 +278,7 @@
                     <tr>
                         <td class="footer-section">
                             <p>&copy; {{ date('Y') }} Passus IPS. Todos los derechos reservados.</p>
-                            <p>Este es un correo automático. Por favor, no respondas directamente a este mensaje.</p>
+                            <p>Este es un correo automático. Por favor, no responda directamente a este mensaje.</p>
                         </td>
                     </tr>
                 </table>

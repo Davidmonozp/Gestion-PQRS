@@ -47,7 +47,7 @@ function UserFilters({ filters, setFilters, onBuscar }) {
             <option value="">Todos los roles</option>
             <option value="Administrador">Administrador</option>
             <option value="Gestor">Gestor</option>
-            <option value="Supervisor">Supervisor</option>
+            <option value="Supervisor/Atencion al usuario">Supervisor/Atencion al usuario</option>
             <option value="Consultor">Consultor</option>
             <option value="Digitador">Digitador</option>
           </select>

@@ -355,17 +355,15 @@ function PqrsForm({
     }
   }, [form.registra_otro, form.documento_tipo]);
 
-useEffect(() => {
-  if (form.sede === "Bogota-Norte") {
-    setForm((prev) => ({
-      ...prev,
-      eps: "Particular",
-      regimen: "Particular",
-    }));
-  }
-}, [form.sede]);
-
-
+  useEffect(() => {
+    if (form.sede === "Cedritos-Divertido") {
+      setForm((prev) => ({
+        ...prev,
+        eps: "Particular",
+        regimen: "Particular",
+      }));
+    }
+  }, [form.sede]);
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -672,98 +670,96 @@ useEffect(() => {
   };
 
   // ---- Validación de archivos obligatorios ----
- const validateArchivos = (
-  clasificaciones,
-  availableClasificaciones,
-  archivosPorRequisito,
-  subOpcionHistoria,
-  historiaClinicaOptions,
-  fileInputsConfig
-) => {
-  let errors = {};
+  const validateArchivos = (
+    clasificaciones,
+    availableClasificaciones,
+    archivosPorRequisito,
+    subOpcionHistoria,
+    historiaClinicaOptions,
+    fileInputsConfig
+  ) => {
+    let errors = {};
 
-  clasificaciones.forEach((clasificacionId) => {
-    const clasificacionObj = availableClasificaciones.find(
-      (c) => c.id === clasificacionId
-    );
-    if (!clasificacionObj) return;
+    clasificaciones.forEach((clasificacionId) => {
+      const clasificacionObj = availableClasificaciones.find(
+        (c) => c.id === clasificacionId
+      );
+      if (!clasificacionObj) return;
 
-    const nombreClasificacion = clasificacionObj.nombre;
+      const nombreClasificacion = clasificacionObj.nombre;
 
-    // Caso especial: Historia clínica
-    if (
-      nombreClasificacion.toLowerCase() ===
-      "envío de historia clínica o informes finales".toLowerCase()
-    ) {
-      if (!subOpcionHistoria) {
-        errors["subOpcionHistoria"] = "Seleccione una opción.";
-      } else {
-        historiaClinicaOptions[subOpcionHistoria].forEach((req) => {
-          if (!archivosPorRequisito[req.id]) {
-            errors[req.id] = "Este archivo es obligatorio.";
+      // Caso especial: Historia clínica
+      if (
+        nombreClasificacion.toLowerCase() ===
+        "envío de historia clínica o informes finales".toLowerCase()
+      ) {
+        if (!subOpcionHistoria) {
+          errors["subOpcionHistoria"] = "Seleccione una opción.";
+        } else {
+          historiaClinicaOptions[subOpcionHistoria].forEach((req) => {
+            if (!archivosPorRequisito[req.id]) {
+              errors[req.id] = "Este archivo es obligatorio.";
+            }
+          });
+        }
+        return;
+      }
+
+      // Caso especial: Solicitudes de tesorería
+      // Caso especial: Solicitudes de tesorería
+      if (
+        nombreClasificacion.toLowerCase() ===
+        "solicitudes de tesorería".toLowerCase()
+      ) {
+        const inputsTesoreria = fileInputsConfig[nombreClasificacion] || [];
+        inputsTesoreria.forEach((input) => {
+          if (input.archivos) {
+            input.archivos.forEach((archivo) => {
+              const isRequired =
+                archivo.required === undefined ? true : archivo.required;
+              if (isRequired && !archivosPorRequisito[archivo.id]) {
+                errors[archivo.id] = "Este archivo es obligatorio.";
+              }
+            });
           }
         });
+        return;
       }
-      return;
-    }
 
-    // Caso especial: Solicitudes de tesorería
-   // Caso especial: Solicitudes de tesorería
-if (
-  nombreClasificacion.toLowerCase() ===
-  "solicitudes de tesorería".toLowerCase()
-) {
-  const inputsTesoreria = fileInputsConfig[nombreClasificacion] || [];
-  inputsTesoreria.forEach((input) => {
-    if (input.archivos) {
-      input.archivos.forEach((archivo) => {
-        const isRequired =
-          archivo.required === undefined ? true : archivo.required;
-        if (isRequired && !archivosPorRequisito[archivo.id]) {
-          errors[archivo.id] = "Este archivo es obligatorio.";
-        }
-      });
-    }
-  });
-  return;
-}
-
-if (
-  nombreClasificacion.toLowerCase() ===
-  "política de multas por inasistencia".toLowerCase()
-) {
-  const inputsMultas = fileInputsConfig[nombreClasificacion] || [];
-  inputsMultas.forEach((input) => {
-    if (input.archivos) {
-      input.archivos.forEach((archivo) => {
-        const isRequired =
-          archivo.required === undefined ? true : archivo.required;
-        if (isRequired && !archivosPorRequisito[archivo.id]) {
-          errors[archivo.id] = "Este archivo es obligatorio.";
-        }
-      });
-    }
-  });
-  return;
-}
-
-
-    // Otras clasificaciones: validar solo si tienen archivos definidos
-    const inputs = fileInputsConfig[nombreClasificacion] || [];
-    inputs.forEach((input) => {
-      if (input.required && input.archivos) {
-        input.archivos.forEach((req) => {
-          if (!archivosPorRequisito[req.id]) {
-            errors[req.id] = "Este archivo es obligatorio.";
+      if (
+        nombreClasificacion.toLowerCase() ===
+        "política de multas por inasistencia".toLowerCase()
+      ) {
+        const inputsMultas = fileInputsConfig[nombreClasificacion] || [];
+        inputsMultas.forEach((input) => {
+          if (input.archivos) {
+            input.archivos.forEach((archivo) => {
+              const isRequired =
+                archivo.required === undefined ? true : archivo.required;
+              if (isRequired && !archivosPorRequisito[archivo.id]) {
+                errors[archivo.id] = "Este archivo es obligatorio.";
+              }
+            });
           }
         });
+        return;
       }
+
+      // Otras clasificaciones: validar solo si tienen archivos definidos
+      const inputs = fileInputsConfig[nombreClasificacion] || [];
+      inputs.forEach((input) => {
+        if (input.required && input.archivos) {
+          input.archivos.forEach((req) => {
+            if (!archivosPorRequisito[req.id]) {
+              errors[req.id] = "Este archivo es obligatorio.";
+            }
+          });
+        }
+      });
     });
-  });
 
-  return errors;
-};
-
+    return errors;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -846,6 +842,9 @@ if (
         formData.append("archivos[]", file);
       });
 
+      archivos.forEach((file) => {
+        formData.append("archivos_adicionales[]", file);
+      });
       // Campos del formulario
       Object.entries(form).forEach(([key, value]) => {
         if (key.startsWith("registrador_") && form.registra_otro === "no")
@@ -914,11 +913,30 @@ if (
         await createPqr(formData);
       } else {
         await createPqr(formData);
+
+        // Determina los destinatarios del correo basándose en la lógica del parentesco
+        let mensajeDestinatario = "";
+
+        if (
+          form.parentesco === "Asegurador" ||
+          form.parentesco === "Ente de control"
+        ) {
+          // Si el parentesco es Asegurador o Ente de control, el correo solo va al registrador.
+          mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.registrador_correo}</strong>.`;
+        } else {
+          // Si no, el correo va al paciente y al registrador (si este existe).
+          if (form.registrador_correo) {
+            mensajeDestinatario = `El número de radicado será enviado a los correos <strong>${form.correo}</strong> y <strong>${form.registrador_correo}</strong>.`;
+          } else {
+            mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.correo}</strong>.`;
+          }
+        }
+
+        // Muestra el mensaje de SweetAlert2 con el texto dinámico
         Swal.fire({
           icon: "success",
           title: "¡PQR enviada!",
-          html: `Tu PQRS ha sido enviada con éxito.<br/>
-          El número de radicado será enviado al correo <strong>${form.correo}</strong>.`,
+          html: `Tu PQRS ha sido enviada con éxito.<br/>${mensajeDestinatario}`,
           confirmButtonColor: "#3085d6",
         });
       }
@@ -1043,7 +1061,8 @@ if (
           { id: "justificacion_medica", name: "Justificación médica" },
           {
             id: "soporte_fuerza_mayor",
-            name: "Soporte de situación de fuerza mayor (si aplica)", required: false
+            name: "Soporte de situación de fuerza mayor (si aplica)",
+            required: false,
           },
         ],
       },
@@ -1124,20 +1143,23 @@ if (
       },
     ],
 
-   "Solicitudes de tesorería": [
-  {
-    id: "solicitudes_tesoreria",
-    label: <>Adjuntar:</>,
-    required: true,
-    archivos: [
-      { id: "certificacion_bancaria", name: "Certificación bancaria" }, // requerido por defecto
-      { id: "carta_autorizacion", name: "Carta de autorización de consignación a un tercero (si aplica).", required: false }, // opcional
-      { id: "soporte_medico", name: "Soporte médico" }, // requerido
-      { id: "soporte_pago", name: "Soporte de pago o transacción" }, // requerido
+    "Solicitudes de tesorería": [
+      {
+        id: "solicitudes_tesoreria",
+        label: <>Adjuntar:</>,
+        required: true,
+        archivos: [
+          { id: "certificacion_bancaria", name: "Certificación bancaria" }, // requerido por defecto
+          {
+            id: "carta_autorizacion",
+            name: "Carta de autorización de consignación a un tercero (si aplica).",
+            required: false,
+          }, // opcional
+          { id: "soporte_medico", name: "Soporte médico" }, // requerido
+          { id: "soporte_pago", name: "Soporte de pago o transacción" }, // requerido
+        ],
+      },
     ],
-  },
-],
-
   };
 
   return (
@@ -1427,7 +1449,7 @@ if (
                 </div>
               </>
             )}
-            <h1 className="titulo-form">DATOS DEL PACIENTE:</h1> <br />
+            <h1 className="titulo-form">DATOS DEL PACIENTE-USUARIO:</h1> <br />
             <div className="pqrs-paciente">
               <div className="floating-label">
                 <input
@@ -1626,32 +1648,31 @@ if (
                 )}
               </div>
 
-<div className="floating-label">
-  <select
-    id="eps"
-    name="eps"
-    value={form.eps}
-    onChange={handleChange}
-    onBlur={handleBlur}
-    required
-  >
-    {form.sede === "Bogota-Norte" ? (
-      <option value="Particular">Particular</option>
-    ) : (
-      <>
-        <option value="" disabled hidden></option>
-        {epsOptions.map((eps) => (
-          <option key={eps} value={eps}>
-            {eps}
-          </option>
-        ))}
-      </>
-    )}
-  </select>
-  <label htmlFor="eps">Asegurador (EPS-ARL)</label>
-  {errors.eps && <p className="error">{errors.eps}</p>}
-</div>
-
+              <div className="floating-label">
+                <select
+                  id="eps"
+                  name="eps"
+                  value={form.eps}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
+                >
+                  {form.sede === "Cedritos-Divertido" ? (
+                    <option value="Particular">Particular</option>
+                  ) : (
+                    <>
+                      <option value="" disabled hidden></option>
+                      {epsOptions.map((eps) => (
+                        <option key={eps} value={eps}>
+                          {eps}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
+                <label htmlFor="eps">Asegurador (EPS-ARL)</label>
+                {errors.eps && <p className="error">{errors.eps}</p>}
+              </div>
 
               <div
                 className={`floating-label regimen-select ${
@@ -1972,9 +1993,7 @@ if (
                 </div>
               )}
             </div>
-
-
-     {/* 🔹 Si la clasificación seleccionada está en fileInputsConfig → muestra su(s) botón(es) */}
+            {/* 🔹 Si la clasificación seleccionada está en fileInputsConfig → muestra su(s) botón(es) */}
             {Object.entries(fileInputsConfig).map(([clasificacion, inputs]) =>
               availableClasificaciones.some(
                 (c) =>
@@ -2162,7 +2181,7 @@ if (
                 htmlFor="archivos-adicionales"
                 className="file-upload-button"
               >
-                Subir archivo adicional
+                Subir archivo
               </label>
               <input
                 id="archivos-adicionales"
@@ -2171,7 +2190,24 @@ if (
                 multiple
                 onChange={(e) => {
                   const nuevos = Array.from(e.target.files);
-                  setArchivos((prev) => [...prev, ...nuevos]);
+
+                  // Filtrar por tamaño (máximo 7MB)
+                  const validos = [];
+                  nuevos.forEach((file) => {
+                    if (file.size > 7 * 1024 * 1024) {
+                      Swal.fire({
+                        icon: "error",
+                        title: "Archivo demasiado grande",
+                        text: `El archivo "${file.name}" supera los 7 MB.`,
+                      });
+                    } else {
+                      validos.push(file);
+                    }
+                  });
+
+                  if (validos.length > 0) {
+                    setArchivos((prev) => [...prev, ...validos]);
+                  }
                 }}
               />
 
@@ -2196,9 +2232,6 @@ if (
                 </div>
               )}
             </div>
-
-
-
             <div className="pqrs-textarea-full">
               <textarea
                 name="descripcion"
@@ -2224,7 +2257,6 @@ if (
                 caracteres
               </small>
             </div>
-       
             <div className="politica-box politica-box-compact">
               <label className="politica-label">
                 <input
