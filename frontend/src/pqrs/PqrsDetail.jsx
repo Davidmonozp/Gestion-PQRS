@@ -5,15 +5,20 @@ import "./styles/PqrsDetail.css";
 import { tienePermiso } from "../utils/permisoHelper";
 import Swal from "sweetalert2";
 import Navbar from "../components/Navbar/Navbar";
+import CambioTipoSolicitud from "./components/CambioTipoSolicitud";
 import CountdownTimer from "./components/CountDownTimer";
 import SeguimientoPqrs from "./components/SeguimientoPqrs";
 import ClasificacionesPqrs from "./components/ClasificacionesPqrs";
 import { Version } from "../components/Footer/Version";
+import { PanelDespegable } from "./components/PanelDespegable";
+import ReclasificarPqr from "./components/CambioTipoSolicitud";
 
 function PqrsDetail() {
   const { pqr_codigo } = useParams();
   const navigate = useNavigate();
   const currentUserRole = localStorage.getItem("role");
+  const [mostrarCambio, setMostrarCambio] = useState(false);
+  const cambioRef = useRef(null);
 
   // 🟢 Estado para controlar la visibilidad de los logs
   const [showLogs, setShowLogs] = useState(false);
@@ -28,6 +33,7 @@ function PqrsDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [respuestaFinal, setRespuestaFinal] = useState("");
+  const maxChars = 4000;
   const [yaTieneFinal, setYaTieneFinal] = useState(false);
   const [existingFinalAnswerId, setExistingFinalAnswerId] = useState(null);
   const [mailEnviado, setMailEnviado] = useState(false);
@@ -73,6 +79,16 @@ function PqrsDetail() {
     prioridad: "",
   });
 
+  const [searchTerm, setSearchTerm] = useState("");
+
+// Filtrar usuarios por nombre o apellido
+const filteredUsuarios = usuarios.filter((u) =>
+  `${u.name} ${u.primer_apellido}`
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase())
+);
+
+
   // Función para ajustar la altura del textarea
   const adjustTextareaHeight = () => {
     if (respuestaFinalTextareaRef.current) {
@@ -81,6 +97,19 @@ function PqrsDetail() {
         respuestaFinalTextareaRef.current.scrollHeight + "px";
     }
   };
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (cambioRef.current && !cambioRef.current.contains(event.target)) {
+        setMostrarCambio(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Efecto para ajustar la altura cuando cambia el contenido
   useEffect(() => {
@@ -141,7 +170,16 @@ function PqrsDetail() {
         setYaTieneFinal(true);
         setRespuestaFinal(finalAnswer.contenido.replace(/<br>/g, "\n"));
         setExistingFinalAnswerId(finalAnswer.id);
-        setFinalAnswerAuthorName(finalAnswer.autor?.name || "Desconocido");
+        setFinalAnswerAuthorName(
+          finalAnswer.autor
+            ? `${finalAnswer.autor.name ?? ""} ${
+                finalAnswer.autor.segundo_nombre ?? ""
+              } ${finalAnswer.autor.primer_apellido ?? ""} ${
+                finalAnswer.autor.segundo_apellido ?? ""
+              }`.trim()
+            : "Desconocido"
+        );
+
         setFinalAnswerCreatedAt(finalAnswer.created_at || null);
         // Cargar adjuntos existentes de la respuesta final
         setAdjuntosExistentesRespuestaFinal(finalAnswer.adjuntos || []); // Asegúrate de que sea un array
@@ -191,6 +229,7 @@ function PqrsDetail() {
         "Administrador",
         "Supervisor/Atencion al usuario",
         "Gestor",
+        "Gestor Administrativo",
         "Consultor",
         "Digitador",
       ])
@@ -308,7 +347,8 @@ function PqrsDetail() {
 
       const tipoSolicitudActual =
         pqr?.tipo_solicitud || formData.tipo_solicitud;
-      if (tipoSolicitudActual !== "Solicitud" && !formData.atributo_calidad) {
+      // if (tipoSolicitudActual !== "Solicitud" && !formData.atributo_calidad) {
+      if (!formData.atributo_calidad) {
         Swal.fire(
           "Debe seleccionar un atributo de calidad",
           "El campo atributo_calidad es obligatorio",
@@ -484,7 +524,7 @@ function PqrsDetail() {
       // Mostrar loading mientras se hace la petición
       Swal.fire({
         title: "Enviando correo...",
-        text: "Por favor espera mientras se envía la respuesta al ciudadano.",
+        text: "Por favor espera mientras se envía la respuesta al usuario.",
         allowOutsideClick: false,
         didOpen: () => {
           Swal.showLoading();
@@ -542,15 +582,21 @@ function PqrsDetail() {
   return (
     <>
       <Navbar />
+
       <div className="pqr-card-container">
+        {/* 🔹 Solo visible para admin y supervisor/atención al usuario */}
+        {tienePermiso(["Administrador", "Supervisor/Atencion al usuario"]) && (
+          <PanelDespegable />
+        )}
+
         <h2>Descripción y clasificación de la {pqr.pqr_codigo}</h2>
         <div className="pqr-card-columns">
           {/* Columna de datos simples (izquierda) */}
-          <div className="pqr-card-col">               
+          <div className="pqr-card-col">
             {/* SI SOLICITANTE EXISTE MOSTRAR SUS DATOS */}
             {pqr.registrador_nombre && (
               <div className="solicitante">
-                 <p>
+                <p>
                   <strong>Parentesco:</strong> {pqr.parentesco}{" "}
                 </p>
                 {pqr.nombre_entidad && (
@@ -648,7 +694,10 @@ function PqrsDetail() {
               )}
             </p>
 
-            {tienePermiso(["Administrador", "Supervisor/Atencion al usuario"]) && (
+            {tienePermiso([
+              "Administrador",
+              "Supervisor/Atencion al usuario",
+            ]) && (
               <p>
                 <strong>⏱ Tiempo de usuario:</strong>{" "}
                 {pqr.estado_respuesta === "Cerrado" ? (
@@ -676,8 +725,11 @@ function PqrsDetail() {
               </p>
             )}
 
-            {tienePermiso(["Supervisor/Atencion al usuario", "Administrador"]) &&
-              pqr.rol !== "Gestor" && (
+            {tienePermiso([
+              "Supervisor/Atencion al usuario",
+              "Administrador",
+            ]) &&
+              !["Gestor", "Gestor Administrativo"].includes(pqr.rol) && (
                 <ClasificacionesPqrs
                   pqrId={pqr.id}
                   useIdInUrl={true}
@@ -701,7 +753,6 @@ function PqrsDetail() {
             <p>
               <strong>Tipo Solicitud:</strong> {pqr.tipo_solicitud}
             </p>
-
             {pqr.clasificacion_tutela && (
               <>
                 <p>
@@ -729,8 +780,42 @@ function PqrsDetail() {
               {pqr.estado_respuesta}
             </p>
 
-            {tienePermiso(["Administrador", "Supervisor/Atencion al usuario"]) && (
+            {tienePermiso([
+              "Administrador",
+              "Supervisor/Atencion al usuario",
+            ]) && (
               <>
+                <div ref={cambioRef}>
+                  {" "}
+                  {/* 👈 ahora el contenedor incluye span + panel */}
+                  <strong>Tipo Solicitud:</strong>{" "}
+                  <span
+                    style={{
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                      color: "#007bff",
+                    }}
+                    onClick={() => setMostrarCambio((prev) => !prev)} // toggle
+                  >
+                    {pqr.tipo_solicitud}
+                  </span>
+                  {mostrarCambio && (
+                    <div className="panel-cambio">
+                      <ReclasificarPqr
+                        pqrId={pqr.id}
+                        tipoActual={pqr.tipo_solicitud}
+                        onCambioExitoso={(nuevoTipo) => {
+                          setPqr((prev) => ({
+                            ...prev,
+                            tipo_solicitud: nuevoTipo,
+                          }));
+                          setMostrarCambio(false);
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+
                 <p>
                   <strong>Histórico: </strong>
                   <span className="ver-logs-link" onClick={toggleLogs}>
@@ -746,9 +831,9 @@ function PqrsDetail() {
                         const logUser = usuarios.find(
                           (user) => user.id === log.user_id
                         );
-                        const userName = logUser
-                          ? logUser.name
-                          : "Usuario Desconocido";
+                       const userName = logUser
+  ? `${logUser.name?? ""} ${logUser.segundo_nombre ?? ""} ${logUser.primer_apellido ?? ""} ${logUser.segundo_apellido ?? ""}`.trim()
+  : "Usuario Desconocido";
 
                         return (
                           <li key={log.id}>
@@ -781,6 +866,7 @@ function PqrsDetail() {
                 <p>
                   <strong>Atributo de calidad:</strong> {pqr.atributo_calidad}
                 </p>
+
                 <p>
                   <strong>Fuente:</strong> {pqr.fuente}
                 </p>
@@ -800,43 +886,47 @@ function PqrsDetail() {
             )}
 
             {/* Formulario de edición para roles específicos */}
-            {!["Consultor", "Digitador", "Gestor"].includes(
-              localStorage.getItem("role")
-            ) &&
+            {![
+              "Consultor",
+              "Digitador",
+              "Gestor",
+              "Gestor Administrativo",
+            ].includes(localStorage.getItem("role")) &&
               yaClasificada && (
                 <form onSubmit={handleSubmit}>
-                  {pqr.tipo_solicitud !== "Solicitud" && (
-                    <>
-                      <label>Atributo de Calidad:</label>
-                      <select
-                        name="atributo_calidad"
-                        value={formData.atributo_calidad}
-                        onChange={handleChange}
-                        className="styled-input"
-                        disabled={
-                          (atributoCalidadBloqueado &&
-                            currentUserRole !== "Administrador") ||
-                          pqr.estado_respuesta === "Cerrado"
-                        }
-                      >
-                        <option value="" disabled>
-                          Seleccione
+                  {/* {pqr.tipo_solicitud !== "Solicitud" && ( */}
+                  <>
+                    <label>Atributo de Calidad:</label>
+                    <select
+                      name="atributo_calidad"
+                      value={formData.atributo_calidad}
+                      onChange={handleChange}
+                      className="styled-input"
+                      disabled={
+                        (atributoCalidadBloqueado &&
+                          currentUserRole !== "Administrador") ||
+                        pqr.estado_respuesta === "Cerrado"
+                      }
+                    >
+                      <option value="" disabled>
+                        Seleccione
+                      </option>
+                      {[
+                        "Accesibilidad",
+                        "Continuidad",
+                        "Efectividad",
+                        "Integralidad",
+                        "Oportunidad",
+                        "Pertinencia",
+                        "Seguridad",
+                      ].map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
                         </option>
-                        {[
-                          "Accesibilidad",
-                          "Continuidad",
-                          "Oportunidad",
-                          "Pertinencia",
-                          "Satisfacción del usuario",
-                          "Seguridad",
-                        ].map((opt) => (
-                          <option key={opt} value={opt}>
-                            {opt}
-                          </option>
-                        ))}
-                      </select>
-                    </>
-                  )}
+                      ))}
+                    </select>
+                  </>
+                  {/* )} */}
 
                   <label>Fuente:</label>
                   <select
@@ -867,41 +957,54 @@ function PqrsDetail() {
                     ))}
                   </select>
 
-                  <label>Asignado a:</label>
-                  <div className="custom-multiselect">
-                    <div
-                      className={`custom-select-box ${
-                        estaCerrada ? "disabled" : ""
-                      }`}
-                      onClick={() => {
-                        if (!estaCerrada) setShowCheckboxes(!showCheckboxes);
-                      }}
-                    >
-                      {formData.asignados.length > 0
-                        ? usuarios
-                            .filter((u) => formData.asignados.includes(u.id))
-                            .map((u) => `${u.name} ${u.primer_apellido}`)
-                            .join(", ")
-                        : "Seleccione asignados..."}
-                    </div>
+                 <label>Asignado a:</label>
+<div className="custom-multiselect">
+  <div
+    className={`custom-select-box ${estaCerrada ? "disabled" : ""}`}
+    onClick={() => {
+      if (!estaCerrada) setShowCheckboxes(!showCheckboxes);
+    }}
+  >
+    {formData.asignados.length > 0
+      ? usuarios
+          .filter((u) => formData.asignados.includes(u.id))
+          .map((u) => `${u.name} ${u.primer_apellido}`)
+          .join(", ")
+      : "Seleccione asignados..."}
+  </div>
 
-                    {showCheckboxes && !estaCerrada && (
-                      <div className="checkbox-options">
-                        {usuarios.map((u) => (
-                          <label key={u.id} className="checkbox-item">
-                            <input
-                              type="checkbox"
-                              value={u.id}
-                              checked={formData.asignados.includes(u.id)}
-                              onChange={handleCheckboxChange}
-                              disabled={estaCerrada}
-                            />
-                            {u.name} {u.primer_apellido}
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+  {showCheckboxes && !estaCerrada && (
+    <div className="checkbox-options">
+      {/* Input de búsqueda */}
+      <input
+        type="text"
+        placeholder="Buscar usuario..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="search-input"
+      />
+
+      {/* Lista filtrada */}
+      {filteredUsuarios.length > 0 ? (
+        filteredUsuarios.map((u) => (
+          <label key={u.id} className="checkbox-item">
+            <input
+              type="checkbox"
+              value={u.id}
+              checked={formData.asignados.includes(u.id)}
+              onChange={handleCheckboxChange}
+              disabled={estaCerrada}
+            />
+            {u.name} {u.primer_apellido}
+          </label>
+        ))
+      ) : (
+        <p className="no-results">No se encontraron coincidencias</p>
+      )}
+    </div>
+  )}
+</div>
+
 
                   <label>Prioridad:</label>
                   <select
@@ -995,6 +1098,18 @@ function PqrsDetail() {
                 })}
               </div>
             )}
+            {pqr.tipo_solicitud === "Felicitacion" && (
+              <div className="pqr-mensaje-correo">
+                <p className="pqr-mensaje-titulo">
+                  Mensaje enviado al usuario:
+                </p>
+                <iframe
+                  title="Correo enviado"
+                  className="pqr-mensaje-correo-iframe"
+                  srcDoc={pqr.contenido_correo}
+                />
+              </div>
+            )}
           </div>
 
           {/* Nueva Columna para Historial de Respuestas y Formulario de Respuesta Final */}
@@ -1026,7 +1141,16 @@ function PqrsDetail() {
                               r.es_respuesta_usuario === 0
                           )
                       )
-                      .map((u) => u.name)
+                      .map((u) =>
+                        [
+                          u.name,
+                          u.segundo_nombre,
+                          u.primer_apellido,
+                          u.segundo_apellido,
+                        ]
+                          .filter(Boolean) // elimina valores nulos o vacíos
+                          .join(" ")
+                      )
                       .join(", ") || "Ninguno"}
                   </div>
                 )}
@@ -1041,7 +1165,16 @@ function PqrsDetail() {
                     <div key={respuesta.id} className="respuesta-item-card">
                       <p>
                         <strong>Autor:</strong>{" "}
-                        {respuesta.autor?.name || "Desconocido"}
+                        {respuesta.autor
+                          ? [
+                              respuesta.autor.name,
+                              respuesta.autor.segundo_nombre,
+                              respuesta.autor.primer_apellido,
+                              respuesta.autor.segundo_apellido,
+                            ]
+                              .filter(Boolean) // elimina nulos o vacíos
+                              .join(" ")
+                          : "Desconocido"}
                       </p>
                       <p>
                         <strong>Fecha:</strong>{" "}
@@ -1101,9 +1234,17 @@ function PqrsDetail() {
               pqr?.estado_respuesta
             ) &&
               // Mostrar siempre para Supervisor y Administrador
-              (tienePermiso(["Supervisor/Atencion al usuario", "Administrador"]) ||
+              (tienePermiso([
+                "Supervisor/Atencion al usuario",
+                "Administrador",
+              ]) ||
                 // Para Gestor, Consultor y Digitador, solo si ya hay respuesta final
-                (tienePermiso(["Gestor", "Consultor", "Digitador"]) &&
+                (tienePermiso([
+                  "Gestor",
+                  "Gestor Administrativo",
+                  "Consultor",
+                  "Digitador",
+                ]) &&
                   yaTieneFinal)) && (
                 <div className="respuesta-final">
                   <h2>Respuesta Final</h2>
@@ -1152,8 +1293,16 @@ function PqrsDetail() {
                       if (plantilla && pqr) {
                         let contenido = plantilla.contenido;
 
+                        let fechaOrigen;
+
+                        if (pqr.fecha_inicio_real) {
+                          fechaOrigen = pqr.fecha_inicio_real;
+                        } else {
+                          fechaOrigen = pqr.created_at;
+                        }
+
                         const fechaPqrCreada = new Date(
-                          pqr.created_at
+                          fechaOrigen
                         ).toLocaleDateString("es-CO", {
                           day: "numeric",
                           month: "long",
@@ -1163,7 +1312,9 @@ function PqrsDetail() {
                         // Reemplazo dinámico de placeholders
                         const placeholders = {
                           "[NOMBRE]": `${pqr.nombre || ""} ${
-                            pqr.apellido || ""
+                            pqr.segundo_nombre || ""
+                          } ${pqr.apellido || ""} ${
+                            pqr.segundo_apellido || ""
                           }`.trim(),
                           "[CIUDAD]": pqr.sede || "Ciudad",
                           "[CORREO]": pqr.correo || "",
@@ -1177,7 +1328,9 @@ function PqrsDetail() {
                           }),
                           "[PQR_CREADA]": fechaPqrCreada,
                           "[PACIENTE]": `${pqr.nombre || ""} ${
-                            pqr.apellido || ""
+                            pqr.segundo_nombre || ""
+                          } ${pqr.apellido || ""} ${
+                            pqr.segundo_apellido || ""
                           }`.trim(),
                           "[CC]": pqr.documento_tipo || "",
                         };
@@ -1205,14 +1358,20 @@ function PqrsDetail() {
                     ref={respuestaFinalTextareaRef}
                     value={respuestaFinal}
                     onChange={(e) => setRespuestaFinal(e.target.value)}
-                    rows="1"
+                    rows="4"
                     placeholder="Escribe la respuesta final..."
                     className="styled-input respuesta-final"
-                    disabled={yaTieneFinal && !editandoRespuestaFinal}
+                    maxLength={maxChars}
                   />
+                  <div className="contador-chars">
+                    {respuestaFinal.length} / {maxChars} caracteres
+                  </div>
 
                   {/* NUEVO: Sección para adjuntar y mostrar archivos para la RESPUESTA FINAL */}
-                  {tienePermiso(["Supervisor/Atencion al usuario", "Administrador"]) &&
+                  {tienePermiso([
+                    "Supervisor/Atencion al usuario",
+                    "Administrador",
+                  ]) &&
                     (!yaTieneFinal || editandoRespuestaFinal) && (
                       <div className="adjuntos-final-respuesta-container">
                         <input
@@ -1294,7 +1453,10 @@ function PqrsDetail() {
                     </div>
                   )}
 
-                  {tienePermiso(["Supervisor/Atencion al usuario", "Administrador"]) && (
+                  {tienePermiso([
+                    "Supervisor/Atencion al usuario",
+                    "Administrador",
+                  ]) && (
                     <div
                       style={{
                         display: "flex",
@@ -1338,7 +1500,10 @@ function PqrsDetail() {
                     </div>
                   )}
 
-                  {tienePermiso(["Supervisor/Atencion al usuario", "Administrador"]) &&
+                  {tienePermiso([
+                    "Supervisor/Atencion al usuario",
+                    "Administrador",
+                  ]) &&
                     yaTieneFinal &&
                     !mailEnviado && (
                       <div style={{ marginTop: "20px" }}>
@@ -1362,6 +1527,39 @@ function PqrsDetail() {
 
 export default PqrsDetail;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // import React, { useEffect, useState, useRef, useCallback } from "react"; // Añadimos useCallback
 // import { useParams, useNavigate } from "react-router-dom";
 // import api from "../api/api";
@@ -1369,28 +1567,46 @@ export default PqrsDetail;
 // import { tienePermiso } from "../utils/permisoHelper";
 // import Swal from "sweetalert2";
 // import Navbar from "../components/Navbar/Navbar";
+// import CambioTipoSolicitud from "./components/CambioTipoSolicitud";
 // import CountdownTimer from "./components/CountDownTimer";
 // import SeguimientoPqrs from "./components/SeguimientoPqrs";
 // import ClasificacionesPqrs from "./components/ClasificacionesPqrs";
+// import { Version } from "../components/Footer/Version";
+// import { PanelDespegable } from "./components/PanelDespegable";
+// import ReclasificarPqr from "./components/CambioTipoSolicitud";
 
 // function PqrsDetail() {
 //   const { pqr_codigo } = useParams();
 //   const navigate = useNavigate();
 //   const currentUserRole = localStorage.getItem("role");
+//   const [mostrarCambio, setMostrarCambio] = useState(false);
+//   const cambioRef = useRef(null);
+
+//   // 🟢 Estado para controlar la visibilidad de los logs
+//   const [showLogs, setShowLogs] = useState(false);
+
+//   // 🟢 Función para alternar la visibilidad
+//   const toggleLogs = () => {
+//     setShowLogs(!showLogs);
+//   };
 
 //   const [pqr, setPqr] = useState(null);
 //   const [usuarios, setUsuarios] = useState([]);
 //   const [loading, setLoading] = useState(true);
 //   const [error, setError] = useState(null);
 //   const [respuestaFinal, setRespuestaFinal] = useState("");
+//   const maxChars = 4000;
 //   const [yaTieneFinal, setYaTieneFinal] = useState(false);
 //   const [existingFinalAnswerId, setExistingFinalAnswerId] = useState(null);
 //   const [mailEnviado, setMailEnviado] = useState(false);
 //   const [editandoRespuestaFinal, setEditandoRespuestaFinal] = useState(false);
 //   const [finalAnswerAuthorName, setFinalAnswerAuthorName] = useState(null);
 //   const [finalAnswerCreatedAt, setFinalAnswerCreatedAt] = useState(null);
+//   const [showCheckboxes, setShowCheckboxes] = useState(false);
 
 //   const [isSavingForm, setIsSavingForm] = useState(false);
+//   const [yaClasificada, setYaClasificada] = useState(false);
+//   const estaCerrada = pqr?.estado_respuesta === "Cerrado";
 
 //   // NUEVOS ESTADOS PARA ADJUNTOS DE RESPUESTA FINAL
 //   const [adjuntosRespuestaFinal, setAdjuntosRespuestaFinal] = useState([]);
@@ -1421,7 +1637,7 @@ export default PqrsDetail;
 //   const [formData, setFormData] = useState({
 //     atributo_calidad: "",
 //     fuente: "",
-//     asignado_a: "",
+//     asignados: [],
 //     prioridad: "",
 //   });
 
@@ -1434,10 +1650,40 @@ export default PqrsDetail;
 //     }
 //   };
 
+//   useEffect(() => {
+//     function handleClickOutside(event) {
+//       if (cambioRef.current && !cambioRef.current.contains(event.target)) {
+//         setMostrarCambio(false);
+//       }
+//     }
+
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => {
+//       document.removeEventListener("mousedown", handleClickOutside);
+//     };
+//   }, []);
+
 //   // Efecto para ajustar la altura cuando cambia el contenido
 //   useEffect(() => {
 //     adjustTextareaHeight();
 //   }, [respuestaFinal, editandoRespuestaFinal, loading]);
+
+//   useEffect(() => {
+//     const verificarClasificada = async () => {
+//       try {
+//         const res = await api.get(`/pqrs/${pqr?.id}/clasificaciones`);
+//         if (res.data.length > 0) {
+//           setYaClasificada(true);
+//         }
+//       } catch (err) {
+//         console.error("Error al verificar clasificación:", err);
+//       }
+//     };
+
+//     if (pqr?.id) {
+//       verificarClasificada();
+//     }
+//   }, [pqr?.id]);
 
 //   // Función para cargar usuarios y detalle de PQRS (Memoizada con useCallback)
 //   const fetchPqr = useCallback(async () => {
@@ -1476,7 +1722,16 @@ export default PqrsDetail;
 //         setYaTieneFinal(true);
 //         setRespuestaFinal(finalAnswer.contenido.replace(/<br>/g, "\n"));
 //         setExistingFinalAnswerId(finalAnswer.id);
-//         setFinalAnswerAuthorName(finalAnswer.autor?.name || "Desconocido");
+//         setFinalAnswerAuthorName(
+//           finalAnswer.autor
+//             ? `${finalAnswer.autor.name ?? ""} ${
+//                 finalAnswer.autor.segundo_nombre ?? ""
+//               } ${finalAnswer.autor.primer_apellido ?? ""} ${
+//                 finalAnswer.autor.segundo_apellido ?? ""
+//               }`.trim()
+//             : "Desconocido"
+//         );
+
 //         setFinalAnswerCreatedAt(finalAnswer.created_at || null);
 //         // Cargar adjuntos existentes de la respuesta final
 //         setAdjuntosExistentesRespuestaFinal(finalAnswer.adjuntos || []); // Asegúrate de que sea un array
@@ -1493,7 +1748,7 @@ export default PqrsDetail;
 //       setFormData({
 //         atributo_calidad: p.atributo_calidad || "",
 //         fuente: p.fuente || "",
-//         asignado_a: p?.asignado?.id || "",
+//         asignados: p?.asignados?.map((u) => u.id) || [],
 //         prioridad: p.prioridad || "",
 //         tipo_solicitud: p.tipo_solicitud || "",
 //       });
@@ -1502,7 +1757,7 @@ export default PqrsDetail;
 //       setPrioridadBloqueada(!!p.prioridad);
 //       setAtributoCalidadBloqueado(!!p.atributo_calidad);
 //       setFuenteBloqueada(!!p.fuente);
-//       setAsignadoABloqueado(!!p.asignado?.id);
+//       setAsignadoABloqueado((p?.asignados?.length || 0) > 0);
 //     } catch (err) {
 //       setError("Error cargando la PQRS");
 //     } finally {
@@ -1524,8 +1779,9 @@ export default PqrsDetail;
 //     if (
 //       !tienePermiso([
 //         "Administrador",
-//         "Supervisor",
+//         "Supervisor/Atencion al usuario",
 //         "Gestor",
+//         "Gestor Administrativo",
 //         "Consultor",
 //         "Digitador",
 //       ])
@@ -1542,17 +1798,63 @@ export default PqrsDetail;
 //     cargarPlantillas();
 //   }, [pqr_codigo, navigate, fetchPqr]);
 
+//   const handleCheckboxChange = (e) => {
+//     const id = parseInt(e.target.value);
+//     const isChecked = e.target.checked;
+
+//     setFormData((prev) => {
+//       const current = prev.asignados || [];
+//       return {
+//         ...prev,
+//         asignados: isChecked
+//           ? [...current, id]
+//           : current.filter((uid) => uid !== id),
+//       };
+//     });
+//   };
+
 //   const handleChange = (e) => {
-//     const { name, value } = e.target;
+//     const { name, value, multiple, options } = e.target;
+//     let newValue = value;
+
+//     if (multiple) {
+//       newValue = Array.from(options)
+//         .filter((o) => o.selected)
+//         .map((o) => Number(o.value));
+//     } else if (name === "asignados") {
+//       newValue = Number(value);
+//     }
+
 //     setFormData((prev) => ({
 //       ...prev,
-//       [name]: name === "asignado_a" ? Number(value) : value,
+//       [name]: newValue,
 //     }));
 //   };
 
 //   const handleSubmit = useCallback(
 //     async (e) => {
 //       e.preventDefault();
+
+//       const result = await Swal.fire({
+//         title: "¿Estás seguro?",
+//         text: "¿Deseas guardar los cambios realizados?",
+//         icon: "question",
+//         showCancelButton: true,
+//         confirmButtonText: "Sí, guardar",
+//         cancelButtonText: "Cancelar",
+//       });
+
+//       if (!result.isConfirmed) return;
+//       Swal.fire({
+//         title: "Guardando...",
+//         text: "Por favor espera",
+//         allowOutsideClick: false,
+//         allowEscapeKey: false,
+//         allowEnterKey: false,
+//         didOpen: () => {
+//           Swal.showLoading();
+//         },
+//       });
 
 //       if (!pqr || !pqr.id) {
 //         Swal.fire(
@@ -1575,10 +1877,10 @@ export default PqrsDetail;
 //         return;
 //       }
 
-//       if (!formData.asignado_a) {
+//       if (!formData.asignados || formData.asignados.length === 0) {
 //         Swal.fire(
 //           "Debe seleccionar a quién se asigna",
-//           "El campo asignado_a es obligatorio",
+//           "Debe seleccionar al menos un asignado",
 //           "warning"
 //         );
 //         setIsSavingForm(false);
@@ -1597,7 +1899,8 @@ export default PqrsDetail;
 
 //       const tipoSolicitudActual =
 //         pqr?.tipo_solicitud || formData.tipo_solicitud;
-//       if (tipoSolicitudActual !== "Solicitud" && !formData.atributo_calidad) {
+//       // if (tipoSolicitudActual !== "Solicitud" && !formData.atributo_calidad) {
+//       if (!formData.atributo_calidad) {
 //         Swal.fire(
 //           "Debe seleccionar un atributo de calidad",
 //           "El campo atributo_calidad es obligatorio",
@@ -1607,27 +1910,27 @@ export default PqrsDetail;
 //         return;
 //       }
 
-//       const dataToUpdatePqr = { ...formData };
-
+//       // Prepara los datos para actualizar
 //       const cleanedDataPqr = {};
-//       for (const key in dataToUpdatePqr) {
-//         if (dataToUpdatePqr[key] !== "") {
-//           cleanedDataPqr[key] = dataToUpdatePqr[key];
-//         } else if (key === "asignado_a" && dataToUpdatePqr[key] === "") {
-//           cleanedDataPqr[key] = null;
+//       for (const key in formData) {
+//         const value = formData[key];
+//         if (key === "asignados") {
+//           cleanedDataPqr[key] = Array.isArray(value) ? value : [];
+//         } else if (value !== "" && value !== null) {
+//           cleanedDataPqr[key] = value;
 //         }
 //       }
 
 //       try {
-//         let successMessage = "PQRS actualizada correctamente";
-
 //         const pqrUpdateResponse = await api.put(
 //           `/pqrs/codigo/${pqr.pqr_codigo}`,
 //           cleanedDataPqr
 //         );
 //         setPqr(pqrUpdateResponse.data.data);
-//         successMessage += " y ";
 
+//         Swal.fire("Éxito", "PQRS actualizada correctamente", "success");
+//       } catch (err) {
+//         let errorMessage = "Error al actualizar la PQRS";
 //         if (err.response) {
 //           errorMessage =
 //             err.response.data?.error ||
@@ -1770,6 +2073,16 @@ export default PqrsDetail;
 //     });
 
 //     if (result.isConfirmed) {
+//       // Mostrar loading mientras se hace la petición
+//       Swal.fire({
+//         title: "Enviando correo...",
+//         text: "Por favor espera mientras se envía la respuesta al usuario.",
+//         allowOutsideClick: false,
+//         didOpen: () => {
+//           Swal.showLoading();
+//         },
+//       });
+
 //       try {
 //         await api.post(`/pqrs/codigo/${pqr_codigo}/enviar-respuesta-correo`);
 
@@ -1780,7 +2093,7 @@ export default PqrsDetail;
 //         ).then(() => {
 //           setPqr((prevPqr) => ({ ...prevPqr, respuesta_enviada: 1 }));
 //           setMailEnviado(true);
-//           fetchPqr(); // Y luego re-fetch para una actualización completa y consistente
+//           fetchPqr();
 //         });
 //       } catch (err) {
 //         Swal.fire(
@@ -1821,7 +2134,13 @@ export default PqrsDetail;
 //   return (
 //     <>
 //       <Navbar />
+
 //       <div className="pqr-card-container">
+//         {/* 🔹 Solo visible para admin y supervisor/atención al usuario */}
+//         {tienePermiso(["Administrador", "Supervisor/Atencion al usuario"]) && (
+//           <PanelDespegable />
+//         )}
+
 //         <h2>Descripción y clasificación de la {pqr.pqr_codigo}</h2>
 //         <div className="pqr-card-columns">
 //           {/* Columna de datos simples (izquierda) */}
@@ -1830,17 +2149,34 @@ export default PqrsDetail;
 //             {pqr.registrador_nombre && (
 //               <div className="solicitante">
 //                 <p>
+//                   <strong>Parentesco:</strong> {pqr.parentesco}{" "}
+//                 </p>
+//                 {pqr.nombre_entidad && (
+//                   <p>
+//                     <strong>Nombre de la entidad:</strong> {pqr.nombre_entidad}
+//                   </p>
+//                 )}
+
+//                 <p>
 //                   <strong>Nombre Solicitante:</strong> {pqr.registrador_nombre}{" "}
-//                   {pqr.registrador_apellido}
+//                   {pqr.registrador_segundo_nombre} {pqr.registrador_apellido}{" "}
+//                   {pqr.registrador_segundo_apellido}
 //                 </p>
-//                 <p>
-//                   <strong>Tipo Doc. Solicitante:</strong>{" "}
-//                   {pqr.registrador_documento_tipo}
-//                 </p>
-//                 <p>
-//                   <strong>No. Doc. Solicitante:</strong>{" "}
-//                   {pqr.registrador_documento_numero}
-//                 </p>
+
+//                 {pqr.registrador_documento_numero && (
+//                   <p>
+//                     <strong>Tipo Doc. Solicitante:</strong>{" "}
+//                     {pqr.registrador_documento_tipo}
+//                   </p>
+//                 )}
+
+//                 {pqr.registrador_documento_numero && (
+//                   <p>
+//                     <strong>No. Doc. Solicitante:</strong>{" "}
+//                     {pqr.registrador_documento_numero}
+//                   </p>
+//                 )}
+
 //                 <p>
 //                   <strong>Correo del solicitante:</strong>{" "}
 //                   {pqr.registrador_correo}
@@ -1849,11 +2185,18 @@ export default PqrsDetail;
 //                   <strong>Teléfono del solicitante:</strong>{" "}
 //                   {pqr.registrador_telefono || "No proporcionado"}
 //                 </p>
+
+//                 {pqr.registrador_cargo && (
+//                   <p>
+//                     <strong>Cargo:</strong> {pqr.registrador_cargo}
+//                   </p>
+//                 )}
 //               </div>
 //             )}
 //             {/* FIN DE LOS DATOS DEL SOLICITANTE */}
 //             <p>
-//               <strong>Nombre:</strong> {pqr.nombre} {pqr.apellido}
+//               <strong>Nombre:</strong> {pqr.nombre} {pqr.segundo_nombre}{" "}
+//               {pqr.apellido} {pqr.segundo_apellido}
 //             </p>
 //             <p>
 //               <strong>Tipo Doc:</strong> {pqr.documento_tipo}
@@ -1903,20 +2246,25 @@ export default PqrsDetail;
 //               )}
 //             </p>
 
-//             <p>
-//               <strong>⏱ Tiempo de usuario:</strong>{" "}
-//               {pqr.estado_respuesta === "Cerrado" ? (
-//                 <span style={{ color: "gray", fontStyle: "italic" }}>
-//                   Finalizado
-//                 </span>
-//               ) : pqr.deadline_ciudadano ? (
-//                 <CountdownTimer targetDate={pqr.deadline_ciudadano} />
-//               ) : (
-//                 <span style={{ color: "gray", fontStyle: "italic" }}>
-//                   No iniciado
-//                 </span>
-//               )}
-//             </p>
+//             {tienePermiso([
+//               "Administrador",
+//               "Supervisor/Atencion al usuario",
+//             ]) && (
+//               <p>
+//                 <strong>⏱ Tiempo de usuario:</strong>{" "}
+//                 {pqr.estado_respuesta === "Cerrado" ? (
+//                   <span style={{ color: "gray", fontStyle: "italic" }}>
+//                     Finalizado
+//                   </span>
+//                 ) : pqr.deadline_ciudadano ? (
+//                   <CountdownTimer targetDate={pqr.deadline_ciudadano} />
+//                 ) : (
+//                   <span style={{ color: "gray", fontStyle: "italic" }}>
+//                     No iniciado
+//                   </span>
+//                 )}
+//               </p>
+//             )}
 
 //             <p>
 //               <strong>La PQR fue respondida en un tiempo de:</strong>{" "}
@@ -1928,10 +2276,19 @@ export default PqrsDetail;
 //                 <strong>Tiempo de respuesta:</strong> {pqr.estado_tiempo}
 //               </p>
 //             )}
-//             <ClasificacionesPqrs
-//               pqrId={pqr.id}
-//               useIdInUrl={true}
-//             />
+
+//             {tienePermiso([
+//               "Supervisor/Atencion al usuario",
+//               "Administrador",
+//             ]) &&
+//               !["Gestor", "Gestor Administrativo"].includes(pqr.rol) && (
+//                 <ClasificacionesPqrs
+//                   pqrId={pqr.id}
+//                   useIdInUrl={true}
+//                   deshabilitado={pqr?.estado_respuesta === "Cerrado"}
+//                   onClasificacionesActualizadas={() => setYaClasificada(true)}
+//                 />
+//               )}
 //           </div>
 
 //           {/* Columna editable (centro) */}
@@ -1948,6 +2305,18 @@ export default PqrsDetail;
 //             <p>
 //               <strong>Tipo Solicitud:</strong> {pqr.tipo_solicitud}
 //             </p>
+//             {pqr.clasificacion_tutela && (
+//               <>
+//                 <p>
+//                   <strong>Clasificación de la Tutela:</strong>{" "}
+//                   {pqr.clasificacion_tutela}
+//                 </p>
+//                 <p>
+//                   <strong>Accionado de la Tutela:</strong> {pqr.accionado}
+//                 </p>
+//               </>
+//             )}
+
 //             <p>
 //               <strong>Fecha solicitud:</strong>{" "}
 //               {new Date(pqr.created_at).toLocaleString()}
@@ -1959,33 +2328,125 @@ export default PqrsDetail;
 //                 : "No registra"}
 //             </p>
 //             <p>
-//               <strong>Estado PQR:</strong> {pqr.estado_tiempo}
+//               <strong>Estado de la respuesta PQR:</strong>{" "}
+//               {pqr.estado_respuesta}
 //             </p>
 
+//             {tienePermiso([
+//               "Administrador",
+//               "Supervisor/Atencion al usuario",
+//             ]) && (
+//               <>
+//                 <div ref={cambioRef}>
+//                   {" "}
+//                   {/* 👈 ahora el contenedor incluye span + panel */}
+//                   <strong>Tipo Solicitud:</strong>{" "}
+//                   <span
+//                     style={{
+//                       cursor: "pointer",
+//                       textDecoration: "underline",
+//                       color: "#007bff",
+//                     }}
+//                     onClick={() => setMostrarCambio((prev) => !prev)} // toggle
+//                   >
+//                     {pqr.tipo_solicitud}
+//                   </span>
+//                   {mostrarCambio && (
+//                     <div className="panel-cambio">
+//                       <ReclasificarPqr
+//                         pqrId={pqr.id}
+//                         tipoActual={pqr.tipo_solicitud}
+//                         onCambioExitoso={(nuevoTipo) => {
+//                           setPqr((prev) => ({
+//                             ...prev,
+//                             tipo_solicitud: nuevoTipo,
+//                           }));
+//                           setMostrarCambio(false);
+//                         }}
+//                       />
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 <p>
+//                   <strong>Histórico: </strong>
+//                   <span className="ver-logs-link" onClick={toggleLogs}>
+//                     {showLogs ? "Ocultar Logs" : "Ver Logs"}
+//                   </span>
+//                 </p>
+
+//                 {/* Renderizado condicional de los logs */}
+//                 {showLogs && (
+//                   <ul className="logs-acordeon">
+//                     {pqr.event_logs && pqr.event_logs.length > 0 ? (
+//                       pqr.event_logs.map((log) => {
+//                         const logUser = usuarios.find(
+//                           (user) => user.id === log.user_id
+//                         );
+//                        const userName = logUser
+//   ? `${logUser.name?? ""} ${logUser.segundo_nombre ?? ""} ${logUser.primer_apellido ?? ""} ${logUser.segundo_apellido ?? ""}`.trim()
+//   : "Usuario Desconocido";
+
+//                         return (
+//                           <li key={log.id}>
+//                             <strong>{log.description}</strong>
+//                             <br />
+//                             <strong>Estado anterior: </strong>{" "}
+//                             {log.estado_anterior} <br />
+//                             <strong>Estado nuevo: </strong>
+//                             {log.estado_nuevo} <br />
+//                             <strong>Autor: </strong> {userName} <br />
+//                             <strong>Fecha: </strong> {log.fecha_evento}
+//                             <hr />
+//                             <hr />
+//                           </li>
+//                         );
+//                       })
+//                     ) : (
+//                       <li>No hay eventos registrados.</li>
+//                     )}
+//                   </ul>
+//                 )}
+//               </>
+//             )}
+
 //             {/* Campos bloqueados para roles específicos */}
-//             {!["Administrador", "Supervisor"].includes(
+//             {!["Administrador", "Supervisor/Atencion al usuario"].includes(
 //               localStorage.getItem("role")
 //             ) && (
 //               <>
 //                 <p>
 //                   <strong>Atributo de calidad:</strong> {pqr.atributo_calidad}
 //                 </p>
+
 //                 <p>
 //                   <strong>Fuente:</strong> {pqr.fuente}
 //                 </p>
 //                 <p>
 //                   <strong>Asignado a:</strong>{" "}
-//                   {pqr.asignado ? pqr.asignado.name : "Sin asignar"}
+//                   {pqr.asignados && pqr.asignados.length > 0
+//                     ? pqr.asignados.map((u) => u.name).join(", ")
+//                     : "Sin asignar"}
+//                 </p>
+//                 <p>
+//                   <strong>Clasificación: </strong>
+//                   {pqr.clasificaciones && pqr.clasificaciones.length > 0
+//                     ? pqr.clasificaciones.map((c) => c.nombre).join(", ")
+//                     : "Sin clasificar"}
 //                 </p>
 //               </>
 //             )}
 
 //             {/* Formulario de edición para roles específicos */}
-//             {!["Consultor", "Digitador", "Gestor"].includes(
-//               localStorage.getItem("role")
-//             ) && (
-//               <form onSubmit={handleSubmit}>
-//                 {pqr.tipo_solicitud !== "Solicitud" && (
+//             {![
+//               "Consultor",
+//               "Digitador",
+//               "Gestor",
+//               "Gestor Administrativo",
+//             ].includes(localStorage.getItem("role")) &&
+//               yaClasificada && (
+//                 <form onSubmit={handleSubmit}>
+//                   {/* {pqr.tipo_solicitud !== "Solicitud" && ( */}
 //                   <>
 //                     <label>Atributo de Calidad:</label>
 //                     <select
@@ -2005,9 +2466,10 @@ export default PqrsDetail;
 //                       {[
 //                         "Accesibilidad",
 //                         "Continuidad",
+//                         "Efectividad",
+//                         "Integralidad",
 //                         "Oportunidad",
 //                         "Pertinencia",
-//                         "Satisfacción del usuario",
 //                         "Seguridad",
 //                       ].map((opt) => (
 //                         <option key={opt} value={opt}>
@@ -2016,80 +2478,99 @@ export default PqrsDetail;
 //                       ))}
 //                     </select>
 //                   </>
-//                 )}
+//                   {/* )} */}
 
-//                 <label>Fuente:</label>
-//                 <select
-//                   name="fuente"
-//                   value={formData.fuente}
-//                   onChange={handleChange}
-//                   className="styled-input"
-//                   disabled={
-//                     (fuenteBloqueada && currentUserRole !== "Administrador") ||
-//                     pqr.estado_respuesta === "Cerrado"
-//                   }
-//                 >
-//                   <option value="" disabled>
-//                     Seleccione
-//                   </option>
-//                   {[
-//                     "Formulario de la web",
-//                     "Correo atención al usuario",
-//                     "Correo de Agendamiento NAC",
-//                     "Encuesta de satisfacción IPS",
-//                     "Callcenter",
-//                     "Presencial",
-//                   ].map((opt) => (
-//                     <option key={opt} value={opt}>
-//                       {opt}
+//                   <label>Fuente:</label>
+//                   <select
+//                     name="fuente"
+//                     value={formData.fuente}
+//                     onChange={handleChange}
+//                     className="styled-input"
+//                     disabled={
+//                       (fuenteBloqueada &&
+//                         currentUserRole !== "Administrador") ||
+//                       pqr.estado_respuesta === "Cerrado"
+//                     }
+//                   >
+//                     <option value="" disabled>
+//                       Seleccione
 //                     </option>
-//                   ))}
-//                 </select>
+//                     {[
+//                       "Formulario de la web",
+//                       "Correo atención al usuario",
+//                       "Correo de Agendamiento NAC",
+//                       "Encuesta de satisfacción IPS",
+//                       "Callcenter",
+//                       "Presencial",
+//                     ].map((opt) => (
+//                       <option key={opt} value={opt}>
+//                         {opt}
+//                       </option>
+//                     ))}
+//                   </select>
 
-//                 <label>Asignado a:</label>
-//                 <select
-//                   name="asignado_a"
-//                   value={formData.asignado_a}
-//                   onChange={handleChange}
-//                   className="styled-input"
-//                   disabled={
-//                     (asignadoABloqueado &&
-//                       currentUserRole !== "Administrador") ||
-//                     pqr.estado_respuesta === "Cerrado"
-//                   }
-//                 >
-//                   <option value="" disabled>
-//                     Seleccione
-//                   </option>
-//                   {usuarios.map((user) => (
-//                     <option key={user.id} value={user.id}>
-//                       {user.name}
-//                     </option>
-//                   ))}
-//                 </select>
-//                 <label>Prioridad:</label>
-//                 <select
-//                   name="prioridad"
-//                   value={formData.prioridad}
-//                   onChange={handleChange}
-//                   className="styled-input"
-//                   disabled={
-//                     prioridadBloqueada || pqr.estado_respuesta === "Cerrado"
-//                   }
-//                 >
-//                   <option value="" disabled>
-//                     Seleccione prioridad
-//                   </option>
-//                   {["Vital", "Priorizado", "Simple", "Solicitud"].map((opt) => (
-//                     <option key={opt} value={opt}>
-//                       {opt}
-//                     </option>
-//                   ))}
-//                 </select>
+//                   <label>Asignado a:</label>
+//                   <div className="custom-multiselect">
+//                     <div
+//                       className={`custom-select-box ${
+//                         estaCerrada ? "disabled" : ""
+//                       }`}
+//                       onClick={() => {
+//                         if (!estaCerrada) setShowCheckboxes(!showCheckboxes);
+//                       }}
+//                     >
+//                       {formData.asignados.length > 0
+//                         ? usuarios
+//                             .filter((u) => formData.asignados.includes(u.id))
+//                             .map((u) => `${u.name}  ${u.primer_apellido} `)
+//                             .join(", ")
+//                         : "Seleccione asignados..."}
+//                     </div>
 
-//                 <button type="submit">Guardar Cambios</button>
-//               </form>
-//             )}
+//                     {showCheckboxes && !estaCerrada && (
+//                       <div className="checkbox-options">
+//                         {usuarios.map((u) => (
+//                           <label key={u.id} className="checkbox-item">
+//                             <input
+//                               type="checkbox"
+//                               value={u.id}
+//                               checked={formData.asignados.includes(u.id)}
+//                               onChange={handleCheckboxChange}
+//                               disabled={estaCerrada}
+//                             />
+//                             {u.name} {u.primer_apellido}
+//                           </label>
+//                         ))}
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   <label>Prioridad:</label>
+//                   <select
+//                     name="prioridad"
+//                     value={formData.prioridad}
+//                     onChange={handleChange}
+//                     className="styled-input"
+//                     disabled={
+//                       prioridadBloqueada || pqr.estado_respuesta === "Cerrado"
+//                     }
+//                   >
+//                     <option value="" disabled>
+//                       Seleccione prioridad
+//                     </option>
+//                     {/* {["Vital", "Priorizado", "Simple", "Solicitud"].map( */}
+//                     {["Vital", "Priorizado", "Simple"].map((opt) => (
+//                       <option key={opt} value={opt}>
+//                         {opt}
+//                       </option>
+//                     ))}
+//                   </select>
+
+//                   <button type="submit" disabled={isSavingForm || estaCerrada}>
+//                     {isSavingForm ? "Guardando..." : "Guardar Cambios"}
+//                   </button>
+//                 </form>
+//               )}
 //           </div>
 
 //           {/* Descripción larga y adjuntos de la PQRS original (columna derecha) */}
@@ -2104,10 +2585,7 @@ export default PqrsDetail;
 //               <div className="archivos-adjuntos" style={{ marginTop: "10px" }}>
 //                 <strong>Archivos adjuntos de la PQRS:</strong>{" "}
 //                 {pqr.archivo.map((fileItem, index) => {
-//                   // Asume que fileItem es un objeto { path: "...", original_name: "..." }
-//                   // const urlArchivo = `http://localhost:8000/storage/${fileItem.path}`;
-//                   const urlArchivo = `http://192.168.1.30:8000/storage/${fileItem.path}`;
-
+//                   const urlArchivo = fileItem.url; // ✅ ya viene lista desde Laravel
 //                   const fileName = fileItem.original_name;
 
 //                   return (
@@ -2116,14 +2594,20 @@ export default PqrsDetail;
 //                       style={{ marginBottom: "10px" }}
 //                     >
 //                       {/* Enlace para descargar o ver */}
-//                       <a
-//                         href={urlArchivo}
-//                         target="_blank"
-//                         rel="noopener noreferrer"
-//                         style={{ display: "inline-block", marginRight: "10px" }}
-//                       >
-//                         {fileName}
-//                       </a>
+//                       {urlArchivo && (
+//                         <a
+//                           href={urlArchivo}
+//                           target="_blank"
+//                           rel="noopener noreferrer"
+//                           style={{
+//                             display: "inline-block",
+//                             marginRight: "10px",
+//                           }}
+//                         >
+//                           {fileName}
+//                         </a>
+//                       )}
+
 //                       {/* Previsualización si es imagen o PDF */}
 //                       {fileItem.path.match(/\.(jpeg|jpg|png|gif)$/i) ? (
 //                         <div>
@@ -2143,15 +2627,26 @@ export default PqrsDetail;
 //                             src={urlArchivo}
 //                             title={`PDF Adjunto ${index + 1}`}
 //                             width="100%"
-//                             height="200px"
+//                             height="500px"
 //                             style={{ border: "1px solid #ccc" }}
 //                           ></iframe>
 //                         </div>
-//                       ) : null}{" "}
-//                       {/* No hay previsualización para otros tipos */}
+//                       ) : null}
 //                     </div>
 //                   );
 //                 })}
+//               </div>
+//             )}
+//             {pqr.tipo_solicitud === "Felicitacion" && (
+//               <div className="pqr-mensaje-correo">
+//                 <p className="pqr-mensaje-titulo">
+//                   Mensaje enviado al usuario:
+//                 </p>
+//                 <iframe
+//                   title="Correo enviado"
+//                   className="pqr-mensaje-correo-iframe"
+//                   srcDoc={pqr.contenido_correo}
+//                 />
 //               </div>
 //             )}
 //           </div>
@@ -2172,6 +2667,33 @@ export default PqrsDetail;
 //             {pqr.respuestas && pqr.respuestas.length > 0 && (
 //               <div className="preliminary-responses-section">
 //                 <h2>Respuestas Preliminares</h2>
+//                 {pqr.asignados && (
+//                   <div className="pendientes-respuesta mb-2 text-sm text-gray-700">
+//                     <strong>Pendientes por responder:</strong>{" "}
+//                     {pqr.asignados
+//                       .filter(
+//                         (usuario) =>
+//                           !pqr.respuestas?.some(
+//                             (r) =>
+//                               r.user_id === usuario.id &&
+//                               !r.es_final && // respuesta preliminar
+//                               r.es_respuesta_usuario === 0
+//                           )
+//                       )
+//                       .map((u) =>
+//                         [
+//                           u.name,
+//                           u.segundo_nombre,
+//                           u.primer_apellido,
+//                           u.segundo_apellido,
+//                         ]
+//                           .filter(Boolean) // elimina valores nulos o vacíos
+//                           .join(" ")
+//                       )
+//                       .join(", ") || "Ninguno"}
+//                   </div>
+//                 )}
+//                 <hr />
 //                 {/* Filtra las respuestas para incluir solo las que NO son finales */}
 //                 {pqr.respuestas
 //                   .filter((respuesta) => !respuesta.es_final)
@@ -2182,7 +2704,16 @@ export default PqrsDetail;
 //                     <div key={respuesta.id} className="respuesta-item-card">
 //                       <p>
 //                         <strong>Autor:</strong>{" "}
-//                         {respuesta.autor?.name || "Desconocido"}
+//                         {respuesta.autor
+//                           ? [
+//                               respuesta.autor.name,
+//                               respuesta.autor.segundo_nombre,
+//                               respuesta.autor.primer_apellido,
+//                               respuesta.autor.segundo_apellido,
+//                             ]
+//                               .filter(Boolean) // elimina nulos o vacíos
+//                               .join(" ")
+//                           : "Desconocido"}
 //                       </p>
 //                       <p>
 //                         <strong>Fecha:</strong>{" "}
@@ -2212,8 +2743,8 @@ export default PqrsDetail;
 //                             {respuesta.adjuntos.map((adj, idx) => (
 //                               <li key={idx} className="adjunto-item">
 //                                 <a
-//                                   // href={`http://127.0.0.1:8000/storage/${adj.path}`}
-//                                   href={`http://192.168.1.30:8000/storage/${adj.path}`}
+//                                   // Use the full URL provided by the backend
+//                                   href={adj.url}
 //                                   target="_blank"
 //                                   rel="noopener noreferrer"
 //                                 >
@@ -2240,247 +2771,298 @@ export default PqrsDetail;
 
 //             {["Asignado", "En proceso", "Cerrado"].includes(
 //               pqr?.estado_respuesta
-//             ) && (
-//               <div className="respuesta-final">
-//                 <h2>Respuesta Final</h2>
+//             ) &&
+//               // Mostrar siempre para Supervisor y Administrador
+//               (tienePermiso([
+//                 "Supervisor/Atencion al usuario",
+//                 "Administrador",
+//               ]) ||
+//                 // Para Gestor, Consultor y Digitador, solo si ya hay respuesta final
+//                 (tienePermiso([
+//                   "Gestor",
+//                   "Gestor Administrativo",
+//                   "Consultor",
+//                   "Digitador",
+//                 ]) &&
+//                   yaTieneFinal)) && (
+//                 <div className="respuesta-final">
+//                   <h2>Respuesta Final</h2>
 
-//                 {yaTieneFinal &&
-//                 finalAnswerAuthorName &&
-//                 finalAnswerCreatedAt ? (
-//                   <div className="respuesta-item-card">
-//                     <p>
-//                       <strong>Autor:</strong> {finalAnswerAuthorName}
-//                     </p>
-//                     <p>
-//                       <strong>Fecha:</strong>{" "}
-//                       {new Date(finalAnswerCreatedAt).toLocaleString("es-CO", {
-//                         day: "2-digit",
-//                         month: "long",
-//                         year: "numeric",
-//                         hour: "2-digit",
-//                         minute: "2-digit",
-//                       })}
-//                     </p>
-//                     <p>
-//                       <strong>Tipo:</strong>{" "}
-//                       <span className="tag-interna">Respuesta Final</span>
-//                     </p>
-//                   </div>
-//                 ) : (
-//                   <h3>Registrar Respuesta Final</h3>
-//                 )}
-//                 {/* Dropdown de plantillas */}
-//                 <select
-//                   className="styled-input"
-//                   value={plantillaSeleccionada}
-//                   onChange={(e) => {
-//                     const idSeleccionado = e.target.value;
-//                     setPlantillaSeleccionada(idSeleccionado);
+//                   {yaTieneFinal &&
+//                   finalAnswerAuthorName &&
+//                   finalAnswerCreatedAt ? (
+//                     <div className="respuesta-item-card">
+//                       <p>
+//                         <strong>Autor:</strong> {finalAnswerAuthorName}
+//                       </p>
+//                       <p>
+//                         <strong>Fecha:</strong>{" "}
+//                         {new Date(finalAnswerCreatedAt).toLocaleString(
+//                           "es-CO",
+//                           {
+//                             day: "2-digit",
+//                             month: "long",
+//                             year: "numeric",
+//                             hour: "2-digit",
+//                             minute: "2-digit",
+//                           }
+//                         )}
+//                       </p>
+//                       <p>
+//                         <strong>Tipo:</strong>{" "}
+//                         <span className="tag-interna">Respuesta Final</span>
+//                       </p>
+//                     </div>
+//                   ) : (
+//                     <h3>Registrar Respuesta Final</h3>
+//                   )}
 
-//                     const plantilla = plantillas.find(
-//                       (p) => p.id.toString() === idSeleccionado
-//                     );
+//                   {/* Dropdown de plantillas */}
+//                   <select
+//                     className="styled-input"
+//                     value={plantillaSeleccionada}
+//                     onChange={(e) => {
+//                       const idSeleccionado = e.target.value;
+//                       setPlantillaSeleccionada(idSeleccionado);
 
-//                     if (plantilla && pqr) {
-//                       let contenido = plantilla.contenido;
+//                       const plantilla = plantillas.find(
+//                         (p) => p.id.toString() === idSeleccionado
+//                       );
 
-//                       const fechaPqrCreada = new Date(
-//                         pqr.created_at
-//                       ).toLocaleDateString("es-CO", {
-//                         day: "numeric",
-//                         month: "long",
-//                         year: "numeric",
-//                       });
+//                       if (plantilla && pqr) {
+//                         let contenido = plantilla.contenido;
 
-//                       // Reemplazo dinámico de placeholders
-//                       const placeholders = {
-//                         "[NOMBRE]": `${pqr.nombre || ""} ${
-//                           pqr.apellido || ""
-//                         }`.trim(),
-//                         "[CIUDAD]": pqr.sede || "Ciudad",
-//                         "[CORREO]": pqr.correo || "",
-//                         "[TIPO_DOC]": pqr.documento_tipo || "",
-//                         "[NUMERO_DOC]": pqr.documento_numero || "",
-//                         "[TELEFONO]": pqr.telefono || "",
-//                         "[FECHA]": new Date().toLocaleDateString("es-CO", {
+//                         let fechaOrigen;
+
+//                         if (pqr.fecha_inicio_real) {
+//                           fechaOrigen = pqr.fecha_inicio_real;
+//                         } else {
+//                           fechaOrigen = pqr.created_at;
+//                         }
+
+//                         const fechaPqrCreada = new Date(
+//                           fechaOrigen
+//                         ).toLocaleDateString("es-CO", {
 //                           day: "numeric",
 //                           month: "long",
 //                           year: "numeric",
-//                         }),
-//                         "[PQR_CREADA]": fechaPqrCreada,
-//                         "[PACIENTE]": `${pqr.nombre || ""} ${
-//                           pqr.apellido || ""
-//                         }`.trim(),
-//                         "[CC]": pqr.documento_tipo || "",
-//                       };
+//                         });
 
-//                       for (const clave in placeholders) {
-//                         const valor = placeholders[clave];
-//                         contenido = contenido.replaceAll(clave, valor);
-//                       }
+//                         // Reemplazo dinámico de placeholders
+//                         const placeholders = {
+//                           "[NOMBRE]": `${pqr.nombre || ""} ${
+//                             pqr.segundo_nombre || ""
+//                           } ${pqr.apellido || ""} ${
+//                             pqr.segundo_apellido || ""
+//                           }`.trim(),
+//                           "[CIUDAD]": pqr.sede || "Ciudad",
+//                           "[CORREO]": pqr.correo || "",
+//                           "[TIPO_DOC]": pqr.documento_tipo || "",
+//                           "[NUMERO_DOC]": pqr.documento_numero || "",
+//                           "[TELEFONO]": pqr.telefono || "",
+//                           "[FECHA]": new Date().toLocaleDateString("es-CO", {
+//                             day: "numeric",
+//                             month: "long",
+//                             year: "numeric",
+//                           }),
+//                           "[PQR_CREADA]": fechaPqrCreada,
+//                           "[PACIENTE]": `${pqr.nombre || ""} ${
+//                             pqr.segundo_nombre || ""
+//                           } ${pqr.apellido || ""} ${
+//                             pqr.segundo_apellido || ""
+//                           }`.trim(),
+//                           "[CC]": pqr.documento_tipo || "",
+//                         };
 
-//                       setRespuestaFinal(contenido);
-//                     }
-//                   }}
-//                   disabled={yaTieneFinal && !editandoRespuestaFinal}
-//                 >
-//                   <option value="">-- Selecciona una plantilla --</option>
-//                   {plantillas.map((p) => (
-//                     <option key={p.id} value={p.id}>
-//                       {p.nombre}
-//                     </option>
-//                   ))}
-//                 </select>
-//                 {/* Área de texto editable */}
-//                 <textarea
-//                   ref={respuestaFinalTextareaRef}
-//                   value={respuestaFinal}
-//                   onChange={(e) => setRespuestaFinal(e.target.value)}
-//                   rows="1"
-//                   placeholder="Escribe la respuesta final..."
-//                   className="styled-input respuesta-final"
-//                   disabled={yaTieneFinal && !editandoRespuestaFinal}
-//                 />
-//                 {/* NUEVO: Sección para adjuntar y mostrar archivos para la RESPUESTA FINAL */}
-//                 {/* Visible solo si tiene permiso y no está cerrada O si está en modo edición */}
-//                 {tienePermiso(["Supervisor", "Administrador"]) &&
-//                   (!yaTieneFinal || editandoRespuestaFinal) && (
-//                     <div className="adjuntos-final-respuesta-container">
-//                       {/* <label htmlFor="adjuntos-final-respuesta">Adjuntar archivos (Respuesta Final):</label> */}
-//                       <input
-//                         type="file"
-//                         id="adjuntos-final-respuesta"
-//                         multiple
-//                         onChange={(e) =>
-//                           setAdjuntosRespuestaFinal(Array.from(e.target.files))
+//                         for (const clave in placeholders) {
+//                           const valor = placeholders[clave];
+//                           contenido = contenido.replaceAll(clave, valor);
 //                         }
-//                         className="styled-input"
-//                         style={{ marginTop: "10px" }}
-//                       />
-//                       <div className="lista-adjuntos-nuevos">
-//                         {adjuntosRespuestaFinal.length > 0 && (
-//                           <p>
-//                             <strong>Archivos nuevos a subir:</strong>
-//                           </p>
-//                         )}
-//                         {adjuntosRespuestaFinal.map((file, index) => (
-//                           <div
-//                             key={`new-adj-${index}`}
-//                             className="adjunto-item"
-//                           >
-//                             <span>{file.name}</span>
-//                             <button
-//                               type="button"
-//                               onClick={() => handleRemoveNewAttachment(index)}
-//                               className="remove-adjunto-button"
-//                             >
-//                               X
-//                             </button>
-//                           </div>
-//                         ))}
-//                       </div>
-//                     </div>
-//                   )}
-//                 {/* Mostrar adjuntos existentes de la RESPUESTA FINAL (si hay) */}
-//                 {adjuntosExistentesRespuestaFinal.length > 0 && (
-//                   <div className="adjuntos-final-respuesta-existentes">
-//                     <h3>🗂️ Archivos adjuntos actuales de la respuesta:</h3>
-//                     <ul>
-//                       {adjuntosExistentesRespuestaFinal.map(
-//                         (fileItem, index) => (
-//                           <div
-//                             key={`existing-adj-${index}`}
-//                             className="adjunto-item"
-//                           >
-//                             <a
-//                               // href={`http://127.0.0.1:8000/storage/${fileItem.path}`}
-//                               href={`http://192.168.1.30:8000/storage/${fileItem.path}`}
-//                               target="_blank"
-//                               rel="noopener noreferrer"
-//                             >
-//                               {fileItem.original_name ||
-//                                 `Archivo ${fileIndex + 1}`}
-//                             </a>
-//                             {/* Permitir eliminar adjuntos existentes solo en modo edición y con permiso */}
-//                             {editandoRespuestaFinal &&
-//                               tienePermiso(["Supervisor", "Administrador"]) && (
-//                                 <button
-//                                   type="button"
-//                                   onClick={() =>
-//                                     handleRemoveExistingAttachment(index)
-//                                   }
-//                                   className="remove-adjunto-button"
-//                                 >
-//                                   X
-//                                 </button>
-//                               )}
-//                           </div>
-//                         )
-//                       )}
-//                     </ul>
-//                   </div>
-//                 )}
-//                 {tienePermiso(["Supervisor", "Administrador"]) && (
-//                   <div
-//                     style={{
-//                       display: "flex",
-//                       gap: "10px",
-//                       marginTop: "10px",
+
+//                         setRespuestaFinal(contenido);
+//                       }
 //                     }}
+//                     disabled={yaTieneFinal && !editandoRespuestaFinal}
 //                   >
-//                     {!yaTieneFinal && (
-//                       <button onClick={handleFinalAnswerAction}>
-//                         Registrar Respuesta Final
-//                       </button>
+//                     <option value="">-- Selecciona una plantilla --</option>
+//                     {plantillas.map((p) => (
+//                       <option key={p.id} value={p.id}>
+//                         {p.nombre}
+//                       </option>
+//                     ))}
+//                   </select>
+
+//                   {/* Área de texto editable */}
+//                   <textarea
+//                     ref={respuestaFinalTextareaRef}
+//                     value={respuestaFinal}
+//                     onChange={(e) => setRespuestaFinal(e.target.value)}
+//                     rows="4"
+//                     placeholder="Escribe la respuesta final..."
+//                     className="styled-input respuesta-final"
+//                     maxLength={maxChars}
+//                   />
+//                   <div className="contador-chars">
+//                     {respuestaFinal.length} / {maxChars} caracteres
+//                   </div>
+
+//                   {/* NUEVO: Sección para adjuntar y mostrar archivos para la RESPUESTA FINAL */}
+//                   {tienePermiso([
+//                     "Supervisor/Atencion al usuario",
+//                     "Administrador",
+//                   ]) &&
+//                     (!yaTieneFinal || editandoRespuestaFinal) && (
+//                       <div className="adjuntos-final-respuesta-container">
+//                         <input
+//                           type="file"
+//                           id="adjuntos-final-respuesta"
+//                           multiple
+//                           onChange={(e) =>
+//                             setAdjuntosRespuestaFinal(
+//                               Array.from(e.target.files)
+//                             )
+//                           }
+//                           className="styled-input"
+//                           style={{ marginTop: "10px" }}
+//                         />
+//                         <div className="lista-adjuntos-nuevos">
+//                           {adjuntosRespuestaFinal.length > 0 && (
+//                             <p>
+//                               <strong>Archivos nuevos a subir:</strong>
+//                             </p>
+//                           )}
+//                           {adjuntosRespuestaFinal.map((file, index) => (
+//                             <div
+//                               key={`new-adj-${index}`}
+//                               className="adjunto-item"
+//                             >
+//                               <span>{file.name}</span>
+//                               <button
+//                                 type="button"
+//                                 onClick={() => handleRemoveNewAttachment(index)}
+//                                 className="remove-adjunto-button"
+//                               >
+//                                 X
+//                               </button>
+//                             </div>
+//                           ))}
+//                         </div>
+//                       </div>
 //                     )}
 
-//                     {yaTieneFinal &&
-//                       !editandoRespuestaFinal &&
-//                       pqr &&
-//                       !mailEnviado && (
-//                         <button onClick={() => setEditandoRespuestaFinal(true)}>
-//                           Editar Respuesta Final
+//                   {/* Mostrar adjuntos existentes de la RESPUESTA FINAL */}
+//                   {adjuntosExistentesRespuestaFinal.length > 0 && (
+//                     <div className="adjuntos-final-respuesta-existentes">
+//                       <h3>🗂️ Archivos adjuntos actuales de la respuesta:</h3>
+//                       <ul>
+//                         {adjuntosExistentesRespuestaFinal.map(
+//                           (fileItem, index) => (
+//                             <div
+//                               key={`existing-adj-${index}`}
+//                               className="adjunto-item"
+//                             >
+//                               <a
+//                                 // ¡CAMBIO AQUÍ! Usa fileItem.url directamente
+//                                 href={fileItem.url}
+//                                 target="_blank"
+//                                 rel="noopener noreferrer"
+//                               >
+//                                 {fileItem.original_name ||
+//                                   `Archivo ${index + 1}`}
+//                               </a>
+//                               {editandoRespuestaFinal &&
+//                                 tienePermiso([
+//                                   "Supervisor/Atencion al usuario",
+//                                   "Administrador",
+//                                 ]) && (
+//                                   <button
+//                                     type="button"
+//                                     onClick={() =>
+//                                       handleRemoveExistingAttachment(index)
+//                                     }
+//                                     className="remove-adjunto-button"
+//                                   >
+//                                     X
+//                                   </button>
+//                                 )}
+//                             </div>
+//                           )
+//                         )}
+//                       </ul>
+//                     </div>
+//                   )}
+
+//                   {tienePermiso([
+//                     "Supervisor/Atencion al usuario",
+//                     "Administrador",
+//                   ]) && (
+//                     <div
+//                       style={{
+//                         display: "flex",
+//                         gap: "10px",
+//                         marginTop: "10px",
+//                       }}
+//                     >
+//                       {!yaTieneFinal && (
+//                         <button onClick={handleFinalAnswerAction}>
+//                           Registrar Respuesta Final
 //                         </button>
 //                       )}
 
-//                     {yaTieneFinal && editandoRespuestaFinal && (
-//                       <>
-//                         <button onClick={handleFinalAnswerAction}>
-//                           Guardar Cambios (Respuesta Final)
-//                         </button>
-//                         <button
-//                           className="boton-cancelar-edicion"
-//                           onClick={() => {
-//                             setEditandoRespuestaFinal(false);
-//                             fetchPqr(); // Re-fetch para restablecer los valores originales y los adjuntos
-//                           }}
-//                         >
-//                           Cancelar edición
-//                         </button>
-//                       </>
-//                     )}
-//                   </div>
-//                 )}
-//                 {/* Botón para enviar al ciudadano, visible solo si ya hay respuesta final y no ha sido enviada */}
-//                 {tienePermiso(["Supervisor", "Administrador"]) &&
-//                   yaTieneFinal &&
-//                   !mailEnviado && (
-//                     <div style={{ marginTop: "20px" }}>
-//                       <button
-//                         onClick={enviarAlCiudadano}
-//                         className="boton-enviar-respuesta"
-//                       >
-//                         ✉️ Enviar Respuesta Final al Usuario
-//                       </button>
+//                       {yaTieneFinal &&
+//                         !editandoRespuestaFinal &&
+//                         pqr &&
+//                         !mailEnviado && (
+//                           <button
+//                             onClick={() => setEditandoRespuestaFinal(true)}
+//                           >
+//                             Editar Respuesta Final
+//                           </button>
+//                         )}
+
+//                       {yaTieneFinal && editandoRespuestaFinal && (
+//                         <>
+//                           <button onClick={handleFinalAnswerAction}>
+//                             Guardar Cambios (Respuesta Final)
+//                           </button>
+//                           <button
+//                             className="boton-cancelar-edicion"
+//                             onClick={() => {
+//                               setEditandoRespuestaFinal(false);
+//                               fetchPqr(); // Re-fetch para restablecer los valores originales y los adjuntos
+//                             }}
+//                           >
+//                             Cancelar edición
+//                           </button>
+//                         </>
+//                       )}
 //                     </div>
 //                   )}
-//               </div>
-//             )}
+
+//                   {tienePermiso([
+//                     "Supervisor/Atencion al usuario",
+//                     "Administrador",
+//                   ]) &&
+//                     yaTieneFinal &&
+//                     !mailEnviado && (
+//                       <div style={{ marginTop: "20px" }}>
+//                         <button
+//                           onClick={enviarAlCiudadano}
+//                           className="boton-enviar-respuesta"
+//                         >
+//                           ✉️ Enviar Respuesta Final al Usuario
+//                         </button>
+//                       </div>
+//                     )}
+//                 </div>
+//               )}
 //           </div>
 //         </div>
 //       </div>
+//       <Version />
 //     </>
 //   );
 // }
 
 // export default PqrsDetail;
+

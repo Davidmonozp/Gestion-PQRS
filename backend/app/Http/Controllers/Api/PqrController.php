@@ -14,11 +14,13 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\View;
+
 
 class PqrController extends Controller
 {
 
-    public function store(Request $request, CodigoPqrService $codigoService)
+       public function store(Request $request, CodigoPqrService $codigoService)
     {
         try {
             $registra_otro = $request->input('registra_otro') === 'si';
@@ -88,7 +90,17 @@ class PqrController extends Controller
                     'registrador_segundo_nombre' => 'nullable|string|max:100',
                     'registrador_apellido' => 'required|string|max:100',
                     'registrador_segundo_apellido' => 'nullable|string|max:100',
-                    'registrador_correo' => 'required|email',
+                    'registrador_correo' => [
+                        'required',
+                        function ($attribute, $value, $fail) {
+                            $correos = array_map('trim', explode(',', $value));
+                            foreach ($correos as $correo) {
+                                if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                                    $fail("Uno o más correos en $attribute no son válidos.");
+                                }
+                            }
+                        },
+                    ],
                     'registrador_telefono' => 'nullable|string',
                     'parentesco' => 'required|string|max:50',
                 ]);
@@ -223,22 +235,38 @@ class PqrController extends Controller
             // } else {
             //     Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
             // }
-
+         
 
             // Comprueba si el parentesco de la PQR es "Asegurador" o "Ente de control"
-if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control') {
-    // Si la condición es verdadera, solo se envía el correo al registrador (si existe)
-    if (!empty($pqr->registrador_correo)) {
-        Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
-    }
-} else {
-    // Si la condición es falsa, el correo se envía tanto al paciente como al registrador (si existe)
-    Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
-    
-    if (!empty($pqr->registrador_correo)) {
-        Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
-    }
-}
+            if ($pqr->tipo_solicitud !== 'Tutela') {
+                if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control') {
+                    // Si la condición es verdadera, solo se envía el correo al registrador (si existe)
+                    if (!empty($pqr->registrador_correo)) {
+                        Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+                    }
+                } else {
+                    // Si la condición es falsa, el correo se envía tanto al paciente como al registrador (si existe)
+                    Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
+
+                    if (!empty($pqr->registrador_correo)) {
+                        Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+                    }
+                }
+            }
+
+            // if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control') {
+            //     // Si la condición es verdadera, solo se envía el correo al registrador (si existe)
+            //     if (!empty($pqr->registrador_correo)) {
+            //         Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+            //     }
+            // } else {
+            //     // Si la condición es falsa, el correo se envía tanto al paciente como al registrador (si existe)
+            //     Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
+
+            //     if (!empty($pqr->registrador_correo)) {
+            //         Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+            //     }
+            // }
 
 
 
@@ -264,7 +292,6 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
             ], 500);
         }
     }
-
 
     // public function store(Request $request, CodigoPqrService $codigoService)
     // {
@@ -485,6 +512,18 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
                 $query->whereIn('sede', $sedesGestor);
             }
 
+            if ($user->hasRole('Gestor Administrativo')) {
+                $clasificacionesPermitidas = [
+                    'Orden y aseo',
+                    'Infraestructura',
+                    'Solicitudes de Tesoreria'
+                ];
+
+                $query->whereHas('clasificaciones', function ($q) use ($clasificacionesPermitidas) {
+                    $q->whereIn('nombre', $clasificacionesPermitidas);
+                });
+            }
+
             // Filtros con AND (no OR)
             if ($request->filled('pqr_codigo')) {
                 $query->where('pqr_codigo', 'like', '%' . $request->pqr_codigo . '%');
@@ -545,6 +584,14 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
                 }
             }
 
+            if ($request->has('clasificaciones') && is_array($request->clasificaciones) && count($request->clasificaciones) > 0) {
+                $ids = array_map('intval', $request->clasificaciones);
+                $query->whereHas('clasificaciones', function ($q) use ($ids) {
+                    $q->whereIn('clasificaciones.id', $ids);
+                });
+            }
+
+
             // 🔹 Antes de paginar, obtenemos todas las PQRs que se van a mostrar y actualizamos estado_tiempo
             $pqrsSinRespuesta = (clone $query)
                 ->where('respuesta_enviada', 0)
@@ -564,9 +611,11 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
             $pqrs = $query->orderBy('respuesta_enviada', 'asc')
                 ->orderBy('created_at', 'desc')
                 ->with([
-                    'asignados:id,name',
-                    'respuestas:id,pqrs_id,user_id,es_respuesta_usuario'
+                    'asignados:id,name,segundo_nombre,primer_apellido,segundo_apellido',
+                    'respuestas:id,pqrs_id,user_id,es_respuesta_usuario',
+                    'clasificaciones:id,nombre'
                 ])
+
                 ->paginate(15);
 
             return response()->json([
@@ -696,7 +745,6 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
     //         ], 500);
     //     }
     // }
-
     public function show($pqr_codigo)
     {
         try {
@@ -721,7 +769,7 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
                 }
             }
 
-            // Calcular tiempo_respondido
+            // 🔹 Calcular tiempo_respondido
             $tiempoRespondido = null;
             if ($pqr->respondido_en) {
                 $createdAt = Carbon::parse($pqr->created_at);
@@ -734,7 +782,7 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
             }
             $pqr->tiempo_respondido = $tiempoRespondido;
 
-            // 🔹 Agregar URL pública a cada archivo si existe el campo archivo
+            // 🔹 Agregar URL pública a cada archivo si existe
             if (!empty($pqr->archivo) && is_array($pqr->archivo)) {
                 $pqr->archivo = array_map(function ($file) {
                     return [
@@ -747,7 +795,17 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
                 }, $pqr->archivo);
             }
 
-            return response()->json(['pqr' => $pqr]);
+            // 🔹 Renderizar plantilla del correo si es Felicitación
+            $contenidoCorreo = null;
+            if ($pqr->tipo_solicitud === 'Felicitacion') {
+                $contenidoCorreo = View::make('emails.felicitacion', compact('pqr'))->render();
+            }
+            $pqr->contenido_correo = $contenidoCorreo;
+
+            return response()->json([
+                'pqr' => $pqr,
+                'contenido_correo' => $contenidoCorreo
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Error al obtener la PQR: ' . $e->getMessage()
@@ -758,19 +816,28 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
     // public function show($pqr_codigo)
     // {
     //     try {
-    //         // No es estrictamente necesario autenticar al usuario aquí si solo vas a mostrar la PQR,
-    //         // pero si tu lógica de negocio lo requiere, déjalo.
-    //         // $user = JWTAuth::parseToken()->authenticate();
-
     //         $pqr = Pqr::where('pqr_codigo', $pqr_codigo)
     //             ->with([
-    //                 'asignado',
+    //                 'asignados',
     //                 'respuestas.autor',
-    //                 'clasificaciones'
+    //                 'clasificaciones',
+    //                 'eventLogs'
     //             ])
     //             ->firstOrFail();
 
-    //         // Calcular tiempo_respondido usando Carbon
+    //         // 🔹 Calcular y actualizar estado_tiempo
+    //         if ($pqr->respuesta_enviada == 0) {
+    //             $tiempoService = new PqrTiempoService();
+    //             $resultado = $tiempoService->calcularEstadoTiempo($pqr);
+    //             $nuevoEstado = $resultado['estado'];
+
+    //             if ($pqr->estado_tiempo !== $nuevoEstado) {
+    //                 $pqr->estado_tiempo = $nuevoEstado;
+    //                 $pqr->save();
+    //             }
+    //         }
+
+    //         // Calcular tiempo_respondido
     //         $tiempoRespondido = null;
     //         if ($pqr->respondido_en) {
     //             $createdAt = Carbon::parse($pqr->created_at);
@@ -781,11 +848,21 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
 
     //             $tiempoRespondido = $diffInHours . ' horas';
     //         }
-
-    //         // Adjuntar al objeto pqr (como atributo dinámico)
     //         $pqr->tiempo_respondido = $tiempoRespondido;
 
-    //         // Retorna la PQR ya con todas las relaciones cargadas
+    //         // 🔹 Agregar URL pública a cada archivo si existe el campo archivo
+    //         if (!empty($pqr->archivo) && is_array($pqr->archivo)) {
+    //             $pqr->archivo = array_map(function ($file) {
+    //                 return [
+    //                     'path' => $file['path'] ?? null,
+    //                     'original_name' => $file['original_name'] ?? null,
+    //                     'url' => !empty($file['path'])
+    //                         ? asset('storage/' . $file['path'])
+    //                         : null
+    //                 ];
+    //             }, $pqr->archivo);
+    //         }
+
     //         return response()->json(['pqr' => $pqr]);
     //     } catch (\Exception $e) {
     //         return response()->json([
@@ -793,6 +870,7 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
     //         ], 500);
     //     }
     // }
+
 
     public function update(Request $request, $pqr_codigo, PqrTiempoService $tiempoService)
     {
@@ -816,9 +894,9 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
                 'fecha_inicio_real',
             ]);
 
-            if ($request->user()->hasRole(['Administrador', 'Supervisor'])) {
+            if ($request->user()->hasRole(['Administrador', 'Supervisor/Atencion al usuario'])) {
                 $request->validate([
-                    'atributo_calidad' => 'nullable|in:Accesibilidad,Continuidad,Oportunidad,Pertinencia,Satisfacción del usuario,Seguridad',
+                    'atributo_calidad' => 'nullable|in:Accesibilidad,Continuidad,Oportunidad,Pertinencia,Seguridad,Efectividad,Integralidad',
                     'clasificaciones' => 'nullable|array',
                     'clasificaciones.*' => 'exists:clasificaciones,id',
                     'fuente'           => 'nullable|in:Formulario de la web,Correo atención al usuario,Correo de Agendamiento NAC,Encuesta de satisfacción IPS,Callcenter,Presencial',
@@ -880,7 +958,7 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
             }
 
             // 👉 6️⃣ Guardar prioridad y calcular deadlines si corresponde
-            if ($request->user()->hasRole(['Administrador', 'Supervisor']) && $request->filled('prioridad')) {
+            if ($request->user()->hasRole(['Administrador', 'Supervisor/Atencion al usuario']) && $request->filled('prioridad')) {
                 $prioridad = $request->prioridad;
 
                 $ciudadanoHoras = match ($prioridad) {
@@ -943,9 +1021,9 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
     //             'fecha_inicio_real',
     //         ]);
 
-    //         if ($request->user()->hasRole(['Administrador', 'Supervisor'])) {
+    //         if ($request->user()->hasRole(['Administrador', 'Supervisor/Atencion al usuario'])) {
     //             $request->validate([
-    //                 'atributo_calidad' => 'nullable|in:Accesibilidad,Continuidad,Oportunidad,Pertinencia,Satisfacción del usuario,Seguridad',
+    //                 'atributo_calidad' => 'nullable|in:Accesibilidad,Continuidad,Oportunidad,Pertinencia,Seguridad,Efectividad,Integralidad',
     //                 'clasificaciones' => 'nullable|array',
     //                 'clasificaciones.*' => 'exists:clasificaciones,id',
     //                 'fuente'           => 'nullable|in:Formulario de la web,Correo atención al usuario,Correo de Agendamiento NAC,Encuesta de satisfacción IPS,Callcenter,Presencial',
@@ -957,13 +1035,35 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
     //             $data['atributo_calidad'] = $request->atributo_calidad;
     //             $data['fuente'] = $request->fuente;
     //         }
+
     //         // 👉 1️⃣ Guardar cambios generales primero, incluida fecha_inicio_real
     //         $asignadoAntes = $pqr->asignado_a;
     //         $pqr->update($data);
 
+    //         // 👉 2️⃣ Guardar cambios en asignados y registrar log si cambian
     //         $asignadosAntes = $pqr->asignados->pluck('id')->toArray();
     //         $nuevosAsignados = $request->input('asignados', []);
     //         $pqr->asignados()->sync($nuevosAsignados);
+
+    //         // 🔹 Crear log si hubo cambios en los asignados
+    //         if ($asignadosAntes != $nuevosAsignados) {
+    //             $asignadoAnteriorNombres = \App\Models\User::whereIn('id', $asignadosAntes)->pluck('name')->toArray();
+    //             $asignadoNuevoNombres = \App\Models\User::whereIn('id', $nuevosAsignados)->pluck('name')->toArray();
+
+    //             $asignadoAnteriorStr = $asignadoAnteriorNombres ? implode(', ', $asignadoAnteriorNombres) : 'Sin asignación';
+    //             $asignadoNuevoStr = $asignadoNuevoNombres ? implode(', ', $asignadoNuevoNombres) : 'Sin asignación';
+
+    //             \App\Models\EventLog::create([
+    //                 'event_type' => 'cambio_asignacion',
+    //                 'description' => "La PQR #{$pqr->pqr_codigo} fue reasignada de [{$asignadoAnteriorStr}] a [{$asignadoNuevoStr}]",
+    //                 'pqr_id' => $pqr->id,
+    //                 'pqr_codigo' => $pqr->pqr_codigo,
+    //                 'estado_anterior' => $asignadoAnteriorStr,
+    //                 'estado_nuevo' => $asignadoNuevoStr,
+    //                 'fecha_evento' => now(),
+    //                 'user_id' => $request->user()->id,
+    //             ]);
+    //         }
 
     //         // 👉 3️⃣ Cambiar estado si se asignó por primera vez
     //         if (empty($asignadosAntes) && !empty($nuevosAsignados)) {
@@ -978,13 +1078,14 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
     //                 Mail::to($usuario->email)->send(new PqrAsignada($pqr, $usuario));
     //             }
     //         }
-    //         // ASIGNAR LA CLASIFICACION DE LAS PQRS
+
+    //         // 👉 5️⃣ Asignar la clasificación de las PQRs
     //         if ($request->has('clasificaciones')) {
     //             $pqr->clasificaciones()->sync($request->clasificaciones);
     //         }
 
-
-    //         if ($request->user()->hasRole(['Administrador', 'Supervisor']) && $request->filled('prioridad')) {
+    //         // 👉 6️⃣ Guardar prioridad y calcular deadlines si corresponde
+    //         if ($request->user()->hasRole(['Administrador', 'Supervisor/Atencion al usuario']) && $request->filled('prioridad')) {
     //             $prioridad = $request->prioridad;
 
     //             $ciudadanoHoras = match ($prioridad) {
@@ -1013,7 +1114,7 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
     //             $pqr->save();
     //         }
 
-    //         // 👉 5️⃣ Calcular y guardar estado de tiempo
+    //         // 👉 7️⃣ Calcular y guardar estado de tiempo
     //         $estadoTiempo = $tiempoService->calcularEstadoTiempo($pqr);
     //         $pqr->estado_tiempo = $estadoTiempo['estado'];
     //         $pqr->save();
@@ -1024,6 +1125,33 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
     //     }
     // }
 
+    public function reclasificar(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'tipo_solicitud' => 'required|string'
+            ]);
+
+            $pqr = Pqr::findOrFail($id);
+
+            $pqr->tipo_solicitud = $request->tipo_solicitud;
+            $pqr->save();
+
+            return response()->json([
+                'message' => 'PQR reclasificada correctamente',
+                'pqr' => $pqr
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al reclasificar PQR',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+
+
 
     public function asignadas()
     {
@@ -1033,7 +1161,8 @@ if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control')
             $pqrs = $user->pqrsAsignadas()
                 ->with([
                     'asignados:id,name',
-                    'respuestas:id,pqrs_id,user_id'
+                    'respuestas:id,pqrs_id,user_id',
+                    'clasificaciones:id,nombre'
                 ])
                 ->get();
 

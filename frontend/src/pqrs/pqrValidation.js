@@ -361,19 +361,39 @@ export const pqrsSchema = Yup.object().shape({
 
 
 
-  registrador_correo: Yup.string().when("registra_otro", {
-    is: "si",
-    then: (schema) =>
-      schema
-        .email("Formato de correo electrónico del solicitante inválido")
-        .required("El correo electrónico del solicitante es obligatorio"),
-    otherwise: (schema) =>
-      schema
-        .notRequired()
-        .transform((_, originalValue) =>
-          originalValue === "" ? undefined : originalValue
-        ),
-  }),
+registrador_correo: Yup.string().when("registra_otro", {
+  is: "si",
+  then: (schema) =>
+    schema
+      .required("El correo electrónico del solicitante es obligatorio")
+      .test(
+        "multiple-emails",
+        "Uno o más correos tienen un formato inválido",
+        (value) => {
+          if (!value) return false; // requerido
+          const correos = value.split(",").map((c) => c.trim());
+          const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return correos.every((c) => regex.test(c));
+        }
+      ),
+  otherwise: (schema) =>
+    schema
+      .notRequired()
+      .transform((_, originalValue) =>
+        originalValue === "" ? undefined : originalValue
+      )
+      .test(
+        "multiple-emails",
+        "Uno o más correos tienen un formato inválido",
+        (value) => {
+          if (!value) return true; // si no es requerido, dejar pasar vacío
+          const correos = value.split(",").map((c) => c.trim());
+          const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return correos.every((c) => regex.test(c));
+        }
+      ),
+}),
+
 
   registrador_telefono: Yup.string().when("registra_otro", {
     is: "si",

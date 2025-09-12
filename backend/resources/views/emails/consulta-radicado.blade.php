@@ -110,11 +110,11 @@
         }
 
         .footer-section {
-            background-color: #f1f1f1;
+                  background-color: #00933f;
             padding: 20px;
             text-align: center;
             font-size: 12px;
-            color: #777777;
+            color: #ffffff;
             border-top: 1px solid #e0e0e0;
         }
 

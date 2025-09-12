@@ -10,303 +10,245 @@ class PlantillaRespuestaSeeder extends Seeder
     public function run()
     {
         $plantillas = [
-    [
-        'nombre' => 'ASIGNACION DE CITAS',
-        'contenido' => '
+            [
+                'nombre' => 'ASIGNACION DE CITA POR ENVIO PUNTUAL DE EPS-JUZGADO',
+                'contenido' => '
 Bogotá, [FECHA]
 
 Señor(a) [NOMBRE]
 
 Ciudad: BOGOTÁ
 
-Cordial saludo,
+Reciba un cordial saludo de PASSUS IPS Taller Psicomotriz S.A.S.,
 
-Por medio de la presente acusamos recibido de su SOLICITUD presentada el día [PQR_CREADA] donde insta ASIGNACION DE CITAS.
+En atención a su solicitud recibida el día [PQR_CREADA], mediante la cual solicita la asignación de citas, le informamos que se ha programado la cita [XXXX] para el(la) señor(a) [PACIENTE] identificada(o) con [TIPO_DOC]. No. [NUMERO_DOC]. La respectiva confirmación fue enviada a su correo electrónico.
 
-Atendiendo a su solicitud y siguiendo el conducto regular, se hace envío de ASIGNACION DE CITA [XXXX] de la paciente [PACIENTE] identificada (o) con [TIPO_DOC]. No. [NUMERO_DOC] esta se encuentra adjunta a este correo.
+De igual forma, le invitamos cordialmente a ingresar a nuestra página web, en la opción “Agéndate aquí”, o directamente a través del siguiente enlace: <a href="https://oficinavirtual.passusips.com/login">Passus IPS | Oficina Virtual</a>. Esta herramienta, disponible las 24 horas del día, le permitirá programar sus citas de Hidroterapia y consultas especializadas de manera ágil, segura y oportuna, desde cualquier lugar.
 
-Passus IPS Taller Psicomotriz SAS, comprometido con la mejora continua en pro de la calidad de la prestación de sus servicios brindada por nuestros profesionales y demás colaboradores. Agradecemos haberse puesto en contacto con nosotros, para expresar sus felicitaciones, inquietudes y sugerencias que nos permiten definir acciones en beneficio de todos nuestros usuarios.
+En PASSUS trabajamos con un firme compromiso hacia la mejora continua y la calidad en la prestación de los servicios de salud y bienestar. Agradecemos su confianza y el haberse puesto en contacto con nosotros, pues sus solicitudes, comentarios y sugerencias son fundamentales para seguir fortaleciendo nuestro servicio en beneficio de todos los usuarios.
 
 Cordialmente,
 
-Passus IPS
+Área de Experiencia al Usuario
+PASSUS IPS Taller Psicomotriz S.A.S.
 ',
-    ],
-    [
-        'nombre' => 'CANCELACION DE CITAS',
-        'contenido' => '
+            ],
+            [
+                'nombre' => 'NOVEDADES CON AGENDAMIENTO WEB',
+                'contenido' => '
 Bogotá, [FECHA]
-
-Señor (a) [NOMBRE]
-
-Sede: [CIUDAD]
-
-Cordial saludo,
-
-Por medio de la presente acusamos recibido de su SOLICITUD presentada el día [PQR_CREADA] donde insta CANCELACION DE CITAS.
-
-Atendiendo a su solicitud, adjunto se hace envío del documento soporte de CANCELACION DE CITAS DE [XXXX] de la paciente [NOMBRE] identificada (o) con [TIPO_DOC]. No.[NUMERO_DOC].
-
-Recordando nuestros canales para asignación de citas y reprogramación en nuestro Callcenter teléfono fijo de contacto (601)3161699
-
-Horarios de atención: lunes a viernes: 7:30 am a 5:30 pm, Sábados: 8:00 am a 1:00 pm
-
-Cancelar tu cita médica cuando no puedas asistir no solo es una muestra de cortesía hacia el personal médico, sino también de consideración hacia otros pacientes que podrían necesitar ese espacio para recibir atención. Al cancelar con anticipación, estás brindando la oportunidad a alguien más de acceder a los servicios médicos necesarios.
-
-Señor usuario, recuerde que sus datos serán tratados de acuerdo con lo establecido en la Ley estatutaria 1581 de 2012 de Habeas Data. Los tiempos de respuesta están sujetos a lo dispuesto.
-
-Cordialmente,
-
-Passus IPS
-',
-    ],
-    [
-        'nombre' => 'DIRECCIONAR AL CALLCENTER PARA ASIGNACION DE CITAS',
-        'contenido' => '
-Bogotá, [FECHA]
-
-Señor (a) [NOMBRE]
-
-Sede: [CIUDAD]
-
-Cordial saludo,
-
-Agradecemos haberse puesto en contacto con nosotros, para expresar sus felicitaciones, inquietudes y sugerencias, teniendo en cuenta que Passus IPS Taller Psicomotriz SAS, está comprometido con la mejora continua para la prestación de sus servicios proporcionada por nuestros profesionales y demás colaboradores.
-
-Nos permitimos precisar lo siguiente:
-
-1-Nuestro canal para asignación de citas y reprogramación es el CALLCENTER teléfono fijo de contacto (601)3161699.
-
-Horarios de atención: lunes a viernes: 7:30 am a 5:30 pm
-Sábados: 8:00 am a 1:00 pm
-
-2-Para lograr una asignación satisfactoria de la cita, es importante contar con la autorización e información del paciente al alcance.
-
-3-Si experimenta algún problema al intentar comunicarse con nuestro call center, no dude en contactarnos por escrito. Estamos aquí para ayudarlo y resolver cualquier inconveniente que pueda surgir.
-
-Señor usuario, recuerde que sus datos serán tratados de acuerdo con lo establecido en la Ley estatutaria 1581 de 2012 de Habeas Data. Los tiempos de respuesta están sujetos a lo dispuesto.
-
-Cordialmente,
-
-Passus IPS
-',
-    ],
-    [
-        'nombre' => 'EXONERACION DE MULTAS',
-        'contenido' => '
-Bogotá, [FECHA]
-
-Señor (a) [NOMBRE]
-
-Sede: [CIUDAD]
-
-Cordial saludo,
-
-Por medio de la presente acusamos recibido de la SOLICITUD presentada el día [PQR_CREADA] donde insta EXONERACION DE MULTA POR INASISTENCIA.
-
-Atendiendo a su solicitud y siguiendo el conducto regular, verificando el caso de la paciente [NOMBRE] identificado (a) con [TIPO_DOC]. No. [NUMERO_DOC] nos permitimos informar:
-
-Como institución prestadora de servicios de salud, nos acogemos a la ley 1438 de 2011, la cual establece MULTA POR INASISTENCIAS INJUSTIFICADAS a las sesiones de hidroterapia, esta multa se está aplicando desde el mes de marzo del año 2023.
-
-Analizando la situación y teniendo en cuenta que fue una situación justificada se EXONERA LA MULTA POR INASTISTENCIA, se registra la información y previa justificación en nuestro sistema de información como control del proceso realizado.
-
-Es importante recordar que para CANCELAR o REPROGRAMAR sus terapias debe realizarlo con 48 horas de anticipación, las únicas excepciones que aceptamos fuera del plazo establecido son aquellas que cuentan con incapacidad, soportes médicos o casos fortuitos justificados presentados durante la fecha de la cita asignada.
-
-Passus IPS Taller Psicomotriz SAS, comprometido con la mejora continua en pro de la calidad de la prestación de sus servicios brindada por nuestros profesionales y demás colaboradores. Agradecemos haberse puesto en contacto con nosotros, para expresar sus felicitaciones, inquietudes y sugerencias que nos permiten definir acciones en pro de todos nuestros usuarios.
-
-Cordialmente,
-
-Passus IPS
-',
-    ],
-[
-    'nombre' => 'INFORMACION DEL COBRO MULTA',
-    'contenido' => '
-Bogotá, [FECHA]
-
-Señor (a) [NOMBRE]
-
-Sede: [CIUDAD]
-
-Cordial saludo,
-
-Por medio de la presente acusamos recibido de la SOLICITUD presentada el día [PQR_CREADA] donde insta REPROGRAMACIÓN DE TERAPIAS.
-
-Atendiendo a su solicitud y siguiendo el conducto regular, nos permitimos informar que, como institución prestadora de servicios de salud, nos acogemos a la ley 1438 de 2011, la cual establece MULTA POR INASISTENCIAS INJUSTIFICADAS a las sesiones de hidroterapia esta multa se está aplicando desde el mes de Marzo del 2023.
-
-Es importante recordar que para CANCELAR o REPROGRAMAR sus terapias debe realizarlo con 48 horas de anticipación, o a través de únicas excepciones que aceptamos fuera del plazo establecido son aquellas que cuentan con incapacidad, soportes médicos o casos fortuitos justificados presentados durante la fecha de la cita asignada, estos deben ser enviados al correo atencionalusuario@passusips.com con datos completos y llamar al callcenter para reprogramar TEL: (601) 3161699.
-
-Cordialmente,
-
-Passus IPS
-',
-],
-[
-    'nombre' => 'QUEJA O SUGERENCIA',
-    'contenido' => '
-Bogotá, [FECHA]
-
-Señor (a) [NOMBRE]
-
-Sede: [CIUDAD]
-
-Estimado(a) Sr(a),
-
-Reciba un cordial saludo de parte de PASSUS IPS TALLER PSICOMOTRIZ S.A.S. Queremos expresarle lo importante que es para nosotros conocer todas sus inquietudes, solicitudes, inconformidades y felicitaciones, ya que nos impulsan a fortalecer nuestros procesos.
-
-Agradecemos de antemano sus comentarios sobre la situación que ha experimentado, ya que estos son fundamentales para nuestro continuo mejoramiento. Tengan la certeza de que los involucrados recibirán retroalimentación en cuanto al cumplimiento de nuestras políticas, y se realizarán ajustes en los procesos, si es necesario. Nuestra entidad se encuentra en constante búsqueda de la excelencia y está comprometida con altos estándares de calidad.
-
-En respuesta a las situaciones presentadas, deseamos informarle lo siguiente:
-
-Passus IPS Taller Psicomotriz SAS, comprometido con la mejora continua en pro de la calidad de la prestación de sus servicios brindada por nuestros profesionales y demás colaboradores.
-
-Agradecemos haberse puesto en contacto con nosotros.
-
-Cordialmente,
-
-Passus IPS
-',
-],
-[
-    'nombre' => 'REITERACION DE MULTAS',
-    'contenido' => '
-Bogotá, [FECHA]
-
-Señor (a) [NOMBRE]
-
-Sede: [CIUDAD]
-
-Estimado(a) Sr(a),
-
-Reciba un cordial saludo de parte de PASSUS IPS TALLER PSICOMOTRIZ S.A.S. Queremos expresarle lo importante que es para nosotros conocer todas sus inquietudes, solicitudes, inconformidades y felicitaciones, ya que nos impulsan a fortalecer nuestros procesos.
-
-Agradecemos de antemano sus comentarios sobre la situación que ha experimentado, ya que estos son fundamentales para nuestro continuo mejoramiento. Tengan la certeza de que los involucrados recibirán retroalimentación en cuanto al cumplimiento de nuestras políticas, y se realizarán ajustes en los procesos, si es necesario. Nuestra entidad se encuentra en constante búsqueda de la excelencia y está comprometida con altos estándares de calidad.
-
-En respuesta a las situaciones presentadas, deseamos informarle lo siguiente:
-
-Passus IPS Taller Psicomotriz SAS, comprometido con la mejora continua en pro de la calidad de la prestación de sus servicios brindada por nuestros profesionales y demás colaboradores.
-
-Agradecemos haberse puesto en contacto con nosotros.
-
-Cordialmente,
-
-Passus IPS
-',
-],
-[
-    'nombre' => 'RESPUESTA DE INASISTENCIA',
-    'contenido' => '
-Bogotá, [FECHA]
-
-Señor (a) [NOMBRE]
-
-Sede: [CIUDAD]
-
-Cordial saludo,
-
-Passus IPS Taller Psicomotriz SAS, comprometido con la mejora continua en pro de la calidad de la prestación de sus servicios brindada por nuestros profesionales y demás colaboradores. Agradecemos haberse puesto en contacto con nosotros, para expresar sus felicitaciones, inquietudes y sugerencias que nos permiten detectar debilidades de manera oportuna para fortalecernos día a día.
-
-Nos permitimos precisar lo siguiente:
-
-1. Asignamos cita y la paciente no asistió, adjuntamos soporte de inasistencia.
-
-2. Al cancelar con anticipación, estás brindando la oportunidad a alguien más de acceder a los servicios médicos necesarios.
-
-3. Además, cancelar tu cita médica te permite gestionar mejor tu tiempo y agenda. Al hacerlo, podrás reprogramar tu cita en un momento más conveniente y asegurarte de recibir la atención que necesitas sin interrupciones.
-
-Tenemos diferentes canales de comunicación que la institución tiene habilitado para su practicidad, teléfono fijo de contacto (601) 3161699, correo institucional atencionalusuario@passusips.com, buzón de sugerencia (ubicado en cada una de nuestras sedes).
-
-Señor usuario, recuerde que sus datos serán tratados de acuerdo con lo establecido en la Ley estatutaria 1581 de 2012 de Habeas Data. Los tiempos de respuesta están sujetos a lo dispuesto.
-
-Cordialmente,
-
-Passus IPS
-',
-],
-[
-    'nombre' => 'RESPUESTA GENERAL',
-    'contenido' => '
-Bogotá, [FECHA]
-
-Señor (a) [NOMBRE]
-
-Sede: [CIUDAD]
-
-Cordial saludo,
-
-Passus IPS Taller Psicomotriz SAS, comprometido con la mejora continua en pro de la calidad de la prestación de sus servicios brindada por nuestros profesionales y demás colaboradores. Agradecemos haberse puesto en contacto con nosotros, para expresar sus felicitaciones, inquietudes y sugerencias que nos permiten detectar debilidades de manera oportuna para fortalecernos día a día.
-
-Nos permitimos precisar lo siguiente:
-
-1.
-
-2.
-
-Tenemos diferentes canales de comunicación que la institución tiene habilitado para su practicidad, teléfono fijo de contacto (601)3161699, correo institucional atencionalusuario@passusips.com, buzón de sugerencia (ubicado en cada una de nuestras sedes).
-
-Señor usuario, recuerde que sus datos serán tratados de acuerdo con lo establecido en la Ley estatutaria 1581 de 2012 de Habeas Data. Los tiempos de respuesta están sujetos a lo dispuesto.
-
-Cordialmente,
-
-Passus IPS
-',
-],
-[
-    'nombre' => 'TRASLADO DE SEDE',
-    'contenido' => '
-Bogotá, [FECHA]
-
-Señor (a) [NOMBRE]
-
-Sede: [CIUDAD]
-
-Cordial saludo,
-
-Passus IPS Taller Psicomotriz SAS, comprometido con la mejora continua en pro de la calidad de la prestación de sus servicios brindada por nuestros profesionales y demás colaboradores. Agradecemos haberse puesto en contacto con nosotros, para expresar sus felicitaciones, inquietudes y sugerencias que nos permiten detectar debilidades de manera oportuna para fortalecernos día a día.
-
-Nos permitimos precisar lo siguiente:
-
-PASSUS IPS, de acuerdo nuestro modelo de atención alineado con su EPS, usted debe continuar las terapias donde fueron asignadas en este caso en [CIUDAD], por motivos de facturación.
-
-Si su médico tratante le ordena más terapias, si las podemos agendar en la sede que usted guste, pero sobre esta misma autorización ya agendada y asistida no es posible realizar el traslado, agradecemos continuar con sus sesiones en la sede asignada mientras la EPS genera un nueva Autorización.
-
-Tenemos diferentes canales de comunicación que la institución tiene habilitado para su practicidad, teléfono fijo de contacto (601)3161699, correo institucional atencionalusuario@passusips.com, buzón de sugerencia (ubicado en cada una de nuestras sedes).
-
-Señor usuario, recuerde que sus datos serán tratados de acuerdo con lo establecido en la Ley estatutaria 1581 de 2012 de Habeas Data. Los tiempos de respuesta están sujetos a lo dispuesto.
-
-Cordialmente,
-
-Passus IPS
-',
-],
-[
-    'nombre' => 'MODELO PARA REPROGRAMACION DE CITAS',
-    'contenido' => '               
-                
-Bogotá, [FECHA] 
 
 Señor(a) [NOMBRE]
 
-Sede: [CIUDAD]
+Ciudad: BOGOTÁ
+
+Reciba un cordial saludo de PASSUS IPS Taller Psicomotriz S.A.S.,
+
+En atención a su solicitud recibida, en la cual nos informa que no fue posible realizar el proceso de agendamiento a través de nuestra Oficina Virtual-<a href="https://oficinavirtual.passusips.com/login">Agendamiento Web.</a> Ofrecemos disculpas por los inconvenientes presentados.
+
+Le informamos que la novedad presentada se debió a un tema técnico puntual, el cual ya fue solucionado en nuestra plataforma. Le invitamos cordialmente a ingresar nuevamente y realizar su agendamiento desde nuestra página web en la opción <a href="https://oficinavirtual.passusips.com/login">Agéndate a qui/a> o directamente a través del siguiente link: <a href="https://oficinavirtual.passusips.com/login">Passus IPS | Oficina Virtual</a> para completar el proceso de manera ágil, seleccionando las fechas que mejor se ajusten a su disponibilidad.
 
 
-Cordial saludo,
+En PASSUS trabajamos con un firme compromiso hacia la mejora continua y la calidad en la prestación de los servicios de salud y bienestar. Agradecemos su confianza y el haberse puesto en contacto con nosotros, pues sus solicitudes, comentarios y sugerencias son fundamentales para seguir fortaleciendo nuestro servicio en beneficio de todos los usuarios.
 
-Passus IPS Taller Psicomotriz SAS, comprometido con la mejora continua en pro de la calidad de la prestación de sus servicios brindada por nuestros profesionales y demás colaboradores. Agradecemos haberse puesto en contacto con nosotros, para expresar sus felicitaciones, inquietudes y sugerencias que nos permiten detectar debilidades de manera oportuna para fortalecernos día a día.
+Cordialmente,
 
-Nos permitimos precisar lo siguiente:
-
-PASSUS IPS tiene un modelo de reprogramación de citas por incapacidad. Si usted no asistió debe de enviar incapacidad médica que concuerde con los días que falló a su cita ya programada. Recuerde que usted cuenta con un # de sesiones que debe de tomar dentro de la vigencia asignada. Si usted todavía cuenta con vigencia en PASSUS y envía incapacidad dentro del tiempo asignado se le realizará la reprogramación.
-
-Tenemos diferentes canales de comunicación que la institución tiene habilitado para su practicidad, teléfono fijo de contacto (601) 3161699, correo institucional atencionalusuario@passusips.com, buzón de sugerencia (ubicado en cada una de nuestras sedes).
-
-Señor usuario, recuerde que sus datos serán tratados de acuerdo con lo establecido en la Ley estatutaria 1581 de 2012 de Habeas Data. Los tiempos de respuesta están sujetos a lo dispuesto.
-
-Cordialmente, 
-
-Passus IPS
+Área de Experiencia al Usuario
+PASSUS IPS Taller Psicomotriz S.A.S.
 ',
-],
+            ],
+            [
+                'nombre' => 'POLITICA DE MULTAS CUANDO NO ADJUNTA LOS SOPORTES
+',
+                'contenido' => '
+Bogotá, [FECHA]
+
+Señor(a) [NOMBRE]
+
+Ciudad: BOGOTÁ
+
+Reciba un cordial saludo de PASSUS IPS Taller Psicomotriz S.A.S.,
+
+En atención a su solicitud relacionada con la, exoneración de multa por inasistencia, nos permitimos informarle que estas exoneraciones únicamente aplican en los siguientes casos:
+
+    1. Justificación médica válida, presentada dentro de las 24 horas siguientes a la cita.
+    
+    2. Situaciones de fuerza mayor, como calamidad familiar por fallecimiento, siempre que estén debidamente soportadas y presentadas en la misma fecha de la cita asignada.
+   
+En caso de que la multa aplique, el pago deberá realizarse en efectivo y en su totalidad en cualquiera de nuestras sedes PASSUS.
+
+En PASSUS IPS valoramos profundamente la importancia de su tratamiento y la continuidad de su proceso terapéutico. Queremos resaltar que estas políticas no tienen carácter sancionatorio, sino que buscan:
+
+        1. Fomentar la adherencia a las sesiones.
+    
+        2. Garantizar la oportunidad en la atención.
+
+        3. Contribuir al logro de los mejores resultados para su bienestar integral.
+
+Como institución prestadora de servicios de salud, nos acogemos a lo establecido en la Ley 1438 de 2011.
+
+Para dar trámite a su solicitud, le invitamos a adjuntar los soportes correspondientes a través del siguiente enlace, diligenciando el formulario: <a href="https://fpqrs.passus.cloud/solicitud">[LINK]</a>.
+
+En PASSUS trabajamos con un firme compromiso hacia la mejora continua y la calidad en la prestación de los servicios de salud y bienestar. Agradecemos su confianza y el haberse puesto en contacto con nosotros, pues sus solicitudes, comentarios y sugerencias son fundamentales para seguir fortaleciendo nuestro servicio en beneficio de todos los usuarios.    
+
+Cordialmente,
+
+Área de Experiencia al Usuario
+PASSUS IPS Taller Psicomotriz S.A.S.
+',
+            ],
+                  [
+                'nombre' => 'RESPUESTA DE EXONERACIÓN JUSTIFICADA.',
+                'contenido' => '
+Bogotá, [FECHA]
+
+Señor(a) [NOMBRE]
+
+Ciudad: BOGOTÁ
+
+Reciba un cordial saludo de PASSUS IPS Taller Psicomotriz S.A.S.,
+
+En atención a su solicitud relacionada con la exoneración de multa por inasistencia, le confirmamos que, tras la revisión de los soportes aportados y considerando que se trata de una situación debidamente justificada, se exonera la multa por inasistencia. Esta novedad ha sido registrada en nuestro sistema de información, garantizando el control y la trazabilidad del proceso.
+
+Deseamos recordarle que la cancelación o reprogramación de terapias debe gestionarse con al menos 48 horas de anticipación. Las únicas excepciones a este plazo corresponden a situaciones con incapacidad, soportes médicos válidos o casos fortuitos debidamente justificados y presentados durante la fecha de la cita asignada.
+
+En PASSUS trabajamos con un firme compromiso hacia la mejora continua y la calidad en la prestación de los servicios de salud y bienestar. Agradecemos su confianza y el haberse puesto en contacto con nosotros, pues sus solicitudes, comentarios y sugerencias son fundamentales para seguir fortaleciendo nuestro servicio en beneficio de todos los usuarios.
+
+Cordialmente,
+
+Área de Experiencia al Usuario
+PASSUS IPS Taller Psicomotriz S.A.S.
+',
+            ],
+                   [
+                'nombre' => 'PROFORMA DE RESPUESTA A QUEJA / SUGERENCIA',
+                'contenido' => '
+Bogotá, [FECHA]
+
+Señor(a) [NOMBRE]
+
+Ciudad: BOGOTÁ
+
+Reciba un cordial saludo de PASSUS IPS Taller Psicomotriz S.A.S.,
+
+Queremos expresarle lo valioso que es para nosotros conocer sus inquietudes, sugerencias o inconformidades, pues constituyen una oportunidad para fortalecer nuestros procesos y garantizar un mejor servicio.
+
+En respuesta a la situación presentada, deseamos informarle lo siguiente:
+
+        1. Aquí se incluye la explicación o respuesta concreta frente a la queja o sugerencia.
+
+En PASSUS trabajamos con un firme compromiso hacia la mejora continua y la calidad en la prestación de los servicios de salud y bienestar. Agradecemos su confianza y el haberse puesto en contacto con nosotros, pues sus solicitudes, comentarios y sugerencias son fundamentales para seguir fortaleciendo nuestro servicio en beneficio de todos los usuarios.
+
+Cordialmente,
+
+Área de Experiencia al Usuario
+PASSUS IPS Taller Psicomotriz S.A.S.
+',
+            ],
+                          [
+                'nombre' => ' RESPUESTA TRASLADO DE SEDE',
+                'contenido' => '
+Bogotá, [FECHA]
+
+Señor(a) [NOMBRE]
+
+Ciudad: BOGOTÁ
+
+Reciba un cordial saludo de PASSUS IPS Taller Psicomotriz S.A.S.,
+
+En atención a su solicitud relacionada con el traslado de sede, y de acuerdo con nuestro modelo de atención y alienado con el de su asegurador, le informamos que debe continuar sus terapias en la sede previamente asignada, debido a motivos administrativos.
+
+En caso de que su médico tratante le ordene nuevas terapias, estas sí podrán agendarse en la sede de su preferencia. Sin embargo, respecto a la autorización actualmente vigente y en curso, no es posible realizar traslado. Por lo anterior, agradecemos continuar con sus sesiones en la sede asignada hasta que la asegurador le emita una nueva autorización.
+
+En PASSUS trabajamos con un firme compromiso hacia la mejora continua y la calidad en la prestación de los servicios de salud y bienestar. Agradecemos su confianza y el haberse puesto en contacto con nosotros, pues sus solicitudes, comentarios y sugerencias son fundamentales para seguir fortaleciendo nuestro servicio en beneficio de todos los usuarios.
+
+Cordialmente,
+
+Área de Experiencia al Usuario
+PASSUS IPS Taller Psicomotriz S.A.S.
+',
+            ],
+                         [
+                'nombre' => 'REPROGRAMACIÓN O CANCELACIÓN CUANDO NO ADJUNTA LOS SOPORTES',
+                'contenido' => '
+Bogotá, [FECHA]
+
+Señor(a) [NOMBRE]
+
+Ciudad: BOGOTÁ
+
+Reciba un cordial saludo de PASSUS IPS Taller Psicomotriz S.A.S.,
+
+En PASSUS IPS estamos convencidos de que la recuperación depende de la asistencia, la constancia y la disciplina en el tratamiento. Por esta razón, no es posible realizar cancelaciones ni reprogramaciones de manera libre, ya que nuestro propósito es garantizar la adherencia al tratamiento de forma ordenada y continua.
+
+La reprogramación de citas únicamente procede en los siguientes casos:
+
+        1. Incapacidad médica debidamente soportada y coherente con las fechas de inasistencia o con las citas programadas.
+
+Tenga en cuenta:
+
+        1. Las sesiones asignadas deben cumplirse dentro del periodo de vigencia autorizado por su entidad de salud o por el profesional tratante.
+
+        2. Si cuenta con vigencia activa y presenta el soporte dentro del tiempo establecido, se reprogramarán las sesiones pendientes.
+
+Para registrar su solicitud:
+
+ Adjunte los soportes correspondientes diligenciando el formulario en el siguiente enlace: <a href="https://fpqrs.passus.cloud/solicitud">[LINK]</a>.
+
+
+En PASSUS trabajamos con un firme compromiso hacia la mejora continua y la calidad en la prestación de los servicios de salud y bienestar. Agradecemos su confianza y el haberse puesto en contacto con nosotros, pues sus solicitudes, comentarios y sugerencias son fundamentales para seguir fortaleciendo nuestro servicio en beneficio de todos los usuarios.
+
+Cordialmente,
+
+Área de Experiencia al Usuario
+PASSUS IPS Taller Psicomotriz S.A.S.
+',
+            ],
+                            [
+                'nombre' => 'REPROGRAMACION O CANCELACIÓN JUSTIFICADA. ',
+                'contenido' => '
+Bogotá, [FECHA]
+
+Señor(a) [NOMBRE]
+
+Ciudad: BOGOTÁ
+
+Reciba un cordial saludo de PASSUS IPS Taller Psicomotriz S.A.S.,
+
+En atención a su solicitud de reprogramación, y tras la verificación de los documentos aportados, le confirmamos que estos cumplen con los requisitos establecidos (vigencia activa y soporte de incapacidad coherente con las fechas correspondientes).
+
+Por lo anterior, se han cancelado las citas, las cuales pueden ser reprogramadas dentro del periodo autorizado (30 días) . Para mayor facilidad, usted puede proceder a reprogramar sus citas desde nuestra página web, en la opción “Agéndate aquí”, o directamente a través del siguiente link: <a href="https://oficinavirtual.passusips.com/login">Passus IPS | Oficina Virtual</a>.  Esta herramienta, disponible las 24 horas del día, le permitirá programar sus citas de Hidroterapia y consultas especializadas de manera ágil, segura y oportuna, desde cualquier lugar.  
+
+En PASSUS trabajamos con un firme compromiso hacia la mejora continua y la calidad en la prestación de los servicios de salud y bienestar. Agradecemos su confianza y el haberse puesto en contacto con nosotros, pues sus solicitudes, comentarios y sugerencias son fundamentales para seguir fortaleciendo nuestro servicio en beneficio de todos los usuarios.
+
+Cordialmente,
+
+Área de Experiencia al Usuario
+PASSUS IPS Taller Psicomotriz S.A.S.
+',
+            ],   
+                            [
+                'nombre' => 'RESPUESTA DE ENVIO DE INFORME FINAL ',
+                'contenido' => '
+Bogotá, [FECHA]
+
+Señor(a) [NOMBRE]
+
+Ciudad: BOGOTÁ
+
+Reciba un cordial saludo de PASSUS IPS Taller Psicomotriz S.A.S.,
+
+En atención a su solicitud de envío de informe final, y una vez verificados los documentos, me permito informarle que dicho informe ha sido remitido de forma automática al correo electrónico registrado en nuestro sistema. En caso de no haberlo recibido, le sugerimos revisar las carpetas de correo no deseado o spam.
+
+En PASSUS trabajamos con un firme compromiso hacia la mejora continua y la calidad en la prestación de los servicios de salud y bienestar. Agradecemos su confianza y el haberse puesto en contacto con nosotros. Sus solicitudes, comentarios y sugerencias son fundamentales para seguir fortaleciendo nuestro servicio en beneficio de todos los usuarios. 
+
+
+Cordialmente,
+
+Área de Experiencia al Usuario
+PASSUS IPS Taller Psicomotriz S.A.S.
+',
+            ],         
         ];
 
         foreach ($plantillas as $plantilla) {

@@ -181,7 +181,6 @@ export const Solicitudes = () => {
            
             Si tu situación corresponde a alguno de los casos mencionados, por favor registra tu solicitud, adjunta los documentos requeridos y describe claramente el motivo.<br /><br />
 
-            ADJUNTAR CADA DOCUMENTO EL DE <strong>Carta de autorización de consignación a un tercero (si aplica)</strong> NO es obligatorio.
           `,
     },
   };

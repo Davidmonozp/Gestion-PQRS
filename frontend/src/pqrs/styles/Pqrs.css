@@ -535,6 +535,7 @@
 
 .accionado-option span {
     margin: 0;
+    margin-left: 14px;
     flex: 1;
     font-size: 16px;
     font-weight: 400;
@@ -810,6 +811,11 @@
 
 .file-input-group li {
     list-style: none;
+}
+
+.text-gray-500{
+    color: rgb(99, 99, 99);
+    font-size: 12px;
 }
 
 

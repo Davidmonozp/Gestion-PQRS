@@ -6,6 +6,7 @@ use App\Models\Pqr;
 use App\Models\Respuesta;
 use App\Observers\PqrObserver;
 use App\Observers\RespuestaObserver;
+use App\Observers\TipoSolicitudObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 
@@ -29,5 +30,8 @@ class AppServiceProvider extends ServiceProvider
         Pqr::observe(PqrObserver::class);
 
         Respuesta::observe(RespuestaObserver::class);
+
+        Pqr::observe(TipoSolicitudObserver::class);
+
     }
 }

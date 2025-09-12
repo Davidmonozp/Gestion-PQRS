@@ -39,7 +39,7 @@ Route::get('/clasificaciones', [ClasificacionController::class, 'index']);
 
 // RUTAS PROTEGIDAS POR AUTENTICACIÓN Y ROLES ESPECÍFICOS
 
-Route::middleware(['auth:api', 'check.role:Administrador,Supervisor/Atencion al usuario,Gestor,Consultor,Digitador'])->group(function () {
+Route::middleware(['auth:api', 'check.role:Administrador,Supervisor/Atencion al usuario,Gestor,Gestor Administrativo,Consultor,Digitador'])->group(function () {
 
     // Rutas de visualización de PQRS (solo roles autorizados pueden ver la lista o detalles)
     Route::get('pqrs', [PqrController::class, 'index']);
@@ -49,7 +49,7 @@ Route::middleware(['auth:api', 'check.role:Administrador,Supervisor/Atencion al 
 });
 
 // RUTAS PROTEGIDAS QUE ACTUALIZAN LA PQRS
-Route::middleware(['auth:api', 'check.role:Administrador,Gestor,Supervisor/Atencion al usuario'])->group(function () {
+Route::middleware(['auth:api', 'check.role:Administrador,Gestor,Gestor Administrativo,Supervisor/Atencion al usuario'])->group(function () {
     Route::put('pqrs/codigo/{pqr_codigo}', [PqrController::class, 'update']);
     Route::post('/pqrs/{pqr}/agregar-clasificacion', [ClasificacionController::class, 'agregarClasificacion']);
 });
@@ -61,6 +61,8 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::post('/user/change-password', [AuthController::class, 'changePassword']);
     Route::get('/pqrs-asignadas', [PqrController::class, 'asignadas']);
 });
+
+
 
 
 
@@ -80,18 +82,18 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador'])->gro
 
 
 // RUTA PARA PODER ASIGNAR USUARIOS a las pqr y dar respuesta
-Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,Supervisor/Atencion al usuario'])->group(function () {
+Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,Gestor Administrativo,Supervisor/Atencion al usuario'])->group(function () {
     Route::get('users', [UserController::class, 'index']);
     Route::post('/pqrs/codigo/{pqr_codigo}/respuesta', [RespuestaController::class, 'registrarRespuesta']);
     Route::post('/pqrs/codigo/{pqr_codigo}/enviar-respuesta-correo', [RespuestaController::class, 'enviarRespuesta']);
 });
 
-Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Consultor,Supervisor/Atencion al usuario,Gestor,Digitador'])->group(function () {
+Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Consultor,Supervisor/Atencion al usuario,Gestor,Gestor Administrativo,Digitador'])->group(function () {
     Route::get('users', [UserController::class, 'index']);
 });
 
 // RUTA PARA RESPUESTA FINAL DE PQR
-Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,Supervisor/Atencion al usuario'])->group(function () {
+Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,Gestor Administrativo,Supervisor/Atencion al usuario'])->group(function () {
     Route::post('/pqrs/codigo/{pqr_codigo}/respuesta-final', [RespuestaController::class, 'registrarRespuestaFinal']);
     Route::get('/plantillas-respuesta', [PlantillaRespuestaController::class, 'index']);
     Route::get('/pqrs/{pqr_codigo}/respuestas', [RespuestaController::class, 'listarRespuestas']);
@@ -100,8 +102,13 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,
     Route::post('/pqrs/{pqr_codigo}/seguimientos', [PqrController::class, 'registrarSeguimiento']);
 });
 
-Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,Supervisor/Atencion al usuario,Consultor,Digitador'])->group(function () {
+Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,Gestor Administrativo,Supervisor/Atencion al usuario,Consultor,Digitador'])->group(function () {
     Route::get('/pqrs/{pqr_codigo}/seguimientos', [PqrController::class, 'obtenerSeguimientos']);
     Route::get('/event-logs', [EventLogController::class, 'index']);
     Route::get('/event-logs/pqrs/{pqrId}', [EventLogController::class, 'showByPqr']);
+});
+
+// RUTAS SOLO PARA ADMINISTRADOR Y SUPERVISOR/ATENCION AL USUARIO
+Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Supervisor/Atencion al usuario'])->group(function () {
+    Route::put('/pqrs/{id}/reclasificar', [PqrController::class, 'reclasificar']);
 });

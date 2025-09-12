@@ -24,17 +24,18 @@ function PqrsAsignadas() {
     sede: [],
     eps: [],
     fecha_inicio: "",
-    fecha_fin: "",
+    fecha_fin: "", 
+    clasificaciones: [],
   });
 
+  // ✅ Traer las PQRs asignadas al cargar el componente
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
         const data = await getPqrsAsignadas();
-        data.forEach((pqr) => {});
         setPqrsBrutas(data);
-        setPqrsFiltradas(data);
+        setPqrsFiltradas(data); // Inicialmente todo
       } catch (err) {
         setError("Error al cargar las PQRs asignadas.");
         console.error(err);
@@ -45,42 +46,56 @@ function PqrsAsignadas() {
     fetchData();
   }, []);
 
+  // ✅ Filtrar automáticamente cuando cambian los filtros o los datos
+  useEffect(() => {
+    handleBuscar();
+  }, [filters, pqrsBrutas]);
+
   const handleBuscar = () => {
     let filteredData = [...pqrsBrutas];
+
     if (filters.pqr_codigo) {
       filteredData = filteredData.filter((pqr) =>
-        String(pqr.pqr_codigo)
-          .toLowerCase()
-          .includes(filters.pqr_codigo.toLowerCase())
+        String(pqr.pqr_codigo).toLowerCase().includes(filters.pqr_codigo.toLowerCase())
       );
     }
+
     if (filters.documento_numero) {
       filteredData = filteredData.filter((pqr) =>
-        String(pqr.documento_numero)
-          .toLowerCase()
-          .includes(filters.documento_numero.toLowerCase())
+        String(pqr.documento_numero).toLowerCase().includes(filters.documento_numero.toLowerCase())
       );
     }
+
     if (filters.servicio_prestado.length > 0) {
       filteredData = filteredData.filter((pqr) =>
         filters.servicio_prestado.includes(pqr.servicio_prestado)
       );
     }
+
     if (filters.tipo_solicitud.length > 0) {
       filteredData = filteredData.filter((pqr) =>
         filters.tipo_solicitud.includes(pqr.tipo_solicitud)
       );
     }
+
+    if (filters.clasificaciones.length > 0) {
+      filteredData = filteredData.filter((pqr) =>
+        pqr.clasificaciones?.some((c) => filters.clasificaciones.includes(c.id))
+      );
+    }
+
     if (filters.sede.length > 0) {
       filteredData = filteredData.filter((pqr) =>
         filters.sede.includes(pqr.sede)
       );
     }
+
     if (filters.eps.length > 0) {
       filteredData = filteredData.filter((pqr) =>
         filters.eps.includes(pqr.eps)
       );
     }
+
     if (filters.fecha_inicio || filters.fecha_fin) {
       filteredData = filteredData.filter((pqr) => {
         const pqrDate = new Date(pqr.created_at);
@@ -88,8 +103,7 @@ function PqrsAsignadas() {
         let matchesEndDate = true;
 
         if (filters.fecha_inicio) {
-          matchesStartDate =
-            pqrDate >= new Date(filters.fecha_inicio + "T00:00:00");
+          matchesStartDate = pqrDate >= new Date(filters.fecha_inicio + "T00:00:00");
         }
         if (filters.fecha_fin) {
           matchesEndDate = pqrDate <= new Date(filters.fecha_fin + "T23:59:59");
@@ -98,6 +112,7 @@ function PqrsAsignadas() {
         return matchesStartDate && matchesEndDate;
       });
     }
+
     setPqrsFiltradas(filteredData);
   };
 
@@ -109,8 +124,8 @@ function PqrsAsignadas() {
           <h2>PQR-S Asignadas a {localStorage.getItem("nameUser")}</h2>
           <PqrsFilters
             filters={filters}
-            setFilters={setFilters}
-            onBuscar={handleBuscar}
+            setFilters={setFilters} // Cada cambio dispara el useEffect
+            onBuscar={handleBuscar} // Mantener por compatibilidad, pero ya no es obligatorio
           />
         </div>
 
@@ -122,6 +137,7 @@ function PqrsAsignadas() {
             <thead>
               <tr>
                 <th>Acciones</th>
+                <th>Índice</th>
                 <th>Contestada</th>
                 <th># Radicado</th>
                 <th>Fecha de solicitud</th>
@@ -137,170 +153,98 @@ function PqrsAsignadas() {
                 <th>Fecha de cierre</th>
                 <th>Tiempo de respuesta PASSUS</th>
                 <th>Asignado a</th>
-
-                {/* <th>Correo</th>
-                <th>Teléfono</th>
-                <th>Archivo</th>
-                <th>Estado de la respuesta</th>
-                <th>Respuesta enviada a usuario</th>
-                <th>Fecha</th> */}
               </tr>
             </thead>
-            <tbody>
-              {pqrsFiltradas.length === 0 && !loading ? (
-                <tr>
-                  <td colSpan="16">
-                    No hay PQRs asignadas que coincidan con los filtros.
-                  </td>
-                </tr>
-              ) : (
-                pqrsFiltradas.map((pqr) => {
-                  const yaRespondio = pqr.respuestas?.some(
-                    (r) => r.user_id === usuarioId
-                  );
-                  return (
-                    <tr key={pqr.id}>
-                      <td>
-                        <button
-                          onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}`)}
-                        >
-                          <i className="fa-solid fa-eye"></i>
-                        </button>
+          <tbody>
+  {pqrsFiltradas.length === 0 && !loading ? (
+    <tr>
+      <td colSpan="17">
+        No hay PQRs asignadas que coincidan con los filtros.
+      </td>
+    </tr>
+  ) : (
+    pqrsFiltradas.map((pqr, index) => {
+      const total = pqrsFiltradas.length; // total de PQRs filtradas
+      const globalIndex = total - index;   // índice descendente
 
-                        {/* Si NO ha respondido, mostramos el botón */}
-                        {!yaRespondio && (
-                          <button
-                            onClick={() =>
-                              navigate(`/pqrs/${pqr.pqr_codigo}/respuesta`)
-                            }
-                          >
-                            <i className="fa-solid fa-pen-to-square"></i>
-                          </button>
-                        )}
+      const yaRespondio = pqr.respuestas?.some(
+        (r) => r.user_id === usuarioId
+      );
 
-                        {/* Si ya respondió, mostramos solo el ícono deshabilitado o un alerta opcional */}
-                        {yaRespondio && (
-                          <button
-                            onClick={() =>
-                              Swal.fire({
-                                icon: "info",
-                                title: "Ya has respondido",
-                                text: "Ya registraste una respuesta para esta PQR.",
-                                confirmButtonText: "Aceptar",
-                              })
-                            }
-                          >
-                            <i
-                              className="fa-solid fa-ban"
-                              style={{ color: "gray" }}
-                            ></i>
-                          </button>
-                        )}
-                      </td>
-                      <td>
-                        {yaRespondio ? (
-                          <span style={{ color: "green", fontWeight: "bold" }}>
-                            ✅ Contestada
-                          </span>
-                        ) : (
-                          <span style={{ color: "red", fontWeight: "bold" }}>
-                            ⏳ Pendiente
-                          </span>
-                        )}
-                      </td>
-
-                      <td>{pqr.pqr_codigo}</td>
-                      <td>{pqr.fecha_inicio_real}</td>
-                      <td>{new Date(pqr.created_at).toLocaleString()}</td>
-                      <td>{pqr.sede}</td>
-                      <td>{pqr.tipo_solicitud}</td>
-                      <td>{pqr.estado_respuesta}</td>
-                      <td>{pqr.documento_tipo}</td>
-                      <td>{pqr.documento_numero}</td>
-                      <td>
-                        {pqr.nombre} {pqr.segundo_nombre} {pqr.apellido} {pqr.segundo_apellido}
-                      </td>
-                      <td>{pqr.eps}</td>
-                      <td>{pqr.servicio_prestado}</td>
-                      <td>{pqr.respondido_en}</td>
-                      <td>
-                        {pqr.estado_respuesta === "Cerrado" ? (
-                          <span
-                            style={{ color: "#474646", fontStyle: "italic" }}
-                          >
-                            Finalizado
-                          </span>
-                        ) : pqr.deadline_interno ? (
-                          <CountdownTimer targetDate={pqr.deadline_interno} />
-                        ) : (
-                          <span
-                            style={{ color: "#474646", fontStyle: "italic" }}
-                          >
-                            No iniciado
-                          </span>
-                        )}
-                      </td>
-                      <td className="pqr-status-cell">
-                        <ul className="pqr-status-list">
-                          {pqr.asignados?.map((usuario) => {
-                            // ✅ Línea corregida: Eliminamos la condición "r.es_respuesta_usuario === 0"
-                            const respondio = (pqr.respuestas ?? []).some(
-                              (r) => r.user_id === usuario.id
-                            );
-
-                            return (
-                              <li key={usuario.id} className="pqr-status-item">
-                                <i
-                                  className={`fa-solid ${
-                                    respondio
-                                      ? "fa-check pqr-icon success"
-                                      : "fa-clock pqr-icon pending"
-                                  }`}
-                                  title={
-                                    respondio
-                                      ? "Respuesta enviada"
-                                      : "Pendiente de respuesta"
-                                  }
-                                ></i>
-                                <span
-                                  className="pqr-user-name"
-                                  title={usuario.name}
-                                >
-                                  {usuario.name}
-                                </span>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </td>
-
-                      {/* <td>{pqr.correo}</td>
-                      <td>{pqr.telefono || "No proporcionado"}</td>
-                      <td>
-                        {pqr.archivo ? (
-                          <a
-                            href={`http://127.0.0.1:8000/storage/${pqr.archivo}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Ver archivo
-                          </a>
-                        ) : (
-                          "Sin archivo"
-                        )}
-                      </td>
-                      <td>{pqr.estado_respuesta}</td>
-                      <td>
-                        {pqr.respuesta_enviada === 1
-                          ? "Enviada ✅"
-                          : "No enviada ❌"}
-                      </td>
-                      <td>{new Date(pqr.created_at).toLocaleString()}</td> */}
-                    </tr>
-                  );
+      return (
+        <tr key={pqr.id}>
+          <td>
+            <button onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}`)}>
+              <i className="fa-solid fa-eye"></i>
+            </button>
+            {!yaRespondio && (
+              <button onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}/respuesta`)}>
+                <i className="fa-solid fa-pen-to-square"></i>
+              </button>
+            )}
+            {yaRespondio && (
+              <button onClick={() =>
+                Swal.fire({
+                  icon: "info",
+                  title: "Ya has respondido",
+                  text: "Ya registraste una respuesta para esta PQR.",
+                  confirmButtonText: "Aceptar",
                 })
-              )}
-            </tbody>
+              }>
+                <i className="fa-solid fa-ban" style={{ color: "gray" }}></i>
+              </button>
+            )}
+          </td>
+
+          {/* ✅ Aquí está el índice descendente */}
+          <td>{globalIndex}</td>
+
+          <td>{yaRespondio ? "✅ Contestada" : "⏳ Pendiente"}</td>
+          <td>{pqr.pqr_codigo}</td>
+          <td>{pqr.fecha_inicio_real}</td>
+          <td>{new Date(pqr.created_at).toLocaleString()}</td>
+          <td>{pqr.sede}</td>
+          <td>{pqr.tipo_solicitud}</td>
+          <td>{pqr.estado_respuesta}</td>
+          <td>{pqr.documento_tipo}</td>
+          <td>{pqr.documento_numero}</td>
+          <td>{`${pqr.nombre} ${pqr.segundo_nombre} ${pqr.apellido} ${pqr.segundo_apellido}`}</td>
+          <td>{pqr.eps}</td>
+          <td>{pqr.servicio_prestado}</td>
+          <td>{pqr.respondido_en}</td>
+          <td>
+            {pqr.estado_respuesta === "Cerrado" ? (
+              <span style={{ color: "#474646", fontStyle: "italic" }}>Finalizado</span>
+            ) : pqr.deadline_interno ? (
+              <CountdownTimer targetDate={pqr.deadline_interno} />
+            ) : (
+              <span style={{ color: "#474646", fontStyle: "italic" }}>No iniciado</span>
+            )}
+          </td>
+          <td className="pqr-status-cell">
+            <ul className="pqr-status-list">
+              {pqr.asignados?.map((usuario) => {
+                const respondio = (pqr.respuestas ?? []).some(
+                  (r) => r.user_id === usuario.id
+                );
+                return (
+                  <li key={usuario.id} className="pqr-status-item">
+                    <i
+                      className={`fa-solid ${respondio ? "fa-check pqr-icon success" : "fa-clock pqr-icon pending"}`}
+                      title={respondio ? "Respuesta enviada" : "Pendiente de respuesta"}
+                    ></i>
+                    <span className="pqr-user-name" title={usuario.name}>{usuario.name}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </td>
+        </tr>
+      );
+    })
+  )}
+</tbody>
+
           </table>
         </div>
       </div>
@@ -310,6 +254,7 @@ function PqrsAsignadas() {
 }
 
 export default PqrsAsignadas;
+
 
 // import React, { useEffect, useState, useMemo } from "react"; // Importa useMemo
 // import { getPqrsAsignadas } from "./pqrsService";

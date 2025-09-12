@@ -25,6 +25,7 @@ const UserDetailEdit = () => {
     { id: 3, name: "Supervisor/Atencion al usuario" },
     { id: 4, name: "Gestor" },
     { id: 5, name: "Digitador" },
+    { id: 6, name: "Gestor Administrativo" }
 
   ];
   const areas = [

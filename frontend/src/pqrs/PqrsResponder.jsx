@@ -15,54 +15,55 @@ const PqrsResponder = () => {
   const [respuesta, setRespuesta] = useState("");
   const [error, setError] = useState("");
   const [adjuntos, setAdjuntos] = useState([]);
+  const maxChars = 4000;
+
 
   const yaRespondida =
     pqr?.estado_respuesta === "Preliminar" ||
     pqr?.estado_respuesta === "Cerrado";
 
   useEffect(() => {
-  const fetchPqrs = async () => {
-    try {
-      if (!pqr_codigo) {
-        setError("Código de PQRS no proporcionado en la URL.");
-        return;
-      }
-
-      const asignadas = await getPqrsAsignadas();
-      const encontrada = asignadas.find(
-        (item) => item.pqr_codigo === pqr_codigo
-      );
-
-      if (!encontrada) {
-        throw new Error("PQRS no encontrada o no asignada a usted.");
-      }
-
-      setPqr(encontrada);
-
-      const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
-      const yaRespondio = encontrada.respuestas?.some(
-        (r) => r.user_id === usuarioId
-      );
-
-      if (yaRespondio) {
-        const result = await Swal.fire({
-          icon: "info",
-          title: "Ya has respondido",
-          text: "Ya registraste una respuesta para esta PQR.",
-          confirmButtonText: "Aceptar",
-        });
-        if (result.isConfirmed) {
-          navigate(`/pqrs/${pqr_codigo}`);
+    const fetchPqrs = async () => {
+      try {
+        if (!pqr_codigo) {
+          setError("Código de PQRS no proporcionado en la URL.");
+          return;
         }
+
+        const asignadas = await getPqrsAsignadas();
+        const encontrada = asignadas.find(
+          (item) => item.pqr_codigo === pqr_codigo
+        );
+
+        if (!encontrada) {
+          throw new Error("PQRS no encontrada o no asignada a usted.");
+        }
+
+        setPqr(encontrada);
+
+        const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
+        const yaRespondio = encontrada.respuestas?.some(
+          (r) => r.user_id === usuarioId
+        );
+
+        if (yaRespondio) {
+          const result = await Swal.fire({
+            icon: "info",
+            title: "Ya has respondido",
+            text: "Ya registraste una respuesta para esta PQR.",
+            confirmButtonText: "Aceptar",
+          });
+          if (result.isConfirmed) {
+            navigate(`/pqrs/${pqr_codigo}`);
+          }
+        }
+      } catch (err) {
+        setError(err.message);
       }
+    };
 
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  fetchPqrs();
-}, [pqr_codigo, navigate]);
+    fetchPqrs();
+  }, [pqr_codigo, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,7 +76,7 @@ const PqrsResponder = () => {
       });
 
       await registrarRespuesta(pqr_codigo, respuesta, adjuntos);
-      await Swal.fire({    
+      await Swal.fire({
         icon: "success",
         title: "Respuesta enviada",
         text: "Su respuesta ha sido registrada correctamente.",
@@ -99,7 +100,9 @@ const PqrsResponder = () => {
     <>
       <Navbar />
       <div className="pqrs-res-container">
-        <h2 className="pqrs-res-title">Respuesta preliminar de la {pqr.pqr_codigo}</h2>
+        <h2 className="pqrs-res-title">
+          Respuesta preliminar de la {pqr.pqr_codigo}
+        </h2>
 
         <div className="pqrs-res-info">
           <p>
@@ -128,60 +131,59 @@ const PqrsResponder = () => {
 
           {/* Mostrar archivos adjuntos de la PQRS original si existen */}
 
-{pqr.archivo && pqr.archivo.length > 0 && (
-  <div className="archivos-adjuntos" style={{ marginTop: "10px" }}>
-    <strong>Archivos adjuntos de la PQRS:</strong>{" "}
-    {pqr.archivo.map((fileItem, index) => {
-      // Usa la URL completa que viene del backend, ya no la construyas manualmente
-      const urlArchivo = fileItem.url; // <-- AQUI ESTA EL CAMBIO CLAVE
+          {pqr.archivo && pqr.archivo.length > 0 && (
+            <div className="archivos-adjuntos" style={{ marginTop: "10px" }}>
+              <strong>Archivos adjuntos de la PQRS:</strong>{" "}
+              {pqr.archivo.map((fileItem, index) => {
+                // Usa la URL completa que viene del backend, ya no la construyas manualmente
+                const urlArchivo = fileItem.url; // <-- AQUI ESTA EL CAMBIO CLAVE
 
-      const fileName = fileItem.original_name;
+                const fileName = fileItem.original_name;
 
-      return (
-        <div
-          key={`pqr-file-${index}`}
-          style={{ marginBottom: "10px" }}
-        >
-          <a
-            href={urlArchivo}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ display: "inline-block", marginRight: "10px" }}
-          >
-            {fileName}
-          </a>
-          {fileItem.path.match(/\.(jpeg|jpg|png|gif)$/i) ? (
-            <div>
-              <img
-                src={urlArchivo}
-                alt={`Adjunto ${index + 1}`}
-                style={{
-                  maxWidth: "300px",
-                  marginTop: "5px",
-                  display: "block",
-                }}
-              />
+                return (
+                  <div
+                    key={`pqr-file-${index}`}
+                    style={{ marginBottom: "10px" }}
+                  >
+                    <a
+                      href={urlArchivo}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: "inline-block", marginRight: "10px" }}
+                    >
+                      {fileName}
+                    </a>
+                    {fileItem.path.match(/\.(jpeg|jpg|png|gif)$/i) ? (
+                      <div>
+                        <img
+                          src={urlArchivo}
+                          alt={`Adjunto ${index + 1}`}
+                          style={{
+                            maxWidth: "300px",
+                            marginTop: "5px",
+                            display: "block",
+                          }}
+                        />
+                      </div>
+                    ) : fileItem.path.match(/\.pdf$/i) ? (
+                      <div style={{ marginTop: "5px" }}>
+                        <iframe
+                          src={urlArchivo}
+                          title={`PDF Adjunto ${index + 1}`}
+                          width="100%"
+                          height="200px"
+                          style={{ border: "1px solid #ccc" }}
+                        ></iframe>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
-          ) : fileItem.path.match(/\.pdf$/i) ? (
-            <div style={{ marginTop: "5px" }}>
-              <iframe
-                src={urlArchivo}
-                title={`PDF Adjunto ${index + 1}`}
-                width="100%"
-                height="200px"
-                style={{ border: "1px solid #ccc" }}
-              ></iframe>
-            </div>
-          ) : null}
-        </div>
-      );
-    })}
-  </div>
-)}
-
+          )}
         </div>
 
-        {yaRespondida ? (
+        {/* {yaRespondida ? (
           <div className="pqrs-res-message">
             <p>
               Esta PQRS ya tiene una respuesta registrada o ha sido cerrada.
@@ -193,19 +195,23 @@ const PqrsResponder = () => {
               Ver detalles de la PQRS
             </button>
           </div>
-        ) : (
+        ) : ( */}
           <form onSubmit={handleSubmit} className="pqrs-res-form">
-            <p>
-              <strong>Respuesta:</strong>
-            </p>
-            <textarea
-              id="respuesta"
-              className="pqrs-res-textarea"
-              value={respuesta}
-              onChange={(e) => setRespuesta(e.target.value)}
-              rows="5"
-              required
-            />
+          <p>
+  <strong>Respuesta:</strong>
+</p>
+<textarea
+  id="respuesta"
+  className="pqrs-res-textarea"
+  value={respuesta}
+  onChange={(e) => setRespuesta(e.target.value)}
+  rows="5"
+  maxLength={maxChars} // límite de caracteres
+  required
+/>
+<div className="contador-chars">
+  {respuesta.length} / {maxChars} caracteres
+</div>
 
             <p>
               <strong>Archivos adjuntos (opcional):</strong>
@@ -238,7 +244,9 @@ const PqrsResponder = () => {
 
             {adjuntos.length > 0 && (
               <div style={{ marginTop: "10px" }}>
-                <strong className="archivo-seleccionado">Archivos seleccionados:</strong>
+                <strong className="archivo-seleccionado">
+                  Archivos seleccionados:
+                </strong>
                 <ul>
                   {adjuntos.map((file, index) => (
                     <li
@@ -271,34 +279,14 @@ const PqrsResponder = () => {
               Enviar Respuesta
             </button>
           </form>
-        )}
+        {/* )} */}
       </div>
-      <Version/>
+      <Version />
     </>
   );
 };
 
 export default PqrsResponder;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import { useState, useEffect } from "react";
 // import { useParams, useNavigate } from "react-router-dom";
@@ -377,7 +365,7 @@ export default PqrsResponder;
 //       });
 
 //       await registrarRespuesta(pqr_codigo, respuesta, adjuntos);
-//       await Swal.fire({    
+//       await Swal.fire({
 //         icon: "success",
 //         title: "Respuesta enviada",
 //         text: "Su respuesta ha sido registrada correctamente.",
@@ -438,8 +426,6 @@ export default PqrsResponder;
 //                 // const urlArchivo = ` http://192.168.1.30:8000/storage/${fileItem.path}`;
 //                 // const urlArchivo = `https://test-pqrs.passusips.com/storage/${fileItem.path}`;
 //                   const urlArchivo = `https://test-pqrs.passus.cloud/storage/${fileItem.path}`;
-
-
 
 //                 const fileName = fileItem.original_name;
 
@@ -587,30 +573,3 @@ export default PqrsResponder;
 // };
 
 // export default PqrsResponder;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

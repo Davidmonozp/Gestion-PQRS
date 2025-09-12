@@ -1,11 +1,11 @@
 import axios from "axios";
 
-// const API_URL = "http://127.0.0.1:8000/api";
+const API_URL = "http://127.0.0.1:8000/api";
 // const API_URL = "http://192.168.1.15:8000/api";
 // const API_URL = "https://pqrs.passusips.com/api";
 // const API_URL = "https://test-pqrs.passusips.com/api";
 // const API_URL = "https://test-pqrs.passus.cloud/api";
-const API_URL = "https://pqrs.passus.cloud/api";
+// const API_URL = "https://pqrs.passus.cloud/api";
 
 
 
@@ -139,10 +139,10 @@ export const registrarRespuestaCiudadano = async (
   }
 
   const response = await fetch(
-    // `http://127.0.0.1:8000/api/respuesta-usuario/${token}`,
+    `http://127.0.0.1:8000/api/respuesta-usuario/${token}`,
     // `http://192.168.1.15:8000/api/respuesta-usuario/${token}`,    
     // `https://pqrs.passusips.com/api/respuesta-usuario/${token}`,
-    `https://test-pqrs.passus.cloud/api/respuesta-usuario/${token}`,
+    // `https://test-pqrs.passus.cloud/api/respuesta-usuario/${token}`,
     // `https://pqrs.passus.cloud/api/respuesta-usuario/${token}`,
 
 
@@ -159,3 +159,13 @@ export const registrarRespuestaCiudadano = async (
 
   return await response.json();
 };
+
+export async function reclasificarPqr(pqrId, tipoSolicitud) {
+  const token = localStorage.getItem("token");
+  const res = await axios.put(
+    `${API_URL}/pqrs/${pqrId}/reclasificar`,
+    { tipo_solicitud: tipoSolicitud },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return res.data;
+}

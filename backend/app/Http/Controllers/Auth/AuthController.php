@@ -116,6 +116,7 @@ class AuthController extends Controller
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'segundo_nombre' => $user->segundo_nombre,
                 'sedes' => $user->sedes,
             ],
             'roles' => $user->getRoleNames()
@@ -162,4 +163,5 @@ class AuthController extends Controller
             'message' => 'Contraseña cambiada exitosamente.'
         ]);
     }
+
 }

@@ -27,7 +27,7 @@ import EventLogs from "../pqrs/EventLogs";
 export function AppRouter() {
   return (
     <Routes>
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/logout" replace />} />
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/logout" element={<Logout />} />
@@ -62,7 +62,8 @@ export function AppRouter() {
               "Consultor",
               "Supervisor/Atencion al usuario",
               "Gestor",
-              "Digitador",
+              "Gestor Administrativo",
+              "Digitador",              
             ]}
           >
             <Pqr />
@@ -78,6 +79,7 @@ export function AppRouter() {
               "Consultor",
               "Supervisor/Atencion al usuario",
               "Gestor",
+              "Gestor Administrativo",
               "Digitador",
             ]}
           >
@@ -95,6 +97,7 @@ export function AppRouter() {
               "Consultor",
               "Supervisor/Atencion al usuario",
               "Gestor",
+              "Gestor Administrativo",
               "Digitador",
             ]}
           >
@@ -105,7 +108,7 @@ export function AppRouter() {
       <Route
         path="/users"
         element={
-          <ProtectedRoute allowedRoles={["Administrador", "Supervisor/Atencion al usuario", "Gestor"]}>
+          <ProtectedRoute allowedRoles={["Administrador", "Supervisor/Atencion al usuario", "Gestor", "Gestor Administrativo",]}>
             <UserList />
           </ProtectedRoute>
         }
@@ -129,7 +132,7 @@ export function AppRouter() {
       <Route
         path="/pqrs/asignadas"
         element={
-          <ProtectedRoute allowedRoles={["Administrador", "Supervisor/Atencion al usuario", "Gestor"]}>
+          <ProtectedRoute allowedRoles={["Administrador", "Supervisor/Atencion al usuario", "Gestor", "Gestor Administrativo",]}>
             <PqrsAsignadas />
           </ProtectedRoute>
         }
@@ -137,7 +140,7 @@ export function AppRouter() {
       <Route
         path="/pqrs/:pqr_codigo/respuesta"
         element={
-          <ProtectedRoute allowedRoles={["Administrador", "Gestor"]}>
+          <ProtectedRoute allowedRoles={["Administrador", "Gestor", "Gestor Administrativo",]}>
             <PqrsResponder />
           </ProtectedRoute>
         }

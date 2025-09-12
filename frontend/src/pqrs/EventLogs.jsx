@@ -8,7 +8,7 @@ function EventLogs({ pqrId }) {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const perPage = 10;
+  const perPage = 15;
 
   const handlePageChange = (page) => {
     if (page >= 1 && page <= lastPage) {

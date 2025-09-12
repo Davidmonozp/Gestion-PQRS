@@ -376,7 +376,7 @@ function PqrsForm({
     title: "",
     description: "",
   });
-  const MAX_CARACTERES_DESCRIPCION = 700;
+  const MAX_CARACTERES_DESCRIPCION = 1500;
 
   const accionadoRef = useRef(null);
   const clasificacionesRef = useRef(null);
@@ -915,22 +915,25 @@ function PqrsForm({
         await createPqr(formData);
 
         // Determina los destinatarios del correo basándose en la lógica del parentesco
-        let mensajeDestinatario = "";
+     let mensajeDestinatario = "";
 
-        if (
-          form.parentesco === "Asegurador" ||
-          form.parentesco === "Ente de control"
-        ) {
-          // Si el parentesco es Asegurador o Ente de control, el correo solo va al registrador.
-          mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.registrador_correo}</strong>.`;
-        } else {
-          // Si no, el correo va al paciente y al registrador (si este existe).
-          if (form.registrador_correo) {
-            mensajeDestinatario = `El número de radicado será enviado a los correos <strong>${form.correo}</strong> y <strong>${form.registrador_correo}</strong>.`;
-          } else {
-            mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.correo}</strong>.`;
-          }
-        }
+if (form.tipo_solicitud !== "Tutela") {
+  if (
+    form.parentesco === "Asegurador" ||
+    form.parentesco === "Ente de control"
+  ) {
+    // Si el parentesco es Asegurador o Ente de control, el correo solo va al registrador.
+    mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.registrador_correo}</strong>.`;
+  } else {
+    // Si no, el correo va al paciente y al registrador (si este existe).
+    if (form.registrador_correo) {
+      mensajeDestinatario = `El número de radicado será enviado a los correos <strong>${form.correo}</strong> y <strong>${form.registrador_correo}</strong>.`;
+    } else {
+      mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.correo}</strong>.`;
+    }
+  }
+}
+
 
         // Muestra el mensaje de SweetAlert2 con el texto dinámico
         Swal.fire({
@@ -1394,22 +1397,6 @@ function PqrsForm({
 
                   <div className="floating-label">
                     <input
-                      id="registrador_correo"
-                      name="registrador_correo"
-                      type="email"
-                      value={form.registrador_correo}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      required
-                    />
-                    <label htmlFor="registrador_correo">Correo</label>
-                    {errors.registrador_correo && (
-                      <p className="error">{errors.registrador_correo}</p>
-                    )}
-                  </div>
-
-                  <div className="floating-label">
-                    <input
                       id="registrador_telefono"
                       name="registrador_telefono"
                       type="text"
@@ -1425,6 +1412,8 @@ function PqrsForm({
                       <p className="error">{errors.registrador_telefono}</p>
                     )}
                   </div>
+
+
 
                   {(form.parentesco === "Ente de control" ||
                     form.parentesco === "Asegurador") && (
@@ -1446,6 +1435,25 @@ function PqrsForm({
                       )}
                     </div>
                   )}
+
+                                    <div className="floating-label">
+  <input
+    id="registrador_correo"
+    name="registrador_correo"
+    type="text"
+    value={form.registrador_correo}
+    onChange={handleChange}
+    onBlur={handleBlur}
+    required
+  />
+  <label htmlFor="registrador_correo">Correo(s) del registrador</label>
+  <small className="text-gray-500">
+    Puedes ingresar varios correos separados por coma. Ej: juan@mail.com, maria@mail.com
+  </small>
+  {errors.registrador_correo && (
+    <p className="error">{errors.registrador_correo}</p>
+  )}
+</div>
                 </div>
               </>
             )}
@@ -2415,6 +2423,38 @@ function PqrsForm({
 
 export default PqrsForm;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // import React, { useState, useEffect, useCallback, useRef } from "react";
 // import { createPqr } from "./pqrsService"; // Asegúrate de tener createPqr y updatePqr si los usas
 // import "./styles/Pqrs.css";
@@ -2624,42 +2664,124 @@ export default PqrsForm;
 //     "Paciente directo": [
 //       {
 //         id: "hc-directo-cedula",
-//         label: "Fotocopia de la cédula de ciudadanía.",
+//         label: (
+//           <span className="label-historia">
+//             Fotocopia de la cédula de ciudadanía.
+//           </span>
+//         ),
 //       },
 //       {
 //         id: "hc-directo-formato",
-//         label: "Diligenciar formato: Solicitud por paciente.",
+//         label: (
+//           <span className="label-historia">
+//             Diligenciar formato: Solicitud por paciente.
+//           </span>
+//         ),
 //       },
 //     ],
 //     "Tercero autorizado": [
 //       {
 //         id: "hc-tercero-cedulas",
-//         label: "Fotocopia de la cédula del paciente y del autorizado.",
+//         label: (
+//           <span className="label-historia">
+//             Fotocopia de la cédula del paciente y del autorizado.
+//           </span>
+//         ),
 //       },
 //       {
 //         id: "hc-tercero-parentesco",
-//         label:
-//           "Soporte que acredite el parentesco (registro civil, acta de matrimonio).",
+//         label: (
+//           <span className="label-historia">
+//             Soporte que acredite el parentesco (registro civil, acta de
+//             matrimonio).
+//           </span>
+//         ),
 //       },
 //       {
 //         id: "hc-tercero-formato",
-//         label: "Diligenciar formato: Solicitud por Tercero.",
+//         label: (
+//           <span className="label-historia">
+//             Diligenciar formato: Solicitud por Tercero.
+//           </span>
+//         ),
 //       },
 //     ],
 //     "Paciente menor de edad": [
 //       {
 //         id: "hc-menor-registro",
-//         label: "Registro civil o tarjeta de identidad (según edad).",
+//         label: (
+//           <span className="label-historia">
+//             Registro civil o tarjeta de identidad (según edad).
+//           </span>
+//         ),
 //       },
 //       {
 //         id: "hc-menor-parentesco",
-//         label:
-//           "Registro civil que acredite el parentesco o documento que certifique la representación legal.",
+//         label: (
+//           <span className="label-historia">
+//             Registro civil que acredite el parentesco o documento que certifique
+//             la representación legal.
+//           </span>
+//         ),
 //       },
-//       { id: "hc-menor-cedula", label: "Cédula de ciudadanía de los padres." },
+//       {
+//         id: "hc-menor-cedula",
+//         label: (
+//           <span className="label-historia">
+//             Cédula de ciudadanía de los padres.
+//           </span>
+//         ),
+//       },
 //       {
 //         id: "hc-menor-formato",
-//         label: "Diligenciar formato: Solicitud por Tercero.",
+//         label: (
+//           <span className="label-historia">
+//             Diligenciar formato: Solicitud por Tercero.
+//           </span>
+//         ),
+//       },
+//     ],
+//     "Paciente incapacitado o declarado interdicto": [
+//       {
+//         id: "hc-incapacitado-certificado",
+//         label: (
+//           <span className="label-historia">
+//             Certificado médico que evidencie el estado de salud del paciente.
+//           </span>
+//         ),
+//       },
+//       {
+//         id: "hc-incapacitado-parentesco",
+//         label: (
+//           <span className="label-historia">
+//             Documentos que acrediten el parentesco o la representación legal.
+//           </span>
+//         ),
+//       },
+//       {
+//         id: "hc-incapacitado-cedula",
+//         label: (
+//           <span className="label-historia">
+//             Cédula del paciente y del familiar o representante.
+//           </span>
+//         ),
+//       },
+//       {
+//         id: "hc-incapacitado-interdiccion",
+//         label: (
+//           <span className="label-historia">
+//             En caso de interdicción, adjuntar la sentencia de interdicción y
+//             copia de la cédula del curador.
+//           </span>
+//         ),
+//       },
+//       {
+//         id: "hc-incapacitado-formato",
+//         label: (
+//           <span className="label-historia">
+//             Diligenciar formato: Solicitud de historia clínica por tercero.
+//           </span>
+//         ),
 //       },
 //     ],
 //   };
@@ -2690,6 +2812,16 @@ export default PqrsForm;
 //     }
 //   }, [form.registra_otro, form.documento_tipo]);
 
+//   useEffect(() => {
+//     if (form.sede === "Cedritos-Divertido") {
+//       setForm((prev) => ({
+//         ...prev,
+//         eps: "Particular",
+//         regimen: "Particular",
+//       }));
+//     }
+//   }, [form.sede]);
+
 //   const [loading, setLoading] = useState(false);
 //   const [errors, setErrors] = useState({});
 //   const isLoggedIn = !!localStorage.getItem("token"); // Verifica si el usuario está logeado
@@ -2701,7 +2833,7 @@ export default PqrsForm;
 //     title: "",
 //     description: "",
 //   });
-//   const MAX_CARACTERES_DESCRIPCION = 700;
+//   const MAX_CARACTERES_DESCRIPCION = 1500;
 
 //   const accionadoRef = useRef(null);
 //   const clasificacionesRef = useRef(null);
@@ -2994,16 +3126,107 @@ export default PqrsForm;
 //     });
 //   };
 
+//   // ---- Validación de archivos obligatorios ----
+//   const validateArchivos = (
+//     clasificaciones,
+//     availableClasificaciones,
+//     archivosPorRequisito,
+//     subOpcionHistoria,
+//     historiaClinicaOptions,
+//     fileInputsConfig
+//   ) => {
+//     let errors = {};
+
+//     clasificaciones.forEach((clasificacionId) => {
+//       const clasificacionObj = availableClasificaciones.find(
+//         (c) => c.id === clasificacionId
+//       );
+//       if (!clasificacionObj) return;
+
+//       const nombreClasificacion = clasificacionObj.nombre;
+
+//       // Caso especial: Historia clínica
+//       if (
+//         nombreClasificacion.toLowerCase() ===
+//         "envío de historia clínica o informes finales".toLowerCase()
+//       ) {
+//         if (!subOpcionHistoria) {
+//           errors["subOpcionHistoria"] = "Seleccione una opción.";
+//         } else {
+//           historiaClinicaOptions[subOpcionHistoria].forEach((req) => {
+//             if (!archivosPorRequisito[req.id]) {
+//               errors[req.id] = "Este archivo es obligatorio.";
+//             }
+//           });
+//         }
+//         return;
+//       }
+
+//       // Caso especial: Solicitudes de tesorería
+//       // Caso especial: Solicitudes de tesorería
+//       if (
+//         nombreClasificacion.toLowerCase() ===
+//         "solicitudes de tesorería".toLowerCase()
+//       ) {
+//         const inputsTesoreria = fileInputsConfig[nombreClasificacion] || [];
+//         inputsTesoreria.forEach((input) => {
+//           if (input.archivos) {
+//             input.archivos.forEach((archivo) => {
+//               const isRequired =
+//                 archivo.required === undefined ? true : archivo.required;
+//               if (isRequired && !archivosPorRequisito[archivo.id]) {
+//                 errors[archivo.id] = "Este archivo es obligatorio.";
+//               }
+//             });
+//           }
+//         });
+//         return;
+//       }
+
+//       if (
+//         nombreClasificacion.toLowerCase() ===
+//         "política de multas por inasistencia".toLowerCase()
+//       ) {
+//         const inputsMultas = fileInputsConfig[nombreClasificacion] || [];
+//         inputsMultas.forEach((input) => {
+//           if (input.archivos) {
+//             input.archivos.forEach((archivo) => {
+//               const isRequired =
+//                 archivo.required === undefined ? true : archivo.required;
+//               if (isRequired && !archivosPorRequisito[archivo.id]) {
+//                 errors[archivo.id] = "Este archivo es obligatorio.";
+//               }
+//             });
+//           }
+//         });
+//         return;
+//       }
+
+//       // Otras clasificaciones: validar solo si tienen archivos definidos
+//       const inputs = fileInputsConfig[nombreClasificacion] || [];
+//       inputs.forEach((input) => {
+//         if (input.required && input.archivos) {
+//           input.archivos.forEach((req) => {
+//             if (!archivosPorRequisito[req.id]) {
+//               errors[req.id] = "Este archivo es obligatorio.";
+//             }
+//           });
+//         }
+//       });
+//     });
+
+//     return errors;
+//   };
+
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
 //     setLoading(true);
 //     setErrors({});
 
 //     try {
-//       // Array para almacenar todos los errores de validación.
 //       const allErrors = {};
 
-//       // 1. Validar el esquema principal (campos del formulario)
+//       // 1. Validar esquema principal (campos normales)
 //       try {
 //         await pqrsSchema.validate(form, {
 //           abortEarly: false,
@@ -3015,43 +3238,36 @@ export default PqrsForm;
 //             allErrors[path] = message;
 //           });
 //         } else {
-//           throw err; // Re-lanza si es un error diferente a validación.
+//           throw err;
 //         }
 //       }
 
-//       // 2. Validar el esquema de archivos si es necesario
-//       if (subOpcionHistoria && historiaClinicaOptions[subOpcionHistoria]) {
-//         try {
-//           const archivosSchema = getFilesSchema(
-//             subOpcionHistoria,
-//             historiaClinicaOptions
-//           );
-//           await archivosSchema.validate(archivosPorRequisito, {
-//             abortEarly: false,
-//           });
-//         } catch (err) {
-//           if (err instanceof Yup.ValidationError) {
-//             err.inner.forEach(({ path, message }) => {
-//               allErrors[path] = message;
-//             });
-//           } else {
-//             throw err;
-//           }
-//         }
-//       }
+//       // 2. Validar archivos obligatorios por clasificación
+//       const archivoErrors = validateArchivos(
+//         form.clasificaciones,
+//         availableClasificaciones,
+//         archivosPorRequisito,
+//         subOpcionHistoria,
+//         historiaClinicaOptions,
+//         fileInputsConfig
+//       );
 
-//       // Si hay algún error en total, lanza un error para ir al bloque `catch`
+//       Object.assign(allErrors, archivoErrors);
+
+//       // 3. Si hay errores, mostrar y detener
 //       if (Object.keys(allErrors).length > 0) {
-//         // Si hay errores, los unimos a un solo objeto de error de Yup
-//         const finalError = new Yup.ValidationError(
-//           "Faltan campos o archivos obligatorios.",
-//           allErrors
-//         );
-//         // Lanzamos el error unificado para que el bloque `catch` lo procese
-//         throw finalError;
+//         setErrors(allErrors);
+//         Swal.fire({
+//           icon: "error",
+//           title: "Error de validación",
+//           text: "Por favor, revisa los campos y adjunta todos los archivos obligatorios.",
+//           confirmButtonColor: "#d33",
+//         });
+//         setLoading(false);
+//         return;
 //       }
 
-//       // Si no hay errores, procede con el resto de la lógica
+//       // 4. Confirmación de envío
 //       const confirm = await Swal.fire({
 //         title: "¿Confirmas el envío de tu PQR?",
 //         text: "Una vez enviada no podrás editar la información.",
@@ -3075,15 +3291,19 @@ export default PqrsForm;
 //         didOpen: () => Swal.showLoading(),
 //       });
 
+//       // 5. Construir FormData
 //       const formData = new FormData();
-//       // 🔹 Agregar todos los archivos cargados por requisito
-//       Object.values(archivosPorRequisito).forEach((file, idx) => {
+
+//       // Archivos
+//       Object.values(archivosPorRequisito).forEach((file) => {
 //         formData.append("archivos[]", file);
 //       });
 
-//       // 🔹 Agregar campos normales del formulario
+//       archivos.forEach((file) => {
+//         formData.append("archivos_adicionales[]", file);
+//       });
+//       // Campos del formulario
 //       Object.entries(form).forEach(([key, value]) => {
-//         // ... (tu lógica para agregar campos al formData)
 //         if (key.startsWith("registrador_") && form.registra_otro === "no")
 //           return;
 //         if (key === "parentesco" && form.registra_otro === "no") return;
@@ -3142,7 +3362,7 @@ export default PqrsForm;
 //         }
 //       });
 
-//       // 📌 Enviar a backend
+//       // 6. Enviar a backend
 //       if (pqrData && pqrData.pqr_codigo) {
 //         console.warn(
 //           "Función de actualización no implementada, creando en su lugar"
@@ -3150,15 +3370,38 @@ export default PqrsForm;
 //         await createPqr(formData);
 //       } else {
 //         await createPqr(formData);
+
+//         // Determina los destinatarios del correo basándose en la lógica del parentesco
+//      let mensajeDestinatario = "";
+
+// if (form.tipo_solicitud !== "Tutela") {
+//   if (
+//     form.parentesco === "Asegurador" ||
+//     form.parentesco === "Ente de control"
+//   ) {
+//     // Si el parentesco es Asegurador o Ente de control, el correo solo va al registrador.
+//     mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.registrador_correo}</strong>.`;
+//   } else {
+//     // Si no, el correo va al paciente y al registrador (si este existe).
+//     if (form.registrador_correo) {
+//       mensajeDestinatario = `El número de radicado será enviado a los correos <strong>${form.correo}</strong> y <strong>${form.registrador_correo}</strong>.`;
+//     } else {
+//       mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.correo}</strong>.`;
+//     }
+//   }
+// }
+
+
+//         // Muestra el mensaje de SweetAlert2 con el texto dinámico
 //         Swal.fire({
 //           icon: "success",
 //           title: "¡PQR enviada!",
-//           html: `Tu PQRS ha sido enviada con éxito.<br/>
-//           El número de radicado será enviado al correo <strong>${form.correo}</strong>.`,
+//           html: `Tu PQRS ha sido enviada con éxito.<br/>${mensajeDestinatario}`,
 //           confirmButtonColor: "#3085d6",
 //         });
 //       }
 
+//       // 7. Reset de formulario si es nuevo
 //       if (!pqrData) {
 //         setForm({
 //           nombre: "",
@@ -3193,30 +3436,20 @@ export default PqrsForm;
 //             ? formatDateToISOWithTime(new Date())
 //             : "",
 //         });
-//         setArchivosPorRequisito({}); // 🔹 limpiar archivos por requisito
+//         setArchivosPorRequisito({});
 //       }
 //     } catch (err) {
-//       // Este bloque ahora maneja el nuevo error genérico o el error del `catch`
-//       if (err instanceof Yup.ValidationError) {
-//         setErrors(err.value); // El `value` del error contiene el objeto de errores
-//         Swal.fire({
-//           icon: "error",
-//           title: "Error de validación",
-//           text: "Por favor, revisa los campos marcados en el formulario y asegúrate de cargar todos los archivos obligatorios.",
-//           confirmButtonColor: "#d33",
-//         });
-//       } else {
-//         Swal.fire({
-//           icon: "error",
-//           title: "Error",
-//           text: err.message || "Ocurrió un error al enviar la PQR.",
-//           confirmButtonColor: "#d33",
-//         });
-//       }
+//       Swal.fire({
+//         icon: "error",
+//         title: "Error",
+//         text: err.message || "Ocurrió un error al enviar la PQR.",
+//         confirmButtonColor: "#d33",
+//       });
 //     } finally {
 //       setLoading(false);
 //     }
 //   };
+
 //   // 🔹 Lista de clasificaciones especiales de "Solicitud"
 //   const clasificacionesSolicitud = [
 //     "Agendamiento",
@@ -3268,39 +3501,43 @@ export default PqrsForm;
 //     "Reprogramación de citas": [
 //       {
 //         id: "Reprogramación de citas",
-//         label: (
-//           <>
-//             Adjuntar:
-//             <ul className="lista-archivos">
-//               <li>Adjuntar soporte de incapacidad médica</li>
-//             </ul>
-//           </>
-//         ),
+//         label: <>Adjuntar:</>,
+//         required: true,
+//         archivos: [
+//           {
+//             id: "soporte_incapacidad_medica",
+//             name: "Soporte de incapacidad médica",
+//           },
+//         ],
 //       },
 //     ],
+
 //     "Política de multas por inasistencia": [
 //       {
-//         id: "Política de multas por inasistencia",
-//         label: (
-//           <>
-//             Adjuntar:
-//             <ul className="lista-archivos">
-//               <li>Justificación médica</li>
-//               <li>Soporte de situación de fuerza mayor (Si aplica)</li>
-//             </ul>
-//           </>
-//         ),
+//         id: "politica_multas_inasistencia",
+//         label: <>Adjuntar:</>,
+//         required: true,
+//         archivos: [
+//           { id: "justificacion_medica", name: "Justificación médica" },
+//           {
+//             id: "soporte_fuerza_mayor",
+//             name: "Soporte de situación de fuerza mayor (si aplica)",
+//             required: false,
+//           },
+//         ],
 //       },
 //     ],
+
 //     "Envío de historia clínica o informes finales": [
 //       {
 //         id: "Envío de historia clínica o informes finales",
+//         required: true,
 //         label: (
 //           <>
 //             Adjuntar si es paciente directo:
 //             <ul className="lista-archivos">
 //               <li>Fotocopia de la cédula de ciudadanía.</li>
-//               <li>Diligenciar formato: Solicitud por paciente. </li>
+//               <li>Diligenciar formato: Solicitud por paciente.</li>
 //             </ul>
 //             Adjuntar si es un tercero autorizado:
 //             <ul className="lista-archivos">
@@ -3323,24 +3560,64 @@ export default PqrsForm;
 //             </ul>
 //           </>
 //         ),
+//         archivos: [
+//           // Paciente directo
+//           {
+//             id: "hc-directo-cedula",
+//             name: "Fotocopia de la cédula de ciudadanía",
+//           },
+//           {
+//             id: "hc-directo-formato",
+//             name: "Diligenciar formato: Solicitud por paciente",
+//           },
+
+//           // Tercero autorizado
+//           {
+//             id: "hc-tercero-cedulas",
+//             name: "Fotocopia de la cédula del paciente y del autorizado",
+//           },
+//           {
+//             id: "hc-tercero-parentesco",
+//             name: "Soporte de parentesco (registro civil, acta de matrimonio)",
+//           },
+//           {
+//             id: "hc-tercero-formato",
+//             name: "Diligenciar formato: Solicitud por Tercero",
+//           },
+
+//           // Paciente menor de edad
+//           {
+//             id: "hc-menor-registro",
+//             name: "Registro civil o tarjeta de identidad (según edad)",
+//           },
+//           {
+//             id: "hc-menor-parentesco",
+//             name: "Registro civil de parentesco o documento de representación legal",
+//           },
+//           { id: "hc-menor-cedula", name: "Cédula de ciudadanía de los padres" },
+//           {
+//             id: "hc-menor-formato",
+//             name: "Diligenciar formato: Solicitud por Tercero",
+//           },
+//         ],
 //       },
 //     ],
+
 //     "Solicitudes de tesorería": [
 //       {
-//         id: "Solicitudes de tesorería",
-//         label: (
-//           <>
-//             Adjuntar:
-//             <ul className="lista-archivos">
-//               <li>Certificación bancaria.</li>
-//               <li>
-//                 Carta de autorización de consignación a un tercero (si aplica).
-//               </li>
-//               <li>Soporte médico.</li>
-//               <li>Soporte de pago o transacción.</li>
-//             </ul>
-//           </>
-//         ),
+//         id: "solicitudes_tesoreria",
+//         label: <>Adjuntar:</>,
+//         required: true,
+//         archivos: [
+//           { id: "certificacion_bancaria", name: "Certificación bancaria" }, // requerido por defecto
+//           {
+//             id: "carta_autorizacion",
+//             name: "Carta de autorización de consignación a un tercero (si aplica).",
+//             required: false,
+//           }, // opcional
+//           { id: "soporte_medico", name: "Soporte médico" }, // requerido
+//           { id: "soporte_pago", name: "Soporte de pago o transacción" }, // requerido
+//         ],
 //       },
 //     ],
 //   };
@@ -3632,7 +3909,7 @@ export default PqrsForm;
 //                 </div>
 //               </>
 //             )}
-//             <h1 className="titulo-form">DATOS DEL PACIENTE:</h1> <br />
+//             <h1 className="titulo-form">DATOS DEL PACIENTE-USUARIO:</h1> <br />
 //             <div className="pqrs-paciente">
 //               <div className="floating-label">
 //                 <input
@@ -3840,12 +4117,18 @@ export default PqrsForm;
 //                   onBlur={handleBlur}
 //                   required
 //                 >
-//                   <option value="" disabled hidden></option>
-//                   {epsOptions.map((eps) => (
-//                     <option key={eps} value={eps}>
-//                       {eps}
-//                     </option>
-//                   ))}
+//                   {form.sede === "Cedritos-Divertido" ? (
+//                     <option value="Particular">Particular</option>
+//                   ) : (
+//                     <>
+//                       <option value="" disabled hidden></option>
+//                       {epsOptions.map((eps) => (
+//                         <option key={eps} value={eps}>
+//                           {eps}
+//                         </option>
+//                       ))}
+//                     </>
+//                   )}
 //                 </select>
 //                 <label htmlFor="eps">Asegurador (EPS-ARL)</label>
 //                 {errors.eps && <p className="error">{errors.eps}</p>}
@@ -4170,37 +4453,12 @@ export default PqrsForm;
 //                 </div>
 //               )}
 //             </div>
-//             <div className="pqrs-textarea-full">
-//               <textarea
-//                 name="descripcion"
-//                 placeholder="Describe la situación que deseas reportar"
-//                 value={form.descripcion}
-//                 onChange={handleChange}
-//                 onBlur={handleBlur}
-//                 rows="5"
-//                 required
-//                 maxLength={MAX_CARACTERES_DESCRIPCION}
-//               />
-//               {errors.descripcion && (
-//                 <p className="error">{errors.descripcion}</p>
-//               )}
-//               <small
-//                 className={`contador-caracteres ${
-//                   form.descripcion.length > MAX_CARACTERES_DESCRIPCION * 0.9
-//                     ? "alerta"
-//                     : ""
-//                 }`}
-//               >
-//                 {form.descripcion.length} / {MAX_CARACTERES_DESCRIPCION}{" "}
-//                 caracteres
-//               </small>
-//             </div>
 //             {/* 🔹 Si la clasificación seleccionada está en fileInputsConfig → muestra su(s) botón(es) */}
 //             {Object.entries(fileInputsConfig).map(([clasificacion, inputs]) =>
 //               availableClasificaciones.some(
 //                 (c) =>
 //                   Array.isArray(form.clasificaciones) &&
-//                   form.clasificaciones && // <-- Asegura que no es null/undefined
+//                   form.clasificaciones &&
 //                   form.clasificaciones.includes(c.id) &&
 //                   c.nombre.toLowerCase() === clasificacion.toLowerCase()
 //               ) ? (
@@ -4208,6 +4466,7 @@ export default PqrsForm;
 //                   {clasificacion ===
 //                   "Envío de historia clínica o informes finales" ? (
 //                     <>
+//                       {/* Lógica para la historia clínica */}
 //                       <div className="subopcion-historia">
 //                         <label>Seleccione quién hace la solicitud:</label>
 //                         <select
@@ -4215,7 +4474,7 @@ export default PqrsForm;
 //                           onChange={(e) => setSubOpcionHistoria(e.target.value)}
 //                           className={`${
 //                             errors["subOpcionHistoria"] ? "input-error" : ""
-//                           }`} // Agrega validación para el select si aplica
+//                           }`}
 //                         >
 //                           <option value="">-- Seleccione una opción --</option>
 //                           {Object.keys(historiaClinicaOptions).map((op) => (
@@ -4224,14 +4483,12 @@ export default PqrsForm;
 //                             </option>
 //                           ))}
 //                         </select>
-//                         {/* Muestra el error para el select si existe */}
 //                         {errors["subOpcionHistoria"] && (
 //                           <p className="error-message">
 //                             {errors["subOpcionHistoria"]}
 //                           </p>
 //                         )}
 //                       </div>
-
 //                       {subOpcionHistoria &&
 //                         historiaClinicaOptions[subOpcionHistoria].map((req) => {
 //                           const requisitoId = req.id;
@@ -4250,7 +4507,6 @@ export default PqrsForm;
 //                                 ) : (
 //                                   <>
 //                                     <span>{req.label}</span>
-//                                     {/* Agrega aquí el marcador de campo requerido para el usuario */}
 //                                     {req.required && (
 //                                       <span className="text-red-500">*</span>
 //                                     )}
@@ -4284,7 +4540,6 @@ export default PqrsForm;
 //                                   </button>
 //                                 </div>
 //                               )}
-//                               {/* AQUÍ ESTÁ EL CAMBIO CLAVE: MOSTRAR EL ERROR */}
 //                               {errors[requisitoId] && (
 //                                 <p className="error-message text-red-500 text-sm mt-1">
 //                                   {errors[requisitoId]}
@@ -4295,104 +4550,82 @@ export default PqrsForm;
 //                         })}
 //                     </>
 //                   ) : (
-//                     /* Caso normal */
+//                     /* Lógica unificada para todas las demás clasificaciones */
 //                     <>
 //                       {inputs.map((input) => (
-//                         <div className="file-input-group" key={input.id}>
+//                         <div key={input.id}>
 //                           <div className="file-upload-text">
-//                             {React.Children.map(
-//                               input.label.props.children,
-//                               (child) => {
-//                                 if (child?.type === "ul") {
-//                                   return (
-//                                     <ul className="lista-archivos">
-//                                       {React.Children.map(
-//                                         child.props.children,
-//                                         (li, index) => {
-//                                           const requisitoId = `${input.id}-${index}`;
-//                                           const archivo =
-//                                             archivosPorRequisito[requisitoId];
+//                             {input.label}{" "}
+//                             {/* Muestra la etiqueta con la lista <ul> si está definida así */}
+//                             {input.archivos && (
+//                               <ul className="lista-archivos">
+//                                 {input.archivos.map((req) => {
+//                                   const requisitoId = req.id;
+//                                   const archivo =
+//                                     archivosPorRequisito[requisitoId];
+//                                   const hasError = errors[requisitoId];
 
-//                                           return (
-//                                             <div
-//                                               key={index}
-//                                               className="requisito-con-archivo"
-//                                             >
-//                                               <li
-//                                                 style={{
-//                                                   textDecoration: archivo
-//                                                     ? "line-through"
-//                                                     : "none",
-//                                                 }}
-//                                               >
-//                                                 {li.props.children}
-//                                                 {!archivo && (
-//                                                   <>
-//                                                     {/* Agrega aquí el marcador de campo requerido para el usuario */}
-//                                                     {li.props.children.includes(
-//                                                       "*"
-//                                                     ) && (
-//                                                       <span className="text-red-500">
-//                                                         *
-//                                                       </span>
-//                                                     )}
-//                                                     <label
-//                                                       htmlFor={`file-upload-${requisitoId}`}
-//                                                       className="file-upload-button"
-//                                                     >
-//                                                       Subir archivo
-//                                                     </label>
-//                                                     <input
-//                                                       id={`file-upload-${requisitoId}`}
-//                                                       type="file"
-//                                                       style={{
-//                                                         display: "none",
-//                                                       }}
-//                                                       onChange={(e) =>
-//                                                         handleFileChange(
-//                                                           e,
-//                                                           requisitoId
-//                                                         )
-//                                                       }
-//                                                     />
-//                                                   </>
-//                                                 )}
-//                                               </li>
-//                                               {archivo && (
-//                                                 <div className="archivo-subido">
-//                                                   {archivo.name} (
-//                                                   {(
-//                                                     archivo.size /
-//                                                     1024 /
-//                                                     1024
-//                                                   ).toFixed(2)}{" "}
-//                                                   MB)
-//                                                   <button
-//                                                     type="button"
-//                                                     className="remove-file-button"
-//                                                     onClick={() =>
-//                                                       removeFile(requisitoId)
-//                                                     }
-//                                                   >
-//                                                     X
-//                                                   </button>
-//                                                 </div>
-//                                               )}
-//                                               {/* AQUÍ ESTÁ EL CAMBIO CLAVE: MOSTRAR EL ERROR */}
-//                                               {errors[requisitoId] && (
-//                                                 <p className="error-message text-red-500 text-sm mt-1">
-//                                                   {errors[requisitoId]}
-//                                                 </p>
-//                                               )}
-//                                             </div>
-//                                           );
-//                                         }
+//                                   return (
+//                                     <div
+//                                       key={requisitoId}
+//                                       className="requisito-con-archivo"
+//                                     >
+//                                       <li className="requisito-item">
+//                                         <span>{req.name}</span>
+
+//                                         {archivo && (
+//                                           <span className="text-green-600 font-bold">
+//                                             ✔️
+//                                           </span>
+//                                         )}
+
+//                                         {!archivo && (
+//                                           <label
+//                                             htmlFor={`file-upload-${requisitoId}`}
+//                                             className="file-upload-button"
+//                                           >
+//                                             Subir archivo
+//                                           </label>
+//                                         )}
+
+//                                         <input
+//                                           id={`file-upload-${requisitoId}`}
+//                                           type="file"
+//                                           style={{ display: "none" }}
+//                                           onChange={(e) =>
+//                                             handleFileChange(e, requisitoId)
+//                                           }
+//                                         />
+//                                       </li>
+
+//                                       {archivo && (
+//                                         <div className="archivo-subido">
+//                                           {archivo.name} (
+//                                           {(archivo.size / 1024 / 1024).toFixed(
+//                                             2
+//                                           )}{" "}
+//                                           MB)
+//                                           <button
+//                                             type="button"
+//                                             className="remove-file-button"
+//                                             onClick={() =>
+//                                               removeFile(requisitoId)
+//                                             }
+//                                           >
+//                                             X
+//                                           </button>
+//                                         </div>
 //                                       )}
-//                                     </ul>
+
+//                                       {hasError && (
+//                                         <p className="error-message text-red-500 text-sm mt-1">
+//                                           {hasError}
+//                                         </p>
+//                                       )}
+//                                     </div>
 //                                   );
-//                                 }
-//                                 return child;
-//                               }
+//                                 })}
+//                               </ul>
 //                             )}
 //                           </div>
 //                         </div>
@@ -4408,7 +4641,7 @@ export default PqrsForm;
 //                 htmlFor="archivos-adicionales"
 //                 className="file-upload-button"
 //               >
-//                 Subir archivo adicional
+//                 Subir archivo
 //               </label>
 //               <input
 //                 id="archivos-adicionales"
@@ -4417,7 +4650,24 @@ export default PqrsForm;
 //                 multiple
 //                 onChange={(e) => {
 //                   const nuevos = Array.from(e.target.files);
-//                   setArchivos((prev) => [...prev, ...nuevos]);
+
+//                   // Filtrar por tamaño (máximo 7MB)
+//                   const validos = [];
+//                   nuevos.forEach((file) => {
+//                     if (file.size > 7 * 1024 * 1024) {
+//                       Swal.fire({
+//                         icon: "error",
+//                         title: "Archivo demasiado grande",
+//                         text: `El archivo "${file.name}" supera los 7 MB.`,
+//                       });
+//                     } else {
+//                       validos.push(file);
+//                     }
+//                   });
+
+//                   if (validos.length > 0) {
+//                     setArchivos((prev) => [...prev, ...validos]);
+//                   }
 //                 }}
 //               />
 
@@ -4442,6 +4692,31 @@ export default PqrsForm;
 //                 </div>
 //               )}
 //             </div>
+//             <div className="pqrs-textarea-full">
+//               <textarea
+//                 name="descripcion"
+//                 placeholder="Describe la situación que deseas reportar"
+//                 value={form.descripcion}
+//                 onChange={handleChange}
+//                 onBlur={handleBlur}
+//                 rows="5"
+//                 required
+//                 maxLength={MAX_CARACTERES_DESCRIPCION}
+//               />
+//               {errors.descripcion && (
+//                 <p className="error">{errors.descripcion}</p>
+//               )}
+//               <small
+//                 className={`contador-caracteres ${
+//                   form.descripcion.length > MAX_CARACTERES_DESCRIPCION * 0.9
+//                     ? "alerta"
+//                     : ""
+//                 }`}
+//               >
+//                 {form.descripcion.length} / {MAX_CARACTERES_DESCRIPCION}{" "}
+//                 caracteres
+//               </small>
+//             </div>
 //             <div className="politica-box politica-box-compact">
 //               <label className="politica-label">
 //                 <input
@@ -4453,7 +4728,7 @@ export default PqrsForm;
 //                 />
 //                 <div className="politica-texto">
 //                   <span className="politica-descripcion">
-//                     Acepto la
+//                     Acepto la 
 //                     <a
 //                       href="https://passusips.com/nosotros-politica-manejo-datos"
 //                       target="_blank"
@@ -4599,3 +4874,36 @@ export default PqrsForm;
 // }
 
 // export default PqrsForm;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
