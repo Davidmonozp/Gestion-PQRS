@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\FelicitacionController;
 use App\Http\Controllers\Api\PqrAlertaController;
 use App\Http\Controllers\EncuestaController;
 use App\Http\Controllers\EventLogController;
+use App\Http\Controllers\Api\GestionAppController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -78,6 +79,9 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador'])->gro
     Route::delete('users/{id}', [UserController::class, 'destroy']); // Eliminar usuario (Admin)
     Route::post('register-user', [UserController::class, 'store']);
     Route::patch('users/{id}/toggle-active', [UserController::class, 'toggleActive']); // Activar/desactivar usuario
+    Route::post('/pqrs/reabrir', [GestionAppController::class, 'reabrir']);
+    Route::post('/crear-clasificacion', [GestionAppController::class, 'crearClasificacion']);
+    Route::post('/pqrs/asignacion-masiva', [PqrController::class, 'asignacionMasiva']);
 });
 
 

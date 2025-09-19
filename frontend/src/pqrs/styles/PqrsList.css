@@ -354,11 +354,27 @@ tbody td:hover::before {
 
 /* FIN ESTILO RESPUESTA PRELIMINAR */
 .descripcion {
-  max-width: 150px;      
-  white-space: nowrap;    
-  overflow: hidden;       
-  text-overflow: ellipsis; 
-  cursor: pointer;        
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.btn-asignar {
+    padding: 10px 20px;
+    background-color: #00933f;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.bulk-assign-controls {
+    margin-bottom: 20px;
+}
+
+.btn-asignar:hover {
+    background-color: #0087cd;
 }
 
 /* FIN PAGINACION */

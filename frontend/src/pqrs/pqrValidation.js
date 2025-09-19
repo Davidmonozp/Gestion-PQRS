@@ -40,21 +40,21 @@ const commonContactFields = {
     .min(2, "El nombre debe tener al menos 2 caracteres")
     .max(20, "El nombre no puede exceder los 50 caracteres"),
 
- segundo_nombre: Yup.string()
-  .nullable()
-  .notRequired()
-  .test(
-    "validar-segundo-nombre",
-    "El segundo nombre debe tener entre 2 y 20 caracteres y no contener espacios en blanco",
-    (value) => {
-      if (!value) return true; // ✅ Si está vacío, pasa
-      return (
-        /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/.test(value) &&
-        value.length >= 2 &&
-        value.length <= 50
-      );
-    }
-  ),
+  segundo_nombre: Yup.string()
+    .nullable()
+    .notRequired()
+    .test(
+      "validar-segundo-nombre",
+      "El segundo nombre debe tener entre 2 y 20 caracteres y no contener espacios en blanco",
+      (value) => {
+        if (!value) return true; // ✅ Si está vacío, pasa
+        return (
+          /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/.test(value) &&
+          value.length >= 2 &&
+          value.length <= 50
+        );
+      }
+    ),
 
 
 
@@ -69,20 +69,20 @@ const commonContactFields = {
     .max(50, "El apellido no puede exceder los 50 caracteres"),
 
   segundo_apellido: Yup.string()
-   .nullable()
-  .notRequired()
-  .test(
-    "validar-segundo-apellido",
-    "El segundo apellido debe tener entre 2 y 20 caracteres y no contener espacios en blanco",
-    (value) => {
-      if (!value) return true; // ✅ Si está vacío, pasa
-      return (
-        /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/.test(value) &&
-        value.length >= 2 &&
-        value.length <= 20
-      );
-    }
-  ),
+    .nullable()
+    .notRequired()
+    .test(
+      "validar-segundo-apellido",
+      "El segundo apellido debe tener entre 2 y 20 caracteres y no contener espacios en blanco",
+      (value) => {
+        if (!value) return true; // ✅ Si está vacío, pasa
+        return (
+          /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/.test(value) &&
+          value.length >= 2 &&
+          value.length <= 20
+        );
+      }
+    ),
 
   documento_tipo: Yup.string().required("Selecciona un tipo de documento"),
 
@@ -164,6 +164,14 @@ export const pqrsSchema = Yup.object().shape({
 
   tipo_solicitud: Yup.string().required("Selecciona un tipo de solicitud"),
 
+  radicado_juzgado: Yup.string()
+  .max(255, "Máximo 255 caracteres")
+  .when("tipo_solicitud", {
+    is: "Tutela",
+    then: (schema) => schema.required("El radicado del juzgado es obligatorio"),
+    otherwise: (schema) => schema.nullable(),
+  }),
+
   clasificacion_tutela: Yup.string().when("tipo_solicitud", {
     is: "Tutela",
     then: (schema) =>
@@ -244,23 +252,23 @@ export const pqrsSchema = Yup.object().shape({
         ),
   }),
 
- registrador_segundo_nombre: Yup.string()
-  .notRequired()
-  .transform((_, originalValue) =>
-    originalValue === "" ? undefined : originalValue
-  )
-  .test(
-    "valid-registrador-segundo-nombre",
-    "El segundo nombre del solicitante debe tener entre 2 y 20 caracteres y no contener espacios en blanco",
-    (value) => {
-      if (!value) return true; // ✅ si está vacío pasa
-      return (
-        /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/.test(value) &&
-        value.length >= 2 &&
-        value.length <= 20
-      );
-    }
-  ),
+  registrador_segundo_nombre: Yup.string()
+    .notRequired()
+    .transform((_, originalValue) =>
+      originalValue === "" ? undefined : originalValue
+    )
+    .test(
+      "valid-registrador-segundo-nombre",
+      "El segundo nombre del solicitante debe tener entre 2 y 20 caracteres y no contener espacios en blanco",
+      (value) => {
+        if (!value) return true; // ✅ si está vacío pasa
+        return (
+          /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/.test(value) &&
+          value.length >= 2 &&
+          value.length <= 20
+        );
+      }
+    ),
 
 
   registrador_apellido: Yup.string().when("registra_otro", {
@@ -287,21 +295,21 @@ export const pqrsSchema = Yup.object().shape({
 
   registrador_segundo_apellido: Yup.string()
     .notRequired()
-  .transform((_, originalValue) =>
-    originalValue === "" ? undefined : originalValue
-  )
-  .test(
-    "valid-registrador-segundo-apellido",
-    "El segundo nombre del solicitante debe tener entre 2 y 20 caracteres y no contener espacios en blanco",
-    (value) => {
-      if (!value) return true; // ✅ si está vacío pasa
-      return (
-        /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/.test(value) &&
-        value.length >= 2 &&
-        value.length <= 20
-      );
-    }
-  ),
+    .transform((_, originalValue) =>
+      originalValue === "" ? undefined : originalValue
+    )
+    .test(
+      "valid-registrador-segundo-apellido",
+      "El segundo nombre del solicitante debe tener entre 2 y 20 caracteres y no contener espacios en blanco",
+      (value) => {
+        if (!value) return true; // ✅ si está vacío pasa
+        return (
+          /^[a-zA-Z0áéíóúüÁÉÍÓÚÜñÑ][a-zA-Z0áéíóúüÁÉÍÓÚÜ\sñÑ]*$/.test(value) &&
+          value.length >= 2 &&
+          value.length <= 20
+        );
+      }
+    ),
 
 
   parentesco: Yup.string().when("registra_otro", {
@@ -361,38 +369,39 @@ export const pqrsSchema = Yup.object().shape({
 
 
 
-registrador_correo: Yup.string().when("registra_otro", {
-  is: "si",
-  then: (schema) =>
-    schema
-      .required("El correo electrónico del solicitante es obligatorio")
-      .test(
-        "multiple-emails",
-        "Uno o más correos tienen un formato inválido",
-        (value) => {
-          if (!value) return false; // requerido
-          const correos = value.split(",").map((c) => c.trim());
-          const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          return correos.every((c) => regex.test(c));
-        }
-      ),
-  otherwise: (schema) =>
-    schema
-      .notRequired()
-      .transform((_, originalValue) =>
-        originalValue === "" ? undefined : originalValue
-      )
-      .test(
-        "multiple-emails",
-        "Uno o más correos tienen un formato inválido",
-        (value) => {
-          if (!value) return true; // si no es requerido, dejar pasar vacío
-          const correos = value.split(",").map((c) => c.trim());
-          const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          return correos.every((c) => regex.test(c));
-        }
-      ),
-}),
+  registrador_correo: Yup.string().when("registra_otro", {
+    is: "si",
+    then: (schema) =>
+      schema
+        .required("El correo electrónico del solicitante es obligatorio")
+        .test(
+          "multiple-emails",
+          "El correo tienen un formato inválido",
+          // "Uno o más correos tienen un formato inválido",
+          (value) => {
+            if (!value) return false; // requerido
+            const correos = value.split(",").map((c) => c.trim());
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return correos.every((c) => regex.test(c));
+          }
+        ),
+    otherwise: (schema) =>
+      schema
+        .notRequired()
+        .transform((_, originalValue) =>
+          originalValue === "" ? undefined : originalValue
+        )
+        .test(
+          "multiple-emails",
+          "Uno o más correos tienen un formato inválido",
+          (value) => {
+            if (!value) return true; // si no es requerido, dejar pasar vacío
+            const correos = value.split(",").map((c) => c.trim());
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return correos.every((c) => regex.test(c));
+          }
+        ),
+  }),
 
 
   registrador_telefono: Yup.string().when("registra_otro", {

@@ -237,33 +237,23 @@
 
                     <tr>
                         <td class="body-content">
-                            <h1>¡FELICITACIÓN!</h1>
+                            <h1>¡Nueva Felicitación Registrada!</h1>
+                            
+                            <p>Estimado(a) Gestor(a),</p>
 
-                            <p>Estimado(a) <strong>{{ $pqr->nombre }} {{ $pqr->apellido }}</strong>,</p>
+                            <p>Se ha registrado una nueva felicitación en la sede {{ $pqr->sede }}.</p>
 
-                            <p> <strong>Reciba un cordial saludo de PASSUS IPS Taller Psicomotriz S.A.S.</strong></p>
+                            <div class="pqr-info-box">
+                                <p><strong>Código de PQR:</strong> {{ $pqr->pqr_codigo }}</p>
+                                <p><strong>Nombre del usuario:</strong> {{ $pqr->nombre }} {{ $pqr->apellido }}</p>
+                                <p><strong>Descripción:</strong></p>
+                                <p style="white-space: pre-line; margin-top: 10px;">{{ $pqr->descripcion }}</p>
+                            </div>
 
-                            <p>Hemos recibido su mensaje, registrado bajo el radicado {{ $pqr->pqr_codigo }} y le
-                                expresamos nuestro más sincero agradecimiento. <br><br>
+                            {{-- <p>Por favor, revisa esta felicitación para su respectivo seguimiento.</p> --}}
 
-                                Sus palabras de felicitación representan un valioso reconocimiento que nos motiva a
-                                fortalecer nuestro compromiso con la humanización, la calidad en la atención y la mejora
-                                continua de nuestros servicios. Cada expresión positiva que recibimos constituye un
-                                estímulo para seguir trabajando con dedicación, excelencia y responsabilidad por el
-                                bienestar de nuestros usuarios y sus familias. <br><br>
-
-                                En PASSUS trabajamos con un firme compromiso hacia la mejora continua y la calidad en la
-                                prestación de los servicios de salud y bienestar. Agradecemos su confianza y el haberse
-                                puesto en contacto con nosotros. Sus solicitudes, comentarios y sugerencias son
-                                fundamentales para seguir fortaleciendo nuestro servicio en beneficio de todos los
-                                usuarios.
-                            </p>
-
-
-
-                            <p>Cordialmente;</p>
-                            <p><strong>Área de Experiencia al Usuario</strong></p>
-                            <p>PASSUS IPS Taller Psicomotriz S.A.S.</p>
+                            <p>Atentamente,</p>
+                            <p><strong>Equipo de PASSUS IPS</strong></p>
 
                             <hr class="divider">
                             <a href="{{ url('https://passusips.com/index.php') }}" target="_blank"

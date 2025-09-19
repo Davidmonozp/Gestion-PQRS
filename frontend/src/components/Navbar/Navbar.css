@@ -87,6 +87,11 @@
     /* font-weight: bold; */
 }
 
+.nav-elements ul a.active-links {
+    color: rgb(11, 41, 75);
+    font-weight: bold;
+}
+
 .profile-dropdown {
     position: relative;
     cursor: pointer;
@@ -100,7 +105,7 @@
 
 .profile-link:hover {
     color: #0087cd;
-    font-weight: 500;
+    font-weight: 700;
 }
 
 .dropdown-menu {

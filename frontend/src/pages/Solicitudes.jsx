@@ -178,7 +178,9 @@ export const Solicitudes = () => {
               <li>Soporte médico.</li>
               <li>Soporte de pago o transacción.</li>
             </ul>
-           
+
+            <strong>Nota:</strong> Tenga en cuenta que los reembolsos se realizarán los días 25 del mes siguiente a su registro de la solicitud si esta cuenta con los documentos requeridos.
+            <br /><br />    
             Si tu situación corresponde a alguno de los casos mencionados, por favor registra tu solicitud, adjunta los documentos requeridos y describe claramente el motivo.<br /><br />
 
           `,

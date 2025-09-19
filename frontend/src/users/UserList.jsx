@@ -57,11 +57,13 @@ const UserList = () => {
 
       // 🟢 La única línea que se modificó
       // Se usa `.includes()` para buscar coincidencias parciales
-        const matchId =
+      const matchId =
         filterId === "" || user.documento_numero.toString().includes(filterId);
 
-      // El resto de la lógica permanece igual
-      const matchName = user.name.toLowerCase().includes(filterName);
+      const nombreCompleto = `${user.name || ""} ${user.segundo_nombre || ""} ${
+        user.primer_apellido || ""
+      } ${user.segundo_apellido || ""}`.toLowerCase();
+      const matchName = nombreCompleto.includes(filterName);
       const matchEmail = user.email.toLowerCase().includes(filterEmail);
       const matchRole =
         filterRole === "" || user.roles.some((r) => r.name === filterRole);

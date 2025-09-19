@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\FelicitacionGestorNotification;
 use Illuminate\Http\Request;
 use App\Models\Pqr;
 use App\Services\CodigoPqrService;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\FelicitacionRecibida;
+use App\Models\User;
 use Carbon\Carbon;
 
 class FelicitacionController extends Controller
 {
+
+
     public function store(Request $request, CodigoPqrService $codigoService)
     {
         $validated = $request->validate([
@@ -62,14 +66,33 @@ class FelicitacionController extends Controller
         // Guardar clasificaciones
         $pqr->clasificaciones()->sync($validated['clasificaciones']);
 
-        // Enviar correo
+        // Enviar correo al usuario que registra
         Mail::to($pqr->correo)->send(new FelicitacionRecibida($pqr));
+
+        // --- Lógica para enviar correo a los gestores de la sede ---
+
+        // Busca gestores por su rol y la sede, asumiendo que el campo 'sede' en tu formulario
+        // es el nombre de la sede, no el ID.
+        $gestores = User::role('Gestor')
+            ->where('activo', 1) // Agrega esta condición para filtrar por usuarios activos
+            ->whereHas('sedes', function ($query) use ($pqr) {
+                $query->where('name', $pqr->sede);
+            })
+            ->get();
+
+        // Si se encuentran gestores (activos), se les envía el correo
+        if ($gestores->count() > 0) {
+            Mail::to($gestores)->send(new FelicitacionGestorNotification($pqr));
+        }
+
+        // --- Fin de la lógica adicional ---
 
         return response()->json([
             'message' => 'Felicitación registrada exitosamente',
             'pqr' => $pqr->load(['clasificaciones', 'respuestas.autor']),
         ], 201);
     }
+
 
 
     // public function store(Request $request, CodigoPqrService $codigoService)
@@ -92,10 +115,10 @@ class FelicitacionController extends Controller
     //         'clasificaciones.*' => 'exists:clasificaciones,id',
     //     ]);
 
-
     //     // Generar código único
     //     $codigo = $codigoService->generarCodigoPqr('Felicitacion', $validated['documento_numero']);
 
+    //     // Crear la PQR
     //     $pqr = Pqr::create([
     //         'pqr_codigo' => $codigo,
     //         'nombre' => $validated['nombre'],
@@ -114,18 +137,12 @@ class FelicitacionController extends Controller
     //         'descripcion' => $validated['descripcion'],
     //         'archivo' => null,
     //         'registra_otro' => 0,
-    //         'registrador_nombre' => null,
-    //         'registrador_apellido' => null,
-    //         'registrador_documento_tipo' => null,
-    //         'registrador_documento_numero' => null,
-    //         'registrador_correo' => null,
-    //         'registrador_telefono' => null,
     //         'respuesta_enviada' => 1,
-    //         'estado_respuesta' => 'cerrado',
+    //         'estado_respuesta' => 'Cerrado',
     //         'respondido_en' => Carbon::now(),
     //     ]);
 
-    //     // 🔹 Guardar relación con clasificaciones
+    //     // Guardar clasificaciones
     //     $pqr->clasificaciones()->sync($validated['clasificaciones']);
 
     //     // Enviar correo
@@ -133,7 +150,9 @@ class FelicitacionController extends Controller
 
     //     return response()->json([
     //         'message' => 'Felicitación registrada exitosamente',
-    //         'pqr' => $pqr->load('clasificaciones'),
+    //         'pqr' => $pqr->load(['clasificaciones', 'respuestas.autor']),
     //     ], 201);
     // }
+
+
 }

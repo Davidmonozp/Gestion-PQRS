@@ -26,6 +26,7 @@ class Pqr extends Model
         'eps',
         'regimen',
         'tipo_solicitud',
+        'radicado_juzgado', 
         'clasificacion_tutela',
         'accionado',
         'descripcion',

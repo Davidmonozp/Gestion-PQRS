@@ -6,6 +6,7 @@ import { tienePermiso } from "../../utils/permisoHelper";
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [configOpen, setConfigOpen] = useState(false);
   const [pqrsDropdownOpen, setPqrsDropdownOpen] = useState(false);
 
   return (
@@ -131,7 +132,7 @@ const Navbar = () => {
                       <NavLink
                         to="/profile/change-password"
                         className={({ isActive }) =>
-                          isActive ? "active-link" : ""
+                          isActive ? "active-links" : ""
                         }
                       >
                         Cambiar contraseña
@@ -141,7 +142,7 @@ const Navbar = () => {
                       <NavLink
                         to="/logout"
                         className={({ isActive }) =>
-                          isActive ? "active-link" : ""
+                          isActive ? "active-links" : ""
                         }
                       >
                         Cerrar sesión
@@ -151,16 +152,43 @@ const Navbar = () => {
                 )}
               </div>
             </li>
-
             {tienePermiso(["Administrador"]) && (
-              <li>
-                <NavLink
-                  to="/users"
-                  className={({ isActive }) => (isActive ? "active-link" : "")}
-                >
-                  Administración de Usuarios
-                </NavLink>
-              </li>
+              <>
+                <li>
+                  <div
+                    className="profile-dropdown"
+                    onClick={() => setConfigOpen(!configOpen)}
+                  >
+                    <span className="profile-link">
+                      Configuración <i className="fas fa-caret-down"></i>
+                    </span>
+                    {configOpen && (
+                      <ul className="dropdown-menu">
+                        <li>
+                          <NavLink
+                            to="/users"
+                            className={({ isActive }) =>
+                              isActive ? "active-links" : ""
+                            }
+                          >
+                            Usuarios
+                          </NavLink>
+                        </li>
+                        <li>
+                          <NavLink
+                            to="/gestion-app"
+                            className={({ isActive }) =>
+                              isActive ? "active-links" : ""
+                            }
+                          >
+                            Gestión de la App
+                          </NavLink>
+                        </li>
+                      </ul>
+                    )}
+                  </div>
+                </li>
+              </>
             )}
           </ul>
         </div>

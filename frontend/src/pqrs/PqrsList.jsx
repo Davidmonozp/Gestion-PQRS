@@ -8,6 +8,7 @@ import CountdownTimer from "./components/CountDownTimer";
 import PqrsSidebar from "../components/Sidebar/PqrsSidebar";
 import { getRole, getSedes } from "../auth/authService";
 import { Version } from "../components/Footer/Version";
+import Swal from "sweetalert2";
 // import BotonesFilters from "./components/BotonesFilters";
 
 function PqrsList() {
@@ -18,6 +19,24 @@ function PqrsList() {
     per_page: 15,
     last_page: 1,
   });
+
+  const [selectedPqrs, setSelectedPqrs] = useState(new Set()); // Ya lo tienes, pero es clave.
+  const [usuarioAsignadoMasivo, setUsuarioAsignadoMasivo] = useState([]);
+  const [showUserSelect, setShowUserSelect] = useState(false); // Para el selector de usuario
+  const [searchTerm, setSearchTerm] = useState(""); // Para el input de búsqueda
+  const [usuarios, setUsuarios] = useState([]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await api.get("/users"); // Asume que tienes un endpoint para esto
+        setUsuarios(response.data);
+      } catch (error) {
+        console.error("Error al cargar usuarios:", error);
+      }
+    };
+    fetchUsers();
+  }, []); // Se ejecuta solo una vez al cargar el componente.
 
   const [filters, setFilters] = useState({
     pqr_codigo: "",
@@ -30,6 +49,7 @@ function PqrsList() {
     fecha_fin: "",
     respuesta_enviada: [],
     clasificaciones: [],
+    asignados: [],
   });
 
   useEffect(() => {
@@ -130,6 +150,11 @@ function PqrsList() {
             queryParams.append("respuesta_enviada[]", estado)
           );
         }
+        if (filters.asignados?.length) {
+          filters.asignados.forEach((u) =>
+            queryParams.append("asignados[]", u)
+          );
+        }
       }
 
       const res = await api.get(`${apiUrl}?${queryParams.toString()}`);
@@ -215,6 +240,108 @@ function PqrsList() {
   if (loading) return <p>Cargando...</p>;
   if (error) return <p>{error}</p>;
 
+  // Agrega esta función para la selección de una PQR
+  const handleSelectPqr = (pqrCodigo) => {
+    setSelectedPqrs((prev) => {
+      const newSelected = new Set(prev);
+      if (newSelected.has(pqrCodigo)) {
+        newSelected.delete(pqrCodigo);
+      } else {
+        newSelected.add(pqrCodigo);
+      }
+      return newSelected;
+    });
+  };
+
+  // Agrega esta función para seleccionar o deseleccionar todo
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      // Filtra las PQRS que sí tienen atributo_calidad asignado
+      const pqrsWithQuality = pqrs.filter(
+        (pqr) =>
+          pqr.atributo_calidad !== null &&
+          pqr.atributo_calidad !== undefined &&
+          pqr.estado_respuesta !== "Cerrado"
+      );
+
+      // Mapea los códigos de esas PQRS a un nuevo Set
+      const allPqrCodes = new Set(pqrsWithQuality.map((pqr) => pqr.pqr_codigo));
+
+      setSelectedPqrs(allPqrCodes);
+    } else {
+      // Si la casilla "seleccionar todo" se desmarca, limpia la selección
+      setSelectedPqrs(new Set());
+    }
+  };
+
+  const handleAsignacionMasiva = async () => {
+    // Verificar si hay PQRS seleccionadas o usuarios
+    if (selectedPqrs.size === 0 || usuarioAsignadoMasivo.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Campos incompletos",
+        text: "Por favor, selecciona al menos una PQR y uno o más usuarios para la asignación.",
+      });
+      return;
+    }
+
+    try {
+      const pqrCodigos = Array.from(selectedPqrs);
+      const usuarioIds = usuarioAsignadoMasivo;
+
+      const response = await api.post("/pqrs/asignacion-masiva", {
+        pqr_codigos: pqrCodigos,
+        usuario_ids: usuarioIds,
+      });
+
+      // Si la solicitud es exitosa
+      Swal.fire({
+        icon: "success",
+        title: "¡Asignación exitosa!",
+        text: response.data.message, // Usa el mensaje del backend
+        confirmButtonText: "OK",
+      });
+
+      // Lógica de éxito
+      fetchPqrs(); // Recarga los datos para actualizar la tabla
+      setSelectedPqrs(new Set()); // Limpia la selección de PQRS
+      setUsuarioAsignadoMasivo([]); // Limpia la selección de usuarios
+      setShowUserSelect(false); // Cierra el selector
+    } catch (error) {
+      // Manejo de errores
+      console.error("Error al asignar en masa:", error);
+
+      // Verifica si el error es una respuesta 422 (errores de validación de Laravel)
+      if (error.response && error.response.status === 422) {
+        const validationErrors = error.response.data.errors;
+        let errorMessage = "";
+
+        // Construye el mensaje de error para las PQRS sin atributo_calidad
+        if (validationErrors.hasOwnProperty("pqr_codigos.0")) {
+          errorMessage = validationErrors["pqr_codigos.0"][0];
+        } else {
+          errorMessage =
+            "Hubo un error de validación. Revisa los datos e intenta de nuevo.";
+        }
+
+        Swal.fire({
+          icon: "error",
+          title: "Error de validación",
+          text: errorMessage,
+          confirmButtonText: "OK",
+        });
+      } else {
+        // Maneja otros errores (ej. 500 Internal Server Error)
+        Swal.fire({
+          icon: "error",
+          title: "Error en el servidor",
+          text: "Hubo un error al realizar la asignación. Intenta más tarde.",
+          confirmButtonText: "OK",
+        });
+      }
+    }
+  };
+
   return (
     <>
       <div className="app-layout-container">
@@ -248,10 +375,108 @@ function PqrsList() {
           </div>
 
           <div className="table-wrapper">
+            {selectedPqrs.size > 0 && (
+              <div className="bulk-assign-controls">
+                <label>Asignar a:</label>
+                {/* Contenedor principal del multiselect */}
+                <div className="custom-multiselect">
+                  <div
+                    className="custom-select-box"
+                    onClick={() => setShowUserSelect(!showUserSelect)}
+                  >
+                    {/* Muestra los nombres de los usuarios seleccionados o un mensaje por defecto */}
+                    {usuarioAsignadoMasivo.length > 0
+                      ? usuarioAsignadoMasivo
+                          .map((id) => {
+                            const usuario = usuarios.find((u) => u.id === id);
+                            return usuario
+                              ? `${usuario.name} ${
+                                  usuario.primer_apellido || ""
+                                }`
+                              : null;
+                          })
+                          .filter(Boolean) // Filtra IDs que no se encuentran
+                          .join(", ")
+                      : "Seleccione uno o más usuarios..."}
+                  </div>
+
+                  {showUserSelect && (
+                    <div className="checkbox-options">
+                      {/* Input de búsqueda */}
+                      <input
+                        type="text"
+                        placeholder="Buscar usuario..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="search-input"
+                      />
+
+                      {/* Lista de usuarios con checkboxes */}
+                      {usuarios
+                        .filter(
+                          (u) =>
+                            u.name
+                              .toLowerCase()
+                              .includes(searchTerm.toLowerCase()) ||
+                            (u.primer_apellido &&
+                              u.primer_apellido
+                                .toLowerCase()
+                                .includes(searchTerm.toLowerCase()))
+                        )
+                        .map((u) => (
+                          <label key={u.id} className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              value={u.id}
+                              checked={usuarioAsignadoMasivo.includes(u.id)}
+                              onChange={(e) => {
+                                const id = parseInt(e.target.value);
+                                if (e.target.checked) {
+                                  // Agrega el ID al array si se selecciona
+                                  setUsuarioAsignadoMasivo([
+                                    ...usuarioAsignadoMasivo,
+                                    id,
+                                  ]);
+                                } else {
+                                  // Elimina el ID del array si se deselecciona
+                                  setUsuarioAsignadoMasivo(
+                                    usuarioAsignadoMasivo.filter(
+                                      (userId) => userId !== id
+                                    )
+                                  );
+                                }
+                              }}
+                            />
+                            {u.name} {u.segundo_nombre} {u.primer_apellido}{" "}
+                            {u.segundo_apellido}
+                          </label>
+                        ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  className="btn-asignar"
+                  onClick={handleAsignacionMasiva}
+                >
+                  Asignar
+                </button>
+              </div>
+            )}
+
             <table className="container-table">
               <thead>
                 <tr>
-                  <th>Acciones</th>
+                  <th>
+                    {tienePermiso(["Administrador"]) && (
+                      <input type="checkbox" onChange={handleSelectAll} />
+                    )}
+                    Acciones
+                  </th>
+                  {/* <th>Asignación masiva</th> */}
+                  {/* <th>
+                    Asignación masiva
+                    <input type="checkbox" onChange={handleSelectAll} />
+                  </th> */}
                   <th>Índice</th>
                   <th># Radicado</th>
                   <th>Fecha de solicitud</th>
@@ -323,7 +548,25 @@ function PqrsList() {
                               <i className="fa fa-eye icono-ver"></i>
                             </button>
                           )}
+                          {tienePermiso(["Administrador"]) && (
+                            <input
+                              type="checkbox"
+                              checked={selectedPqrs.has(pqr.pqr_codigo)}
+                              onChange={() => handleSelectPqr(pqr.pqr_codigo)}
+                              disabled={
+                                pqr.estado_respuesta === "Cerrado" ||
+                                pqr.atributo_calidad == null
+                              }
+                            />
+                          )}
                         </td>
+                        {/* <td>
+                          <input
+                            type="checkbox"
+                            checked={selectedPqrs.has(pqr.pqr_codigo)}
+                            onChange={() => handleSelectPqr(pqr.pqr_codigo)}
+                          />
+                        </td> */}
                         <td>{globalIndex}</td>
                         <td>{pqr.pqr_codigo}</td>
                         <td>{pqr.fecha_inicio_real || pqr.created_at}</td>

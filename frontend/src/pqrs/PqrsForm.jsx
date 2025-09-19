@@ -179,6 +179,7 @@ function PqrsForm({
     regimen: "",
     regimenLocked: false,
     tipo_solicitud: defaultTipoSolicitud || "",
+    radicado_juzgado: "",
     clasificacion_tutela: "",
     accionado: [],
     descripcion: "",
@@ -481,6 +482,7 @@ function PqrsForm({
         eps: pqrData.eps || "",
         regimen: pqrData.regimen || "",
         tipo_solicitud: pqrData.tipo_solicitud || defaultTipoSolicitud || "",
+        radicado_juzgado: pqrData.radicado_juzgado || "",
         clasificacion_tutela: pqrData.clasificacion_tutela || "",
         accionado: pqrData.accionado || "",
         descripcion: pqrData.descripcion || "",
@@ -915,25 +917,24 @@ function PqrsForm({
         await createPqr(formData);
 
         // Determina los destinatarios del correo basándose en la lógica del parentesco
-     let mensajeDestinatario = "";
+        let mensajeDestinatario = "";
 
-if (form.tipo_solicitud !== "Tutela") {
-  if (
-    form.parentesco === "Asegurador" ||
-    form.parentesco === "Ente de control"
-  ) {
-    // Si el parentesco es Asegurador o Ente de control, el correo solo va al registrador.
-    mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.registrador_correo}</strong>.`;
-  } else {
-    // Si no, el correo va al paciente y al registrador (si este existe).
-    if (form.registrador_correo) {
-      mensajeDestinatario = `El número de radicado será enviado a los correos <strong>${form.correo}</strong> y <strong>${form.registrador_correo}</strong>.`;
-    } else {
-      mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.correo}</strong>.`;
-    }
-  }
-}
-
+        if (form.tipo_solicitud !== "Tutela") {
+          if (
+            form.parentesco === "Asegurador" ||
+            form.parentesco === "Ente de control"
+          ) {
+            // Si el parentesco es Asegurador o Ente de control, el correo solo va al registrador.
+            mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.registrador_correo}</strong>.`;
+          } else {
+            // Si no, el correo va al paciente y al registrador (si este existe).
+            if (form.registrador_correo) {
+              mensajeDestinatario = `El número de radicado será enviado a los correos <strong>${form.correo}</strong> y <strong>${form.registrador_correo}</strong>.`;
+            } else {
+              mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.correo}</strong>.`;
+            }
+          }
+        }
 
         // Muestra el mensaje de SweetAlert2 con el texto dinámico
         Swal.fire({
@@ -1413,8 +1414,6 @@ if (form.tipo_solicitud !== "Tutela") {
                     )}
                   </div>
 
-
-
                   {(form.parentesco === "Ente de control" ||
                     form.parentesco === "Asegurador") && (
                     <div className="floating-label">
@@ -1436,24 +1435,27 @@ if (form.tipo_solicitud !== "Tutela") {
                     </div>
                   )}
 
-                                    <div className="floating-label">
-  <input
-    id="registrador_correo"
-    name="registrador_correo"
-    type="text"
-    value={form.registrador_correo}
-    onChange={handleChange}
-    onBlur={handleBlur}
-    required
-  />
-  <label htmlFor="registrador_correo">Correo(s) del registrador</label>
+                  <div className="floating-label">
+                    <input
+                      id="registrador_correo"
+                      name="registrador_correo"
+                      type="text"
+                      value={form.registrador_correo}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      required
+                    />
+                    <label htmlFor="registrador_correo">
+                      Correo del registrador
+                    </label>
+                    {/* <label htmlFor="registrador_correo">Correo(s) del registrador</label>
   <small className="text-gray-500">
     Puedes ingresar varios correos separados por coma. Ej: juan@mail.com, maria@mail.com
-  </small>
-  {errors.registrador_correo && (
-    <p className="error">{errors.registrador_correo}</p>
-  )}
-</div>
+  </small> */}
+                    {errors.registrador_correo && (
+                      <p className="error">{errors.registrador_correo}</p>
+                    )}
+                  </div>
                 </div>
               </>
             )}
@@ -1735,6 +1737,24 @@ if (form.tipo_solicitud !== "Tutela") {
                   <p className="error">{errors.tipo_solicitud}</p>
                 )}
               </div>
+
+              {form.tipo_solicitud === "Tutela" && (
+  <div className="floating-label">
+    <input
+      id="radicado_juzgado"
+      name="radicado_juzgado"
+      type="text"
+      value={form.radicado_juzgado}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      required
+    />
+    <label htmlFor="radicado_juzgado">Radicado del juzgado</label>
+    {errors.radicado_juzgado && (
+      <p className="error">{errors.radicado_juzgado}</p>
+    )}
+  </div>
+)}
 
               {/* 🟢 Campo Clasificaciones */}
               <div
@@ -2422,38 +2442,6 @@ if (form.tipo_solicitud !== "Tutela") {
 }
 
 export default PqrsForm;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import React, { useState, useEffect, useCallback, useRef } from "react";
 // import { createPqr } from "./pqrsService"; // Asegúrate de tener createPqr y updatePqr si los usas
@@ -3390,7 +3378,6 @@ export default PqrsForm;
 //     }
 //   }
 // }
-
 
 //         // Muestra el mensaje de SweetAlert2 con el texto dinámico
 //         Swal.fire({
@@ -4728,7 +4715,7 @@ export default PqrsForm;
 //                 />
 //                 <div className="politica-texto">
 //                   <span className="politica-descripcion">
-//                     Acepto la 
+//                     Acepto la
 //                     <a
 //                       href="https://passusips.com/nosotros-politica-manejo-datos"
 //                       target="_blank"
@@ -4874,36 +4861,3 @@ export default PqrsForm;
 // }
 
 // export default PqrsForm;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

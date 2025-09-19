@@ -234,7 +234,6 @@ public function registrarRespuesta(Request $request, $pqr_codigo)
         ], 200);
     }
 
-
 public function enviarRespuesta($pqr_codigo)
 {
     $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
@@ -246,11 +245,29 @@ public function enviarRespuesta($pqr_codigo)
         return response()->json(['error' => 'No hay respuesta final registrada para esta PQRS.'], 400);
     }
 
+    // 1.1 Validar tipo de solicitud antes de enviar correos
+    if ($pqr->tipo_solicitud === "Tutela") {
+        // Solo marcar como respondida, no enviar correos
+        $fechaRespuesta = Carbon::parse($respuesta->created_at, 'America/Bogota');
+
+        $pqr->estado_respuesta = 'Cerrado';
+        $pqr->respuesta_enviada = true;
+        $pqr->respondido_en = $fechaRespuesta;
+        $pqr->deadline_interno = $fechaRespuesta;
+        $pqr->deadline_ciudadano = $fechaRespuesta;
+
+        $estadoTiempo = app(PqrTiempoService::class)->calcularEstadoTiempo($pqr);
+        $pqr->estado_tiempo = $estadoTiempo['estado'];
+
+        $pqr->save();
+
+        return response()->json(['mensaje' => 'Respuesta final marcada como enviada (Tutela, no se enviaron correos).']);
+    }
+
     // 2. Extraer adjuntos
     $adjuntosRespuesta = $respuesta->adjuntos ?? [];
 
     // RESPUESTA A TODOS LOS CORREOS TANTO REGISTRADORES COMO USUARIO
-
     try {
         // ✅ Validar correo ciudadano
         $correoCiudadanoValido = !empty($pqr->correo) && filter_var(trim($pqr->correo), FILTER_VALIDATE_EMAIL);
@@ -305,7 +322,6 @@ public function enviarRespuesta($pqr_codigo)
 }
 
 
-
 // public function enviarRespuesta($pqr_codigo)
 // {
 //     $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
@@ -317,12 +333,14 @@ public function enviarRespuesta($pqr_codigo)
 //         return response()->json(['error' => 'No hay respuesta final registrada para esta PQRS.'], 400);
 //     }
 
-//     // 2. Extraer los adjuntos
+//     // 2. Extraer adjuntos
 //     $adjuntosRespuesta = $respuesta->adjuntos ?? [];
+
+//     // RESPUESTA A TODOS LOS CORREOS TANTO REGISTRADORES COMO USUARIO
 
 //     try {
 //         // ✅ Validar correo ciudadano
-//         $correoCiudadanoValido = !empty($pqr->correo) && filter_var($pqr->correo, FILTER_VALIDATE_EMAIL);
+//         $correoCiudadanoValido = !empty($pqr->correo) && filter_var(trim($pqr->correo), FILTER_VALIDATE_EMAIL);
 
 //         // ✅ Validar correos del registrador (pueden ser múltiples separados por coma)
 //         $correosRegistrador = [];
@@ -340,24 +358,16 @@ public function enviarRespuesta($pqr_codigo)
 //             return response()->json(['error' => 'No se pudo enviar el correo: ambas direcciones son inválidas.'], 400);
 //         }
 
-//         // 2. Crear una sola instancia del Mailable
-//         $mailable = new RespuestaFinalPQRSMail($pqr, $respuesta, $adjuntosRespuesta);
+//         // 2. Enviar SIEMPRE al ciudadano si es válido
+//         if ($correoCiudadanoValido) {
+//             Mail::to(trim($pqr->correo))
+//                 ->send(new RespuestaFinalPQRSMail($pqr, $respuesta, $adjuntosRespuesta));
+//         }
 
-//         // 3. Envío según parentesco
-//         if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control') {
-//             // Solo al registrador (si existen correos válidos)
-//             foreach ($correosRegistrador as $correo) {
-//                 Mail::to($correo)->send($mailable);
-//             }
-//         } else {
-//             // Al ciudadano
-//             if ($correoCiudadanoValido) {
-//                 Mail::to($pqr->correo)->send($mailable);
-//             }
-//             // Y también a los registradores válidos
-//             foreach ($correosRegistrador as $correo) {
-//                 Mail::to($correo)->send($mailable);
-//             }
+//         // 3. Enviar SIEMPRE a todos los correos del registrador válidos
+//         foreach ($correosRegistrador as $correo) {
+//             Mail::to($correo)
+//                 ->send(new RespuestaFinalPQRSMail($pqr, $respuesta, $adjuntosRespuesta));
 //         }
 //     } catch (\Exception $e) {
 //         Log::error("Error al enviar correos para PQRS {$pqr_codigo}: " . $e->getMessage());
@@ -380,11 +390,7 @@ public function enviarRespuesta($pqr_codigo)
 
 //     return response()->json(['mensaje' => 'Respuesta final enviada correctamente.']);
 // }
-
-
-    
-
-
+  
     public function solicitarRespuestaUsuario($id)
     {
         $pqr = Pqr::findOrFail($id);

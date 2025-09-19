@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../styles/PqrsFilters.css";
 import api from "../../api/api";
+import { tienePermiso } from "../../utils/permisoHelper";
 
 // El componente DropdownMultiSelect es el mismo, no se necesita modificarlo.
 function DropdownMultiSelect({
@@ -8,8 +9,10 @@ function DropdownMultiSelect({
   selected = [],
   setSelected,
   placeholder,
+  searchable = false, // 👈 activa o no el buscador
 }) {
   const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(""); // 👈 estado para búsqueda
   const ref = useRef();
 
   const toggleOption = (option) => {
@@ -32,6 +35,13 @@ function DropdownMultiSelect({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // 👇 filtramos opciones
+  const filteredOptions = searchable
+    ? options.filter((o) =>
+        o.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : options;
+
   return (
     <div className="multi-select-container" ref={ref}>
       <div className="multi-select-display" onClick={() => setOpen(!open)}>
@@ -40,9 +50,20 @@ function DropdownMultiSelect({
           : placeholder}
         <span className="arrow">{open ? "▲" : "▼"}</span>
       </div>
+
       {open && (
         <div className="multi-select-dropdown">
-          {options.map((option) => (
+          {searchable && (
+            <input
+              type="text"
+              className="multi-select-search"
+              placeholder="Buscar..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          )}
+
+          {filteredOptions.map((option) => (
             <label key={option} className="dropdown-item">
               <input
                 type="checkbox"
@@ -60,6 +81,7 @@ function DropdownMultiSelect({
 
 function PqrsFilters({ filters, setFilters, onBuscar }) {
   const [tempFilters, setTempFilters] = useState(filters);
+  const [usuariosOptions, setUsuariosOptions] = useState([]);
 
   // Opciones existentes
   const servicios = [
@@ -140,6 +162,31 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
   useEffect(() => {
     setTempFilters(filters);
   }, [filters]);
+
+  useEffect(() => {
+    const fetchUsuarios = async () => {
+      try {
+        const res = await api.get("/users");
+        // Transformar la respuesta en { label, value }
+        const options = res.data.map((u) => ({
+          label: [
+            u.name,
+            u.segundo_nombre,
+            u.primer_apellido,
+            u.segundo_apellido,
+          ]
+            .filter(Boolean)
+            .join(" "),
+          value: u.id,
+        }));
+        setUsuariosOptions(options);
+      } catch (err) {
+        console.error("Error al cargar usuarios:", err);
+      }
+    };
+
+    fetchUsuarios();
+  }, []);
 
   const handleRespuestaChange = (selectedValues) => {
     // Convierte las etiquetas seleccionadas ("Sí", "No") a sus valores numéricos (1, 0)
@@ -277,6 +324,28 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
             placeholder="Estado de la PQR-S"
           />
         </div>
+        {tienePermiso(["Administrador"]) && (
+      <div className="filtro-asignados">
+  <DropdownMultiSelect
+    options={usuariosOptions.map((opt) => opt.label)} // array de nombres
+    selected={tempFilters.asignadosNombres || []}
+    setSelected={(selectedNames) => {
+      const selectedIds = usuariosOptions
+        .filter((opt) => selectedNames.includes(opt.label))
+        .map((opt) => opt.value);
+
+      setTempFilters({
+        ...tempFilters,
+        asignados: selectedIds,
+        asignadosNombres: selectedNames,
+      });
+    }}
+    placeholder="Asignado a"
+    searchable={true} // 👈 añadimos esta prop para activar buscador
+  />
+</div>
+
+        )}
         <div className="iconos-filtros">
           <button
             type="button"
@@ -308,6 +377,7 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
                 respuesta_enviada: [],
                 clasificaciones: [],
                 clasificacionesNombres: [],
+                asignados: [],
               })
             }
             title="Limpiar filtros"

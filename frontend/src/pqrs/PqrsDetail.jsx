@@ -81,13 +81,12 @@ function PqrsDetail() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-// Filtrar usuarios por nombre o apellido
-const filteredUsuarios = usuarios.filter((u) =>
-  `${u.name} ${u.primer_apellido}`
-    .toLowerCase()
-    .includes(searchTerm.toLowerCase())
-);
-
+  // Filtrar usuarios por nombre o apellido
+  const filteredUsuarios = usuarios.filter((u) =>
+    `${u.name} ${u.primer_apellido}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
 
   // Función para ajustar la altura del textarea
   const adjustTextareaHeight = () => {
@@ -762,6 +761,9 @@ const filteredUsuarios = usuarios.filter((u) =>
                 <p>
                   <strong>Accionado de la Tutela:</strong> {pqr.accionado}
                 </p>
+                <p>
+                  <strong>Radicado del juzgado:</strong> {pqr.radicado_juzgado}
+                </p>
               </>
             )}
 
@@ -831,9 +833,13 @@ const filteredUsuarios = usuarios.filter((u) =>
                         const logUser = usuarios.find(
                           (user) => user.id === log.user_id
                         );
-                       const userName = logUser
-  ? `${logUser.name?? ""} ${logUser.segundo_nombre ?? ""} ${logUser.primer_apellido ?? ""} ${logUser.segundo_apellido ?? ""}`.trim()
-  : "Usuario Desconocido";
+                        const userName = logUser
+                          ? `${logUser.name ?? ""} ${
+                              logUser.segundo_nombre ?? ""
+                            } ${logUser.primer_apellido ?? ""} ${
+                              logUser.segundo_apellido ?? ""
+                            }`.trim()
+                          : "Usuario Desconocido";
 
                         return (
                           <li key={log.id}>
@@ -957,54 +963,76 @@ const filteredUsuarios = usuarios.filter((u) =>
                     ))}
                   </select>
 
-                 <label>Asignado a:</label>
-<div className="custom-multiselect">
-  <div
-    className={`custom-select-box ${estaCerrada ? "disabled" : ""}`}
-    onClick={() => {
-      if (!estaCerrada) setShowCheckboxes(!showCheckboxes);
-    }}
-  >
-    {formData.asignados.length > 0
-      ? usuarios
-          .filter((u) => formData.asignados.includes(u.id))
-          .map((u) => `${u.name} ${u.primer_apellido}`)
-          .join(", ")
-      : "Seleccione asignados..."}
-  </div>
+                  <label>Asignado a:</label>
+                  <div className="custom-multiselect">
+                    <div
+                      className={`custom-select-box ${
+                        estaCerrada ? "disabled" : ""
+                      }`}
+                      onClick={() => {
+                        if (!estaCerrada) setShowCheckboxes(!showCheckboxes);
+                      }}
+                    >
+                      {formData.asignados.length > 0
+                        ? usuarios
+                            .filter((u) => formData.asignados.includes(u.id))
+                            .map((u) => {
+                              // Si el segundo nombre y segundo apellido existen, agrégalos
+                              const nombreCompleto = `${u.name}${
+                                u.segundo_nombre ? " " + u.segundo_nombre : ""
+                              } ${u.primer_apellido}${
+                                u.segundo_apellido
+                                  ? " " + u.segundo_apellido
+                                  : ""
+                              }`;
+                              return nombreCompleto;
+                            })
+                            .join(", ")
+                        : "Seleccione asignados..."}
+                    </div>
 
-  {showCheckboxes && !estaCerrada && (
-    <div className="checkbox-options">
-      {/* Input de búsqueda */}
-      <input
-        type="text"
-        placeholder="Buscar usuario..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="search-input"
-      />
+                    {showCheckboxes && !estaCerrada && (
+                      <div className="checkbox-options">
+                        {/* Input de búsqueda */}
+                        <input
+                          type="text"
+                          placeholder="Buscar usuario..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="search-input"
+                        />
 
-      {/* Lista filtrada */}
-      {filteredUsuarios.length > 0 ? (
-        filteredUsuarios.map((u) => (
-          <label key={u.id} className="checkbox-item">
-            <input
-              type="checkbox"
-              value={u.id}
-              checked={formData.asignados.includes(u.id)}
-              onChange={handleCheckboxChange}
-              disabled={estaCerrada}
-            />
-            {u.name} {u.primer_apellido}
-          </label>
-        ))
-      ) : (
-        <p className="no-results">No se encontraron coincidencias</p>
-      )}
-    </div>
-  )}
-</div>
-
+                        {/* Lista filtrada y AHORA ordenada */}
+                        {filteredUsuarios.length > 0 ? (
+                          [...filteredUsuarios] // Crea una copia para no mutar el array original
+                            .sort((a, b) => a.name.localeCompare(b.name)) // Ordena por nombre
+                            .map((u) => (
+                              <label key={u.id} className="checkbox-item">
+                                <input
+                                  type="checkbox"
+                                  value={u.id}
+                                  checked={formData.asignados.includes(u.id)}
+                                  onChange={handleCheckboxChange}
+                                  disabled={estaCerrada}
+                                />
+                                {u.name}
+                                {u.segundo_nombre
+                                  ? " " + u.segundo_nombre
+                                  : ""}{" "}
+                                {u.primer_apellido}
+                                {u.segundo_apellido
+                                  ? " " + u.segundo_apellido
+                                  : ""}
+                              </label>
+                            ))
+                        ) : (
+                          <p className="no-results">
+                            No se encontraron coincidencias
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                   <label>Prioridad:</label>
                   <select
@@ -1526,39 +1554,6 @@ const filteredUsuarios = usuarios.filter((u) =>
 }
 
 export default PqrsDetail;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import React, { useEffect, useState, useRef, useCallback } from "react"; // Añadimos useCallback
 // import { useParams, useNavigate } from "react-router-dom";
@@ -3065,4 +3060,3 @@ export default PqrsDetail;
 // }
 
 // export default PqrsDetail;
-

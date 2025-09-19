@@ -22,7 +22,7 @@ import TutelaForm from "../pqrs/TutelaForm";
 import SolicitudForm from "../pqrs/SolicitudForm";
 import InicioPQRS from "../pqrs/InicioPQRS";
 import EventLogs from "../pqrs/EventLogs";
-
+import GestionApp from "../pqrs/GestionApp";
 
 export function AppRouter() {
   return (
@@ -34,24 +34,19 @@ export function AppRouter() {
       <Route path="/register" element={<Register />} />
       <Route path="/pqrsForm" element={<PqrsForm />} />
 
-
       {/* <Route path="/pqrsList" element={<PqrsList />} /> */}
       {/* <Route path="/pqrs/:id" element={<PqrsDetail />} /> */}
       {/* <Route path="/pqrs/asignadas" element={<PqrsAsignadas />} /> */}
       {/* <Route path="/pqrs/:id/respuesta" element={<PqrsResponder />} /> */}
-       <Route path="/respuesta-usuario/:token" element={<RespuestaUsuario />} />
-       <Route path="/solicitudes" element={<Solicitudes />} />
-       <Route path="/felicitacion" element={<FelicitacionForm />} />
-       <Route path="/tutela" element={<TutelaForm />} />
-       <Route path="/derecho-peticion" element={<DerechoPeticionForm />} />
-       <Route path="/solicitud" element={<SolicitudForm />} />
-       <Route path="/consultar-radicado" element={<InicioPQRS/>} />
-       <Route path="/event-logs" element={<EventLogs/>} />
-        <Route path="/pqr/:pqr_id/logs" element={<EventLogs />} />
-
-       
-
-
+      <Route path="/respuesta-usuario/:token" element={<RespuestaUsuario />} />
+      <Route path="/solicitudes" element={<Solicitudes />} />
+      <Route path="/felicitacion" element={<FelicitacionForm />} />
+      <Route path="/tutela" element={<TutelaForm />} />
+      <Route path="/derecho-peticion" element={<DerechoPeticionForm />} />
+      <Route path="/solicitud" element={<SolicitudForm />} />
+      <Route path="/consultar-radicado" element={<InicioPQRS />} />
+      <Route path="/event-logs" element={<EventLogs />} />
+      <Route path="/pqr/:pqr_id/logs" element={<EventLogs />} />
 
       <Route
         path="/Pqr"
@@ -63,7 +58,7 @@ export function AppRouter() {
               "Supervisor/Atencion al usuario",
               "Gestor",
               "Gestor Administrativo",
-              "Digitador",              
+              "Digitador",
             ]}
           >
             <Pqr />
@@ -108,7 +103,14 @@ export function AppRouter() {
       <Route
         path="/users"
         element={
-          <ProtectedRoute allowedRoles={["Administrador", "Supervisor/Atencion al usuario", "Gestor", "Gestor Administrativo",]}>
+          <ProtectedRoute
+            allowedRoles={[
+              "Administrador",
+              "Supervisor/Atencion al usuario",
+              "Gestor",
+              "Gestor Administrativo",
+            ]}
+          >
             <UserList />
           </ProtectedRoute>
         }
@@ -132,7 +134,14 @@ export function AppRouter() {
       <Route
         path="/pqrs/asignadas"
         element={
-          <ProtectedRoute allowedRoles={["Administrador", "Supervisor/Atencion al usuario", "Gestor", "Gestor Administrativo",]}>
+          <ProtectedRoute
+            allowedRoles={[
+              "Administrador",
+              "Supervisor/Atencion al usuario",
+              "Gestor",
+              "Gestor Administrativo",
+            ]}
+          >
             <PqrsAsignadas />
           </ProtectedRoute>
         }
@@ -140,8 +149,20 @@ export function AppRouter() {
       <Route
         path="/pqrs/:pqr_codigo/respuesta"
         element={
-          <ProtectedRoute allowedRoles={["Administrador", "Gestor", "Gestor Administrativo",]}>
+          <ProtectedRoute
+            allowedRoles={["Administrador", "Gestor", "Gestor Administrativo"]}
+          >
             <PqrsResponder />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/gestion-app"
+        element={
+          <ProtectedRoute
+            allowedRoles={["Administrador"]}
+          >
+            <GestionApp />
           </ProtectedRoute>
         }
       />

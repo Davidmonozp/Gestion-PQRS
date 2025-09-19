@@ -15,12 +15,13 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\DB;
 
 
 class PqrController extends Controller
 {
 
-       public function store(Request $request, CodigoPqrService $codigoService)
+    public function store(Request $request, CodigoPqrService $codigoService)
     {
         try {
             $registra_otro = $request->input('registra_otro') === 'si';
@@ -64,6 +65,7 @@ class PqrController extends Controller
                 'eps' => 'required|string',
                 'regimen' => 'required|string',
                 'tipo_solicitud' => 'required|string',
+                'radicado_juzgado' => 'required_if:tipo_solicitud,Tutela|string|max:255',
                 'descripcion' => 'required|string',
                 'archivos' => 'nullable|array',
                 'archivos.*' => 'file|max:8000',
@@ -185,6 +187,7 @@ class PqrController extends Controller
                 'eps' => $validated['eps'],
                 'regimen' => $validated['regimen'],
                 'tipo_solicitud' => $validated['tipo_solicitud'],
+                'radicado_juzgado' => $validated['radicado_juzgado'] ?? null,
                 'clasificacion_tutela' => $validated['clasificacion_tutela'] ?? null,
                 'accionado' => $request->input('accionado', []),
                 'fuente' => $validated['fuente'] ?? null,
@@ -235,7 +238,7 @@ class PqrController extends Controller
             // } else {
             //     Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
             // }
-         
+
 
             // Comprueba si el parentesco de la PQR es "Asegurador" o "Ente de control"
             if ($pqr->tipo_solicitud !== 'Tutela') {
@@ -588,6 +591,14 @@ class PqrController extends Controller
                 $ids = array_map('intval', $request->clasificaciones);
                 $query->whereHas('clasificaciones', function ($q) use ($ids) {
                     $q->whereIn('clasificaciones.id', $ids);
+                });
+            }
+
+            if ($request->has('asignados') && is_array($request->asignados) && count($request->asignados) > 0) {
+                $ids = array_map('intval', $request->asignados);
+
+                $query->whereHas('asignados', function ($q) use ($ids) {
+                    $q->whereIn('users.id', $ids);
                 });
             }
 
@@ -1286,6 +1297,62 @@ class PqrController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Error al obtener las PQRS por estado: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function asignacionMasiva(Request $request)
+    {
+        // 1. Validar los datos de la solicitud
+        $request->validate([
+            'pqr_codigos' => 'required|array',
+            // Asegura que las PQRS existan y tengan un valor en 'atributo_calidad'
+            'pqr_codigos.*' => 'string|exists:pqrs,pqr_codigo',
+
+            // Agrega una validación personalizada para verificar el atributo_calidad
+            'pqr_codigos.*' => [
+                'required',
+                'string',
+                'exists:pqrs,pqr_codigo',
+                function ($attribute, $value, $fail) {
+                    // Obtiene la PQR por su código
+                    $pqr = Pqr::where('pqr_codigo', $value)->first();
+                    // Verifica si el campo 'atributo_calidad' está vacío o nulo
+                    if ($pqr && is_null($pqr->atributo_calidad)) {
+                        $fail("Las PQRS no se puede asignar porque alguna(s) aún no han sido clasificada(s).");
+                    }
+                },
+            ],
+            'usuario_ids' => 'required|array',
+            'usuario_ids.*' => 'integer|exists:users,id',
+        ]);
+
+        // El resto de la lógica para la asignación masiva...
+        $pqrCodigos = $request->input('pqr_codigos');
+        $usuarioIds = $request->input('usuario_ids');
+
+        try {
+            DB::beginTransaction();
+
+            $pqrs = Pqr::whereIn('pqr_codigo', $pqrCodigos)->get();
+            foreach ($pqrs as $pqr) {
+                $pqr->asignados()->syncWithoutDetaching($usuarioIds);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'PQRS asignadas masivamente con éxito.',
+                'assigned_count' => count($pqrCodigos),
+                'user_count' => count($usuarioIds)
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al asignar las PQRS.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
