@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Mail\ConsultaRadicadoInfo;
 use App\Mail\PqrAsignada;
 use App\Models\Pqr;
+use App\Models\PqrReembolso;
+use App\Models\User;
 use App\Services\CodigoPqrService;
 use App\Services\PqrTiempoService;
 use Carbon\Carbon;
@@ -593,6 +595,15 @@ class PqrController extends Controller
                     $q->whereIn('clasificaciones.id', $ids);
                 });
             }
+            if ($request->has('atributo_calidad')) {
+                $atributos = $request->input('atributo_calidad');
+
+                if (is_array($atributos)) {
+                    $query->whereIn('atributo_calidad', $atributos);
+                } else {
+                    $query->where('atributo_calidad', 'like', '%' . $atributos . '%');
+                }
+            }
 
             if ($request->has('asignados') && is_array($request->asignados) && count($request->asignados) > 0) {
                 $ids = array_map('intval', $request->asignados);
@@ -618,16 +629,23 @@ class PqrController extends Controller
                 }
             }
 
+            $perPage = $request->input('per_page', 20); // usa 20 como valor por defecto
+
+            // Si el usuario selecciona "todas", puedes permitir algo como -1 o un número alto
+            if ($perPage == -1) {
+                $perPage = 100000; // o cualquier número suficientemente grande
+            }
+
             // Ordenar por fecha más reciente
             $pqrs = $query->orderBy('respuesta_enviada', 'asc')
                 ->orderBy('created_at', 'desc')
                 ->with([
                     'asignados:id,name,segundo_nombre,primer_apellido,segundo_apellido',
                     'respuestas:id,pqrs_id,user_id,es_respuesta_usuario',
-                    'clasificaciones:id,nombre'
+                    'clasificaciones:id,nombre',
                 ])
 
-                ->paginate(15);
+                ->paginate($perPage);
 
             return response()->json([
                 'pqrs' => $pqrs->items(),
@@ -764,7 +782,8 @@ class PqrController extends Controller
                     'asignados',
                     'respuestas.autor',
                     'clasificaciones',
-                    'eventLogs'
+                    'eventLogs',
+                    'reembolsos.usuario'
                 ])
                 ->firstOrFail();
 
@@ -1173,7 +1192,8 @@ class PqrController extends Controller
                 ->with([
                     'asignados:id,name',
                     'respuestas:id,pqrs_id,user_id',
-                    'clasificaciones:id,nombre'
+                    'clasificaciones:id,nombre',
+                    'reembolsos.usuario'
                 ])
                 ->get();
 
@@ -1236,8 +1256,10 @@ class PqrController extends Controller
     public function registrarSeguimiento(Request $request, $pqr_codigo)
     {
         $request->validate([
-            'descripcion' => 'required|string|max:2000',
-            'tipo_seguimiento' => 'required|string|max:255', // Nuevo campo
+            'descripcion'      => 'required|string|max:2000',
+            'tipo_seguimiento' => 'required|string|max:255',
+            'adjuntos'         => 'nullable|array',
+            'adjuntos.*'       => 'file|max:7168', // 7MB máximo
         ]);
 
         $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
@@ -1248,18 +1270,65 @@ class PqrController extends Controller
             'tipo_seguimiento' => $request->tipo_seguimiento,
         ]);
 
+        // Procesar los adjuntos
+        $adjuntosData = [];
+        if ($request->hasFile('adjuntos')) {
+            foreach ($request->file('adjuntos') as $file) {
+                $path = $file->store('seguimientos', 'public');
+
+                $adjuntosData[] = [
+                    'path'          => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'url'           => !empty($path) ? asset("storage/{$path}") : null,
+                ];
+            }
+        }
+
+        // Si quieres guardar los adjuntos en una columna JSON en la tabla seguimientos:
+        if (!empty($adjuntosData)) {
+            $seguimiento->update([
+                'adjuntos' => $adjuntosData,
+            ]);
+        }
+
         return response()->json([
             'message' => 'Seguimiento registrado',
-            'data'    => $seguimiento
+            'data'    => $seguimiento,
         ]);
     }
+
+
+
+
+
+
+    // public function registrarSeguimiento(Request $request, $pqr_codigo)
+    // {
+    //     $request->validate([
+    //         'descripcion' => 'required|string|max:2000',
+    //         'tipo_seguimiento' => 'required|string|max:255', // Nuevo campo
+    //     ]);
+
+    //     $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+
+    //     $seguimiento = $pqr->seguimientos()->create([
+    //         'user_id'          => $request->user()->id,
+    //         'descripcion'      => $request->descripcion,
+    //         'tipo_seguimiento' => $request->tipo_seguimiento,
+    //     ]);
+
+    //     return response()->json([
+    //         'message' => 'Seguimiento registrado',
+    //         'data'    => $seguimiento
+    //     ]);
+    // }
 
 
 
     public function obtenerSeguimientos($pqr_codigo)
     {
         $pqr = Pqr::where('pqr_codigo', $pqr_codigo)
-            ->with(['seguimientos.user:id,name'])
+            ->with(['seguimientos.user:id,name,segundo_nombre,primer_apellido,segundo_apellido'])
             ->firstOrFail();
 
         return response()->json([
@@ -1355,5 +1424,145 @@ class PqrController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function desasignacionMasiva(Request $request)
+    {
+        // Validar la solicitud
+        $request->validate([
+            'pqr_codigos' => 'required|array',
+            'pqr_codigos.*' => [
+                'required',
+                'string',
+                'exists:pqrs,pqr_codigo',
+                function ($attribute, $value, $fail) {
+                    $pqr = Pqr::where('pqr_codigo', $value)->first();
+                    if ($pqr && is_null($pqr->atributo_calidad)) {
+                        $fail("Las PQRS no se pueden desasignar porque alguna(s) aún no han sido clasificadas.");
+                    }
+                },
+            ],
+            'usuario_ids' => 'required|array',
+            'usuario_ids.*' => 'integer|exists:users,id',
+        ]);
+
+        $pqrCodigos = $request->input('pqr_codigos');
+        $usuarioIds = $request->input('usuario_ids');
+
+        try {
+            DB::beginTransaction();
+
+            $pqrs = Pqr::whereIn('pqr_codigo', $pqrCodigos)->get();
+
+            foreach ($pqrs as $pqr) {
+                $pqr->asignados()->detach($usuarioIds); // <- desasigna en lugar de asignar
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'PQRS desasignadas masivamente con éxito.',
+                'unassigned_count' => count($pqrCodigos),
+                'user_count' => count($usuarioIds),
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Error al desasignar las PQRS.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    public function aprobarReembolso(Request $request, $id)
+    {
+        $request->validate([
+            'estado' => 'required|in:Aprobado,Desaprobado',
+            'comentario' => 'nullable|string|max:1000',
+        ]);
+
+        // Usuario autenticado con JWT
+        $usuario = JWTAuth::parseToken()->authenticate();
+
+        if (!in_array($usuario->id, [32]) && !$usuario->hasRole('Administrador')) {
+            return response()->json([
+                'message' => 'No tienes permisos para aprobar o desaprobar reembolsos.'
+            ], 403);
+        }
+
+        $pqr = Pqr::findOrFail($id);
+
+        $reembolso = PqrReembolso::create([
+            'pqr_id' => $pqr->id,
+            'aprobado_por' => $usuario->id,
+            'estado' => $request->estado,
+            'comentario' => $request->comentario,
+        ]);
+
+        if ($request->estado === 'Aprobado') {
+            $usuarioAsignado = User::find(38);
+
+            if ($usuarioAsignado) {
+                // Asignar al usuario 16
+                $pqr->asignados()->syncWithoutDetaching([$usuarioAsignado->id]);
+
+                // Enviar correo al usuario asignado
+                Mail::to($usuarioAsignado->email)->send(
+                    new PqrAsignada($pqr, $usuarioAsignado)
+                );
+            }
+        }
+
+
+        return response()->json([
+            'message' => $request->estado === 'Aprobado'
+                ? '✅ El reembolso fue aprobado correctamente'
+                : '❌ El reembolso fue desaprobado',
+            'reembolso' => $reembolso,
+            'aprobado_por' => trim(
+                $usuario->name . ' ' .
+                    ($usuario->segundo_nombre ?? '') . ' ' .
+                    ($usuario->primer_apellido ?? '') . ' ' .
+                    ($usuario->segundo_apellido ?? '')
+            ),
+        ]);
+    }
+
+
+
+    public function getReembolso($id)
+    {
+        $reembolso = PqrReembolso::where('pqr_id', $id)
+            ->with('usuario')
+            ->first();
+
+        if (!$reembolso) {
+            return response()->json([
+                'message' => 'No existe reembolso para esta PQR'
+            ], 404);
+        }
+
+        $usuario = $reembolso->usuario;
+
+        $nombreCompleto = null;
+        if ($usuario) {
+            $nombreCompleto = trim(
+                ($usuario->name ?? '') . ' ' .
+                    ($usuario->segundo_nombre ?? '') . ' ' .
+                    ($usuario->primer_apellido ?? '') . ' ' .
+                    ($usuario->segundo_apellido ?? '')
+            );
+        }
+
+        return response()->json([
+            'id' => $reembolso->id,
+            'pqr_id' => $reembolso->pqr_id,
+            'estado' => $reembolso->estado,
+            'comentario' => $reembolso->comentario,
+            'created_at' => $reembolso->created_at,
+            'updated_at' => $reembolso->updated_at,
+            'aprobado_por' => $nombreCompleto,
+            'usuario' => $usuario, // datos completos opcionales
+        ]);
     }
 }

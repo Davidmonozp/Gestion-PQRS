@@ -24,6 +24,15 @@ const Navbar = () => {
 
         <div className={`nav-elements ${menuOpen ? "active" : ""}`}>
           <ul>
+              <li>
+                <NavLink
+                  to="/dashboard"
+                  className={({ isActive }) => (isActive ? "active-link" : "")}
+                >
+                  Dashboard
+                </NavLink>
+              </li>
+            
             <li>
               <NavLink
                 to="/Pqr"

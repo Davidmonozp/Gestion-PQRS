@@ -26,7 +26,7 @@ class Pqr extends Model
         'eps',
         'regimen',
         'tipo_solicitud',
-        'radicado_juzgado', 
+        'radicado_juzgado',
         'clasificacion_tutela',
         'accionado',
         'descripcion',
@@ -155,7 +155,7 @@ class Pqr extends Model
     }
 
     // 🔹 Mutators para nombres y apellidos en mayúsculas
-       public function setNombreAttribute($value)
+    public function setNombreAttribute($value)
     {
         $this->attributes['nombre'] = strtoupper($value);
     }
@@ -195,4 +195,11 @@ class Pqr extends Model
     {
         $this->attributes['registrador_segundo_apellido'] = $value ? strtoupper($value) : null;
     }
+
+    public function reembolsos()
+    {
+        return $this->hasMany(PqrReembolso::class, 'pqr_id');
+    }
+
+    
 }

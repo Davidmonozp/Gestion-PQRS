@@ -368,7 +368,9 @@ tbody td:hover::before {
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    margin-top: 10px;
 }
+
 .bulk-assign-controls {
     margin-bottom: 20px;
 }
@@ -376,6 +378,36 @@ tbody td:hover::before {
 .btn-asignar:hover {
     background-color: #0087cd;
 }
+
+.btn-desasignar {
+    padding: 10px 20px;
+    background-color: #cd3000;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 20px;
+}
+
+
+.btn-desasignar:hover {
+    background-color: #9b3506;
+}
+
+.mostrar {
+    width: auto;
+    height: 25px;
+    border: 1px solid #00933f;
+    padding: 0px 0px;
+    cursor: pointer;
+    background-color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #0087cd;
+}
+
 
 /* FIN PAGINACION */
 @media (max-width: 1365px) {

@@ -1,0 +1,35 @@
+.select-reembolso {
+   width: 352px;
+    height: 34px;
+    background: transparent;
+    border: 1px solid #00933f;
+    border-radius: 2px;
+    color: #525252;
+    /* font-family: 'Exo', sans-serif; */
+    font-size: 16px;
+    font-weight: 400;
+    padding: 4px 10px;
+    margin-top: 0px;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+
+.comentario-reembolso {
+    width: 100%;
+    min-height: 100px;
+}
+
+.boton-reembolso {
+    display: block;
+    margin: 30px auto 0;
+    padding: 10px 20px;
+    background-color: #00933f;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.boton-reembolso:hover {
+        background-color: #0087cd;
+}

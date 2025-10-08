@@ -73,19 +73,32 @@ class FelicitacionController extends Controller
 
         // Busca gestores por su rol y la sede, asumiendo que el campo 'sede' en tu formulario
         // es el nombre de la sede, no el ID.
-        $gestores = User::role('Gestor')
-            ->where('activo', 1) // Agrega esta condición para filtrar por usuarios activos
+        // TODOS LOS GESTORES
+        // $gestores = User::role('Gestor')
+        //     ->where('activo', 1) 
+        //     ->whereHas('sedes', function ($query) use ($pqr) {
+        //         $query->where('name', $pqr->sede);
+        //     })
+        //     ->get();
+
+        // // Si se encuentran gestores (activos), se les envía el correo
+        // if ($gestores->count() > 0) {
+        //     Mail::to($gestores)->send(new FelicitacionGestorNotification($pqr));
+        // }
+        // --- Fin de la lógica adicional ---
+
+        // SOLO A LA DRA LILIANA MURCIA
+        $gestores = User::where('activo', 1)
+            ->where('primer_apellido', 'ZUÑIGA') // filtramos por primer apellido
             ->whereHas('sedes', function ($query) use ($pqr) {
                 $query->where('name', $pqr->sede);
             })
             ->get();
 
-        // Si se encuentran gestores (activos), se les envía el correo
+        // Si se encuentra al menos un usuario que cumpla la condición, se le envía el correo
         if ($gestores->count() > 0) {
             Mail::to($gestores)->send(new FelicitacionGestorNotification($pqr));
         }
-
-        // --- Fin de la lógica adicional ---
 
         return response()->json([
             'message' => 'Felicitación registrada exitosamente',

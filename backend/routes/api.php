@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ClasificacionController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\PlantillaRespuestaController;
 use App\Http\Controllers\Api\PqrController;
 use App\Http\Controllers\Api\RespuestaController;
@@ -14,6 +15,11 @@ use App\Http\Controllers\EventLogController;
 use App\Http\Controllers\Api\GestionAppController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+use App\Exports\PqrsFullExport;
+use Maatwebsite\Excel\Facades\Excel;
+
+
 
 
 
@@ -47,6 +53,27 @@ Route::middleware(['auth:api', 'check.role:Administrador,Supervisor/Atencion al 
     Route::get('pqrs/codigo/{pqr_codigo}', [PqrController::class, 'show']);
     Route::get('/pqrs/estado', [PqrController::class, 'filtros_estado_respuesta'])->middleware('auth:api');
     Route::get('/pqrs/{pqr}/clasificaciones', [ClasificacionController::class, 'obtenerClasificacionesPorPqr']);
+    Route::get('/pqrs/{id}/reembolso', [PqrController::class, 'getReembolso']);
+
+
+     // RUTAS DE DASHBOARD
+    Route::get('/resumen-global', [DashboardController::class, 'resumenGlobal']);
+    Route::get('/resumen-filtrado', [DashboardController::class, 'resumenFiltrado']);
+    Route::get('/por-mes', [DashboardController::class, 'porMes']);
+    Route::get('/por-anio', [DashboardController::class, 'porAnio']);
+    Route::get('/por-tipo', [DashboardController::class, 'porTipo']);
+    Route::get('/por-eps', [DashboardController::class, 'porEps']);
+    Route::get('/por-atributo', [DashboardController::class, 'porAtributoCalidad']);
+    Route::get('/por-estado-respuesta', [DashboardController::class, 'porEstadoRespuesta']);
+    Route::get('/promedio-tiempo-respuesta', [DashboardController::class, 'promedioTiempoRespuesta']);
+    Route::get('/por-servicio-prestado', [DashboardController::class, 'porServicioPrestado']);
+    Route::get('/pqrs/por-sede-tipo-solicitud', [DashboardController::class, 'porSedeTipoSolicitud']);
+    Route::get('/users-varias-pqrs', [DashboardController::class, 'usuariosConVariasPqrs']);
+    Route::get('/tiempo-por-area', [DashboardController::class, 'tiempoPorArea']);
+    Route::get('/clasificacion-por-tipo-solicitud', [DashboardController::class, 'clasificacionPorTipoSolicitud']);
+    Route::get('/export-pqrs', function () {
+        return Excel::download(new PqrsFullExport, 'pqrs.xlsx');
+    });
 });
 
 // RUTAS PROTEGIDAS QUE ACTUALIZAN LA PQRS
@@ -82,6 +109,9 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador'])->gro
     Route::post('/pqrs/reabrir', [GestionAppController::class, 'reabrir']);
     Route::post('/crear-clasificacion', [GestionAppController::class, 'crearClasificacion']);
     Route::post('/pqrs/asignacion-masiva', [PqrController::class, 'asignacionMasiva']);
+    Route::post('/pqrs/desasignacion-masiva', [PqrController::class, 'desasignacionMasiva']);
+
+   
 });
 
 
@@ -115,4 +145,5 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Gestor,
 // RUTAS SOLO PARA ADMINISTRADOR Y SUPERVISOR/ATENCION AL USUARIO
 Route::middleware(['auth:api', 'check.active', 'check.role:Administrador,Supervisor/Atencion al usuario'])->group(function () {
     Route::put('/pqrs/{id}/reclasificar', [PqrController::class, 'reclasificar']);
+    Route::post('/pqrs/{id}/reembolso', [PqrController::class, 'aprobarReembolso']);
 });

@@ -7,10 +7,14 @@ import Swal from "sweetalert2";
 import CountdownTimer from "./components/CountDownTimer";
 import { Version } from "../components/Footer/Version";
 import SeguimientoPqrs from "./components/SeguimientoPqrs";
+import AprobarReembolso from "./components/AprobarReembolso";
+import { tienePermiso } from "../utils/permisoHelper";
 
 const PqrsResponder = () => {
   const { pqr_codigo } = useParams();
   const navigate = useNavigate();
+  const usuarioId = parseInt(localStorage.getItem("usuarioId"), 10);
+
 
   const [pqr, setPqr] = useState(null);
   const [respuesta, setRespuesta] = useState("");
@@ -18,11 +22,11 @@ const PqrsResponder = () => {
   const [adjuntos, setAdjuntos] = useState([]);
   const maxChars = 4000;
   const [formData, setFormData] = useState({
-      atributo_calidad: "",
-      fuente: "",
-      asignados: [],
-      prioridad: "",
-    });
+    atributo_calidad: "",
+    fuente: "",
+    asignados: [],
+    prioridad: "",
+  });
 
   const yaRespondida =
     pqr?.estado_respuesta === "Preliminar" ||
@@ -261,6 +265,21 @@ const PqrsResponder = () => {
                 ? pqr.clasificaciones.map((c) => c.nombre).join(", ")
                 : "Sin clasificar"}
             </p>
+            <p>
+              <strong>Reembolso:</strong>{" "}
+              {pqr.reembolsos && pqr.reembolsos.length > 0 ? (
+                <>
+                  {pqr.reembolsos[0].estado === "Aprobado"
+                    ? "✅ Aprobado"
+                    : "❌ Desaprobado"}{" "}
+                  {pqr.reembolsos[0].usuario
+                    ? `por ${pqr.reembolsos[0].usuario.name} ${pqr.reembolsos[0].usuario.primer_apellido}`
+                    : ""}
+                </>
+              ) : (
+                "No tiene reembolso"
+              )}
+            </p>
           </div>
         </div>
         <p>
@@ -270,67 +289,90 @@ const PqrsResponder = () => {
 
         {/* Mostrar archivos adjuntos de la PQRS original si existen */}
 
-      {pqr.archivo && pqr.archivo.length > 0 && (
-              <div className="archivos-adjuntos" style={{ marginTop: "10px" }}>
-                <strong>Archivos adjuntos de la PQRS:</strong>{" "}
-                {pqr.archivo.map((fileItem, index) => {
-                  const urlArchivo = fileItem.url; // ✅ ya viene lista desde Laravel
-                  const fileName = fileItem.original_name;
+        {pqr.archivo && pqr.archivo.length > 0 && (
+          <div className="archivos-adjuntos" style={{ marginTop: "10px" }}>
+            <strong>Archivos adjuntos de la PQRS:</strong>{" "}
+            {pqr.archivo.map((fileItem, index) => {
+              const urlArchivo = fileItem.url; // ✅ ya viene lista desde Laravel
+              const fileName = fileItem.original_name;
 
-                  return (
-                    <div
-                      key={`pqr-file-${index}`}
-                      style={{ marginBottom: "10px" }}
+              return (
+                <div
+                  key={`pqr-file-${index}`}
+                  style={{ marginBottom: "10px" }}
+                >
+                  {/* Enlace para descargar o ver */}
+                  {urlArchivo && (
+                    <a
+                      href={urlArchivo}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: "inline-block",
+                        marginRight: "10px",
+                      }}
                     >
-                      {/* Enlace para descargar o ver */}
-                      {urlArchivo && (
-                        <a
-                          href={urlArchivo}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            display: "inline-block",
-                            marginRight: "10px",
-                          }}
-                        >
-                          {fileName}
-                        </a>
-                      )}
+                      {fileName}
+                    </a>
+                  )}
 
-                      {/* Previsualización si es imagen o PDF */}
-                      {fileItem.path.match(/\.(jpeg|jpg|png|gif)$/i) ? (
-                        <div>
-                          <img
-                            src={urlArchivo}
-                            alt={`Adjunto ${index + 1}`}
-                            style={{
-                              maxWidth: "300px",
-                              marginTop: "5px",
-                              display: "block",
-                            }}
-                          />
-                        </div>
-                      ) : fileItem.path.match(/\.pdf$/i) ? (
-                        <div style={{ marginTop: "5px" }}>
-                          <iframe
-                            src={urlArchivo}
-                            title={`PDF Adjunto ${index + 1}`}
-                            width="100%"
-                            height="500px"
-                            style={{ border: "1px solid #ccc" }}
-                          ></iframe>
-                        </div>
-                      ) : null}
+                  {/* Previsualización si es imagen o PDF */}
+                  {fileItem.path.match(/\.(jpeg|jpg|png|gif)$/i) ? (
+                    <div>
+                      <img
+                        src={urlArchivo}
+                        alt={`Adjunto ${index + 1}`}
+                        style={{
+                          maxWidth: "300px",
+                          marginTop: "5px",
+                          display: "block",
+                        }}
+                      />
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  ) : fileItem.path.match(/\.pdf$/i) ? (
+                    <div style={{ marginTop: "5px" }}>
+                      <iframe
+                        src={urlArchivo}
+                        title={`PDF Adjunto ${index + 1}`}
+                        width="100%"
+                        height="500px"
+                        style={{ border: "1px solid #ccc" }}
+                      ></iframe>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        )}
         <SeguimientoPqrs
           pqr_codigo={pqr_codigo}
           formData={formData}
-          // estado_respuesta={pqr.estado_respuesta}
+        // estado_respuesta={pqr.estado_respuesta}
         />
+
+        <h2>
+          <strong>Reembolso:</strong>{" "}
+          {pqr.reembolsos && pqr.reembolsos.length > 0 ? (
+            <>
+              {pqr.reembolsos[0].estado === "Aprobado"
+                ? "✅ Aprobado"
+                : "❌ Desaprobado"}{" "}
+              {pqr.reembolsos[0].usuario
+                ? `por ${pqr.reembolsos[0].usuario.name} ${pqr.reembolsos[0].usuario.primer_apellido}`
+                : ""}
+            </>
+          ) : (
+            "No tiene reembolso"
+          )}
+        </h2>
+
+        {pqr &&
+          (tienePermiso(["Administrador"]) || [3, 10].includes(usuarioId)) &&
+          pqr.clasificaciones?.some(c => c.nombre === "Solicitudes de tesorería") && (
+            <AprobarReembolso pqrId={pqr.id} />
+          )}
+
         {/* {yaRespondida ? (
           <div className="pqrs-res-message">
             <p>

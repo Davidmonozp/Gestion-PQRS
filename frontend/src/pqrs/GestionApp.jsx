@@ -3,49 +3,51 @@ import api from "../api/api";
 import Swal from "sweetalert2";
 import Navbar from "../components/Navbar/Navbar";
 import "./styles/GestionApp.css";
+import DescargarPqrsExcel from "./components/DescargarPqrsExcel";
+import { Version } from "../components/Footer/Version";
 
 function GestionApp() {
   const [codigo, setCodigo] = useState("");
   const [loading, setLoading] = useState(false);
 
   // 👉 Función para reabrir PQR
-const handleReabrir = async () => {
-  if (!codigo.trim()) {
-    Swal.fire("Error", "Debes ingresar el código de la PQR", "error");
-    return;
-  }
+  const handleReabrir = async () => {
+    if (!codigo.trim()) {
+      Swal.fire("Error", "Debes ingresar el código de la PQR", "error");
+      return;
+    }
 
-  // Confirmación antes de reabrir
-  const result = await Swal.fire({
-    title: "¿Estás seguro?",
-    text: "¿Deseas reabrir esta PQR?",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Sí, reabrir",
-    cancelButtonText: "Cancelar",
-  });
+    // Confirmación antes de reabrir
+    const result = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "¿Deseas reabrir esta PQR?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, reabrir",
+      cancelButtonText: "Cancelar",
+    });
 
-  if (!result.isConfirmed) {
-    return; // el usuario canceló
-  }
+    if (!result.isConfirmed) {
+      return; // el usuario canceló
+    }
 
-  setLoading(true);
-  try {
-    const response = await api.post("/pqrs/reabrir", { pqr_codigo: codigo });
+    setLoading(true);
+    try {
+      const response = await api.post("/pqrs/reabrir", { pqr_codigo: codigo });
 
-    Swal.fire("Éxito", response.data.message, "success");
-    setCodigo(""); // limpiar input
-  } catch (error) {
-    console.error(error);
-    Swal.fire(
-      "Error",
-      error.response?.data?.message || "No se pudo reabrir la PQR",
-      "error"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+      Swal.fire("Éxito", response.data.message, "success");
+      setCodigo(""); // limpiar input
+    } catch (error) {
+      console.error(error);
+      Swal.fire(
+        "Error",
+        error.response?.data?.message || "No se pudo reabrir la PQR",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   // 👉 Función para agregar clasificación
@@ -101,7 +103,7 @@ const handleReabrir = async () => {
   return (
     <>
       <Navbar />
-      <h2>Gestión de la App</h2>
+      <h2 className="titulo-gestion">Gestión de la App</h2>
 
       <div className="gestion-app">
         <div className="cards-row">
@@ -134,6 +136,11 @@ const handleReabrir = async () => {
               Agregar Clasificación
             </button>
           </div>
+          <div className="card-config">
+            <h3>Informe PQRS</h3>
+            <p>Descarga de archivo Excel de PQRS</p>
+            <DescargarPqrsExcel />
+          </div>
 
           {/* Card Cargo */}
           {/* <div className="card-config">
@@ -142,6 +149,7 @@ const handleReabrir = async () => {
             <button onClick={handleNuevoCargo}>Agregar Cargo</button>
           </div> */}
         </div>
+        <Version />
       </div>
     </>
   );

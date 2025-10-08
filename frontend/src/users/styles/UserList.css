@@ -16,8 +16,8 @@
 }
 
 .container-table-users {
-    width: 100%;
-    max-width: 900px;
+    width: 90%;
+    /* max-width: 900px; */
     min-width: 400px;
     border-collapse: collapse;
     margin: 0 auto;

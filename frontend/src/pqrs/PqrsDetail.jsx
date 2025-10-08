@@ -12,6 +12,7 @@ import ClasificacionesPqrs from "./components/ClasificacionesPqrs";
 import { Version } from "../components/Footer/Version";
 import { PanelDespegable } from "./components/PanelDespegable";
 import ReclasificarPqr from "./components/CambioTipoSolicitud";
+import AprobarReembolso from "./components/AprobarReembolso";
 
 function PqrsDetail() {
   const { pqr_codigo } = useParams();
@@ -171,10 +172,8 @@ function PqrsDetail() {
         setExistingFinalAnswerId(finalAnswer.id);
         setFinalAnswerAuthorName(
           finalAnswer.autor
-            ? `${finalAnswer.autor.name ?? ""} ${
-                finalAnswer.autor.segundo_nombre ?? ""
-              } ${finalAnswer.autor.primer_apellido ?? ""} ${
-                finalAnswer.autor.segundo_apellido ?? ""
+            ? `${finalAnswer.autor.name ?? ""} ${finalAnswer.autor.segundo_nombre ?? ""
+              } ${finalAnswer.autor.primer_apellido ?? ""} ${finalAnswer.autor.segundo_apellido ?? ""
               }`.trim()
             : "Desconocido"
         );
@@ -697,21 +696,21 @@ function PqrsDetail() {
               "Administrador",
               "Supervisor/Atencion al usuario",
             ]) && (
-              <p>
-                <strong>⏱ Tiempo de usuario:</strong>{" "}
-                {pqr.estado_respuesta === "Cerrado" ? (
-                  <span style={{ color: "gray", fontStyle: "italic" }}>
-                    Finalizado
-                  </span>
-                ) : pqr.deadline_ciudadano ? (
-                  <CountdownTimer targetDate={pqr.deadline_ciudadano} />
-                ) : (
-                  <span style={{ color: "gray", fontStyle: "italic" }}>
-                    No iniciado
-                  </span>
-                )}
-              </p>
-            )}
+                <p>
+                  <strong>⏱ Tiempo de usuario:</strong>{" "}
+                  {pqr.estado_respuesta === "Cerrado" ? (
+                    <span style={{ color: "gray", fontStyle: "italic" }}>
+                      Finalizado
+                    </span>
+                  ) : pqr.deadline_ciudadano ? (
+                    <CountdownTimer targetDate={pqr.deadline_ciudadano} />
+                  ) : (
+                    <span style={{ color: "gray", fontStyle: "italic" }}>
+                      No iniciado
+                    </span>
+                  )}
+                </p>
+              )}
 
             <p>
               <strong>La PQR fue respondida en un tiempo de:</strong>{" "}
@@ -781,115 +780,127 @@ function PqrsDetail() {
               <strong>Estado de la respuesta PQR:</strong>{" "}
               {pqr.estado_respuesta}
             </p>
-
+            <p>
+              <strong>Reembolso:</strong>{" "}
+              {pqr.reembolsos && pqr.reembolsos.length > 0 ? (
+                <>
+                  {pqr.reembolsos[0].estado === "Aprobado"
+                    ? "✅ Aprobado"
+                    : "❌ Desaprobado"}{" "}
+                  {pqr.reembolsos[0].usuario
+                    ? `por ${pqr.reembolsos[0].usuario.name} ${pqr.reembolsos[0].usuario.primer_apellido}`
+                    : ""}
+                </>
+              ) : (
+                "No tiene reembolso"
+              )}
+            </p>
             {tienePermiso([
               "Administrador",
               "Supervisor/Atencion al usuario",
             ]) && (
-              <>
-                <div ref={cambioRef}>
-                  {" "}
-                  {/* 👈 ahora el contenedor incluye span + panel */}
-                  <strong>Tipo Solicitud:</strong>{" "}
-                  <span
-                    style={{
-                      cursor: "pointer",
-                      textDecoration: "underline",
-                      color: "#007bff",
-                    }}
-                    onClick={() => setMostrarCambio((prev) => !prev)} // toggle
-                  >
-                    {pqr.tipo_solicitud}
-                  </span>
-                  {mostrarCambio && (
-                    <div className="panel-cambio">
-                      <ReclasificarPqr
-                        pqrId={pqr.id}
-                        tipoActual={pqr.tipo_solicitud}
-                        onCambioExitoso={(nuevoTipo) => {
-                          setPqr((prev) => ({
-                            ...prev,
-                            tipo_solicitud: nuevoTipo,
-                          }));
-                          setMostrarCambio(false);
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <p>
-                  <strong>Histórico: </strong>
-                  <span className="ver-logs-link" onClick={toggleLogs}>
-                    {showLogs ? "Ocultar Logs" : "Ver Logs"}
-                  </span>
-                </p>
-
-                {/* Renderizado condicional de los logs */}
-                {showLogs && (
-                  <ul className="logs-acordeon">
-                    {pqr.event_logs && pqr.event_logs.length > 0 ? (
-                      pqr.event_logs.map((log) => {
-                        const logUser = usuarios.find(
-                          (user) => user.id === log.user_id
-                        );
-                        const userName = logUser
-                          ? `${logUser.name ?? ""} ${
-                              logUser.segundo_nombre ?? ""
-                            } ${logUser.primer_apellido ?? ""} ${
-                              logUser.segundo_apellido ?? ""
-                            }`.trim()
-                          : "Usuario Desconocido";
-
-                        return (
-                          <li key={log.id}>
-                            <strong>{log.description}</strong>
-                            <br />
-                            <strong>Estado anterior: </strong>{" "}
-                            {log.estado_anterior} <br />
-                            <strong>Estado nuevo: </strong>
-                            {log.estado_nuevo} <br />
-                            <strong>Autor: </strong> {userName} <br />
-                            <strong>Fecha: </strong> {log.fecha_evento}
-                            <hr />
-                            <hr />
-                          </li>
-                        );
-                      })
-                    ) : (
-                      <li>No hay eventos registrados.</li>
+                <>
+                  <div ref={cambioRef}>
+                    {" "}
+                    {/* 👈 ahora el contenedor incluye span + panel */}
+                    <strong>Tipo Solicitud:</strong>{" "}
+                    <span
+                      style={{
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                        color: "#007bff",
+                      }}
+                      onClick={() => setMostrarCambio((prev) => !prev)} // toggle
+                    >
+                      {pqr.tipo_solicitud}
+                    </span>
+                    {mostrarCambio && (
+                      <div className="panel-cambio">
+                        <ReclasificarPqr
+                          pqrId={pqr.id}
+                          tipoActual={pqr.tipo_solicitud}
+                          onCambioExitoso={(nuevoTipo) => {
+                            setPqr((prev) => ({
+                              ...prev,
+                              tipo_solicitud: nuevoTipo,
+                            }));
+                            setMostrarCambio(false);
+                          }}
+                        />
+                      </div>
                     )}
-                  </ul>
-                )}
-              </>
-            )}
+                  </div>
+
+                  <p>
+                    <strong>Histórico: </strong>
+                    <span className="ver-logs-link" onClick={toggleLogs}>
+                      {showLogs ? "Ocultar Logs" : "Ver Logs"}
+                    </span>
+                  </p>
+
+                  {/* Renderizado condicional de los logs */}
+                  {showLogs && (
+                    <ul className="logs-acordeon">
+                      {pqr.event_logs && pqr.event_logs.length > 0 ? (
+                        pqr.event_logs.map((log) => {
+                          const logUser = usuarios.find(
+                            (user) => user.id === log.user_id
+                          );
+                          const userName = logUser
+                            ? `${logUser.name ?? ""} ${logUser.segundo_nombre ?? ""
+                              } ${logUser.primer_apellido ?? ""} ${logUser.segundo_apellido ?? ""
+                              }`.trim()
+                            : "Usuario Desconocido";
+
+                          return (
+                            <li key={log.id}>
+                              <strong>{log.description}</strong>
+                              <br />
+                              <strong>Estado anterior: </strong>{" "}
+                              {log.estado_anterior} <br />
+                              <strong>Estado nuevo: </strong>
+                              {log.estado_nuevo} <br />
+                              <strong>Autor: </strong> {userName} <br />
+                              <strong>Fecha: </strong> {log.fecha_evento}
+                              <hr />
+                              <hr />
+                            </li>
+                          );
+                        })
+                      ) : (
+                        <li>No hay eventos registrados.</li>
+                      )}
+                    </ul>
+                  )}
+                </>
+              )}
 
             {/* Campos bloqueados para roles específicos */}
             {!["Administrador", "Supervisor/Atencion al usuario"].includes(
               localStorage.getItem("role")
             ) && (
-              <>
-                <p>
-                  <strong>Atributo de calidad:</strong> {pqr.atributo_calidad}
-                </p>
+                <>
+                  <p>
+                    <strong>Atributo de calidad:</strong> {pqr.atributo_calidad}
+                  </p>
 
-                <p>
-                  <strong>Fuente:</strong> {pqr.fuente}
-                </p>
-                <p>
-                  <strong>Asignado a:</strong>{" "}
-                  {pqr.asignados && pqr.asignados.length > 0
-                    ? pqr.asignados.map((u) => u.name).join(", ")
-                    : "Sin asignar"}
-                </p>
-                <p>
-                  <strong>Clasificación: </strong>
-                  {pqr.clasificaciones && pqr.clasificaciones.length > 0
-                    ? pqr.clasificaciones.map((c) => c.nombre).join(", ")
-                    : "Sin clasificar"}
-                </p>
-              </>
-            )}
+                  <p>
+                    <strong>Fuente:</strong> {pqr.fuente}
+                  </p>
+                  <p>
+                    <strong>Asignado a:</strong>{" "}
+                    {pqr.asignados && pqr.asignados.length > 0
+                      ? pqr.asignados.map((u) => u.name).join(", ")
+                      : "Sin asignar"}
+                  </p>
+                  <p>
+                    <strong>Clasificación: </strong>
+                    {pqr.clasificaciones && pqr.clasificaciones.length > 0
+                      ? pqr.clasificaciones.map((c) => c.nombre).join(", ")
+                      : "Sin clasificar"}
+                  </p>
+                </>
+              )}
 
             {/* Formulario de edición para roles específicos */}
             {![
@@ -966,28 +977,25 @@ function PqrsDetail() {
                   <label>Asignado a:</label>
                   <div className="custom-multiselect">
                     <div
-                      className={`custom-select-box ${
-                        estaCerrada ? "disabled" : ""
-                      }`}
+                      className={`custom-select-box ${estaCerrada ? "disabled" : ""
+                        }`}
                       onClick={() => {
                         if (!estaCerrada) setShowCheckboxes(!showCheckboxes);
                       }}
                     >
                       {formData.asignados.length > 0
                         ? usuarios
-                            .filter((u) => formData.asignados.includes(u.id))
-                            .map((u) => {
-                              // Si el segundo nombre y segundo apellido existen, agrégalos
-                              const nombreCompleto = `${u.name}${
-                                u.segundo_nombre ? " " + u.segundo_nombre : ""
-                              } ${u.primer_apellido}${
-                                u.segundo_apellido
-                                  ? " " + u.segundo_apellido
-                                  : ""
+                          .filter((u) => formData.asignados.includes(u.id))
+                          .map((u) => {
+                            // Si el segundo nombre y segundo apellido existen, agrégalos
+                            const nombreCompleto = `${u.name}${u.segundo_nombre ? " " + u.segundo_nombre : ""
+                              } ${u.primer_apellido}${u.segundo_apellido
+                                ? " " + u.segundo_apellido
+                                : ""
                               }`;
-                              return nombreCompleto;
-                            })
-                            .join(", ")
+                            return nombreCompleto;
+                          })
+                          .join(", ")
                         : "Seleccione asignados..."}
                     </div>
 
@@ -1182,6 +1190,21 @@ function PqrsDetail() {
                       .join(", ") || "Ninguno"}
                   </div>
                 )}
+                <p>
+                  <strong>Reembolso:</strong>{" "}
+                  {pqr.reembolsos && pqr.reembolsos.length > 0 ? (
+                    <>
+                      {pqr.reembolsos[0].estado === "Aprobado"
+                        ? "✅ Aprobado"
+                        : "❌ Desaprobado"}{" "}
+                      {pqr.reembolsos[0].usuario
+                        ? `por ${pqr.reembolsos[0].usuario.name} ${pqr.reembolsos[0].usuario.primer_apellido}`
+                        : ""}
+                    </>
+                  ) : (
+                    "No tiene reembolso"
+                  )}
+                </p>
                 <hr />
                 {/* Filtra las respuestas para incluir solo las que NO son finales */}
                 {pqr.respuestas
@@ -1195,13 +1218,13 @@ function PqrsDetail() {
                         <strong>Autor:</strong>{" "}
                         {respuesta.autor
                           ? [
-                              respuesta.autor.name,
-                              respuesta.autor.segundo_nombre,
-                              respuesta.autor.primer_apellido,
-                              respuesta.autor.segundo_apellido,
-                            ]
-                              .filter(Boolean) // elimina nulos o vacíos
-                              .join(" ")
+                            respuesta.autor.name,
+                            respuesta.autor.segundo_nombre,
+                            respuesta.autor.primer_apellido,
+                            respuesta.autor.segundo_apellido,
+                          ]
+                            .filter(Boolean) // elimina nulos o vacíos
+                            .join(" ")
                           : "Desconocido"}
                       </p>
                       <p>
@@ -1221,7 +1244,9 @@ function PqrsDetail() {
                             __html: respuesta.contenido,
                           }}
                         />
+
                       </div>
+
 
                       {respuesta.adjuntos && respuesta.adjuntos.length > 0 && (
                         <div className="respuesta-adjuntos-list">
@@ -1253,7 +1278,8 @@ function PqrsDetail() {
                     No hay respuestas preliminares registradas para esta PQR.
                   </p>
                 )}
-                <hr className="respuesta-divider" />
+                {/* <hr className="respuesta-divider" /> */}
+
               </div>
             )}
             {/* --- FIN Sección para mostrar TODAS las respuestas --- */}
@@ -1278,8 +1304,8 @@ function PqrsDetail() {
                   <h2>Respuesta Final</h2>
 
                   {yaTieneFinal &&
-                  finalAnswerAuthorName &&
-                  finalAnswerCreatedAt ? (
+                    finalAnswerAuthorName &&
+                    finalAnswerCreatedAt ? (
                     <div className="respuesta-item-card">
                       <p>
                         <strong>Autor:</strong> {finalAnswerAuthorName}
@@ -1339,11 +1365,9 @@ function PqrsDetail() {
 
                         // Reemplazo dinámico de placeholders
                         const placeholders = {
-                          "[NOMBRE]": `${pqr.nombre || ""} ${
-                            pqr.segundo_nombre || ""
-                          } ${pqr.apellido || ""} ${
-                            pqr.segundo_apellido || ""
-                          }`.trim(),
+                          "[NOMBRE]": `${pqr.nombre || ""} ${pqr.segundo_nombre || ""
+                            } ${pqr.apellido || ""} ${pqr.segundo_apellido || ""
+                            }`.trim(),
                           "[CIUDAD]": pqr.sede || "Ciudad",
                           "[CORREO]": pqr.correo || "",
                           "[TIPO_DOC]": pqr.documento_tipo || "",
@@ -1355,11 +1379,9 @@ function PqrsDetail() {
                             year: "numeric",
                           }),
                           "[PQR_CREADA]": fechaPqrCreada,
-                          "[PACIENTE]": `${pqr.nombre || ""} ${
-                            pqr.segundo_nombre || ""
-                          } ${pqr.apellido || ""} ${
-                            pqr.segundo_apellido || ""
-                          }`.trim(),
+                          "[PACIENTE]": `${pqr.nombre || ""} ${pqr.segundo_nombre || ""
+                            } ${pqr.apellido || ""} ${pqr.segundo_apellido || ""
+                            }`.trim(),
                           "[CC]": pqr.documento_tipo || "",
                         };
 
@@ -1485,48 +1507,48 @@ function PqrsDetail() {
                     "Supervisor/Atencion al usuario",
                     "Administrador",
                   ]) && (
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "10px",
-                        marginTop: "10px",
-                      }}
-                    >
-                      {!yaTieneFinal && (
-                        <button onClick={handleFinalAnswerAction}>
-                          Registrar Respuesta Final
-                        </button>
-                      )}
-
-                      {yaTieneFinal &&
-                        !editandoRespuestaFinal &&
-                        pqr &&
-                        !mailEnviado && (
-                          <button
-                            onClick={() => setEditandoRespuestaFinal(true)}
-                          >
-                            Editar Respuesta Final
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "10px",
+                          marginTop: "10px",
+                        }}
+                      >
+                        {!yaTieneFinal && (
+                          <button onClick={handleFinalAnswerAction}>
+                            Registrar Respuesta Final
                           </button>
                         )}
 
-                      {yaTieneFinal && editandoRespuestaFinal && (
-                        <>
-                          <button onClick={handleFinalAnswerAction}>
-                            Guardar Cambios (Respuesta Final)
-                          </button>
-                          <button
-                            className="boton-cancelar-edicion"
-                            onClick={() => {
-                              setEditandoRespuestaFinal(false);
-                              fetchPqr(); // Re-fetch para restablecer los valores originales y los adjuntos
-                            }}
-                          >
-                            Cancelar edición
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
+                        {yaTieneFinal &&
+                          !editandoRespuestaFinal &&
+                          pqr &&
+                          !mailEnviado && (
+                            <button
+                              onClick={() => setEditandoRespuestaFinal(true)}
+                            >
+                              Editar Respuesta Final
+                            </button>
+                          )}
+
+                        {yaTieneFinal && editandoRespuestaFinal && (
+                          <>
+                            <button onClick={handleFinalAnswerAction}>
+                              Guardar Cambios (Respuesta Final)
+                            </button>
+                            <button
+                              className="boton-cancelar-edicion"
+                              onClick={() => {
+                                setEditandoRespuestaFinal(false);
+                                fetchPqr(); // Re-fetch para restablecer los valores originales y los adjuntos
+                              }}
+                            >
+                              Cancelar edición
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
 
                   {tienePermiso([
                     "Supervisor/Atencion al usuario",

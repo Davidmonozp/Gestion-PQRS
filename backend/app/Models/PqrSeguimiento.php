@@ -9,7 +9,11 @@ class PqrSeguimiento extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['pqr_id', 'user_id', 'descripcion', 'tipo_seguimiento'];
+    protected $fillable = ['pqr_id', 'user_id', 'descripcion', 'tipo_seguimiento', 'adjuntos',];
+
+    protected $casts = [
+        'adjuntos' => 'array',
+    ];
 
     public function pqr()
     {
@@ -21,4 +25,3 @@ class PqrSeguimiento extends Model
         return $this->belongsTo(User::class);
     }
 }
-

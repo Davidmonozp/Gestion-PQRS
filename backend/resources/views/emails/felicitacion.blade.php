@@ -265,6 +265,22 @@
                             <p><strong>Área de Experiencia al Usuario</strong></p>
                             <p>PASSUS IPS Taller Psicomotriz S.A.S.</p>
 
+                            
+                            <p><i style="font-size: 11px; line-height: 1.5;"> <strong>Aviso legal:</strong> El contenido
+                                    de este mensaje y cualquier archivo adjunto son confidenciales, por lo que la
+                                    información no puede ser utilizada por personas diferentes a su destinatario, ni
+                                    está autorizada su divulgación. Si usted no es la persona a la cual está dirigido
+                                    este mensaje, por favor notifique inmediatamente al remitente con respuesta a este
+                                    mensaje y en tal caso, por favor destruya todas las copias de este y los archivos
+                                    adjuntos. Cualquier uso, divulgación, copia, distribución, impresión o acto derivado
+                                    del conocimiento total o parcial de este mensaje sin autorización de PASSUS, será
+                                    sancionado de acuerdo con las normas legales vigentes. Al destinatario de este
+                                    mensaje se le considera custodio de la información contenida y debe velar por su
+                                    confidencialidad, integridad y privacidad. Las opiniones contenidas en este mensaje
+                                    electrónico no relacionadas con la actividad de nuestra organización. <strong>
+                                        Reciclar no es una obligación, es NUESTRA responsabilidad, evitemos imprimir, de
+                                        ser necesario hacerlo, hacer uso de ambas caras de la hoja</strong></i></p> <br>
+
                             <hr class="divider">
                             <a href="{{ url('https://passusips.com/index.php') }}" target="_blank"
                                 style="display: inline-block; text-decoration: none;">

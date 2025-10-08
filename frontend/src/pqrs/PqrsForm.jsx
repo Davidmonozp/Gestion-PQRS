@@ -121,7 +121,7 @@ const serviciosPorSede = {
     "Psiquiatría",
     "Fisiatría",
   ],
-  "Cedritos-Divertido": ["Natación", "Yoga", "Pilates"],
+  "Divertido": ["Natación", "Yoga", "Pilates"],
 };
 
 const parentesco = [
@@ -357,7 +357,7 @@ function PqrsForm({
   }, [form.registra_otro, form.documento_tipo]);
 
   useEffect(() => {
-    if (form.sede === "Cedritos-Divertido") {
+    if (form.sede === "Divertido") {
       setForm((prev) => ({
         ...prev,
         eps: "Particular",
@@ -1625,8 +1625,8 @@ function PqrsForm({
                   <option value="Bogota-Sur-Occidente-Rehabilitación">
                     Bogotá Sur Occidente Rehabilitación
                   </option>
-                  <option value="Cedritos-Divertido">Cedritos-Divertido</option>
                   <option value="Chia">Chía</option>
+                  <option value="Divertido">Divertido</option>
                   <option value="Florencia">Florencia</option>
                   <option value="Ibague">Ibagué</option>
                 </select>
@@ -1667,7 +1667,7 @@ function PqrsForm({
                   onBlur={handleBlur}
                   required
                 >
-                  {form.sede === "Cedritos-Divertido" ? (
+                  {form.sede === "Divertido" ? (
                     <option value="Particular">Particular</option>
                   ) : (
                     <>

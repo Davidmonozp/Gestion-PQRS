@@ -115,6 +115,7 @@ const UserList = () => {
                 <th>Nombre</th>
                 <th>Nombre de usuario</th>
                 <th>Correo</th>
+                <th>Area</th>
                 {/* Ocultar estos tres encabezados para Gestor y Digitador */}
                 {!["Gestor", "Digitador"].includes(
                   localStorage.getItem("role")
@@ -138,6 +139,7 @@ const UserList = () => {
                   </td>
                   <td>{user.userName}</td>
                   <td>{user.email}</td>
+                  <td>{user.area}</td>
                   {!["Gestor", "Digitador", "Consultor"].includes(
                     localStorage.getItem("role")
                   ) && (

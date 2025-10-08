@@ -533,23 +533,49 @@
 
                     <tr>
                         <td class="body-content">
-                            <h1>¡Nueva Felicitación Registrada!</h1>
+                            <h1>¡FELICITACIÓN!</h1>
+
+                            <p>Estimado(a) <strong>{{ $pqr->nombre }} {{ $pqr->apellido }}</strong>,</p>
+
+                            <p> <strong>Reciba un cordial saludo de PASSUS IPS Taller Psicomotriz S.A.S.</strong></p>
+
+                            <p>Hemos recibido su mensaje, registrado bajo el radicado {{ $pqr->pqr_codigo }} y le
+                                expresamos nuestro más sincero agradecimiento. <br><br>
+
+                                Sus palabras de felicitación representan un valioso reconocimiento que nos motiva a
+                                fortalecer nuestro compromiso con la humanización, la calidad en la atención y la mejora
+                                continua de nuestros servicios. Cada expresión positiva que recibimos constituye un
+                                estímulo para seguir trabajando con dedicación, excelencia y responsabilidad por el
+                                bienestar de nuestros usuarios y sus familias. <br><br>
+
+                                En PASSUS trabajamos con un firme compromiso hacia la mejora continua y la calidad en la
+                                prestación de los servicios de salud y bienestar. Agradecemos su confianza y el haberse
+                                puesto en contacto con nosotros. Sus solicitudes, comentarios y sugerencias son
+                                fundamentales para seguir fortaleciendo nuestro servicio en beneficio de todos los
+                                usuarios.
+                            </p>
+
+
+
+                            <p>Cordialmente;</p>
+                            <p><strong>Área de Experiencia al Usuario</strong></p>
+                            <p>PASSUS IPS Taller Psicomotriz S.A.S.</p>
+
                             
-                            <p>Estimado(a) Gestor(a),</p>
-
-                            <p>Se ha registrado una nueva felicitación en la sede **{{ $pqr->sede }}**.</p>
-
-                            <div class="pqr-info-box">
-                                <p><strong>Código de PQR:</strong> {{ $pqr->pqr_codigo }}</p>
-                                <p><strong>Nombre del usuario:</strong> {{ $pqr->nombre }} {{ $pqr->apellido }}</p>
-                                <p><strong>Descripción:</strong></p>
-                                <p style="white-space: pre-line; margin-top: 10px;">{{ $pqr->descripcion }}</p>
-                            </div>
-
-                             <!-- <p>Por favor, revisa esta felicitación para su respectivo seguimiento.</p>  -->
-
-                            <p>Atentamente,</p>
-                            <p><strong>Equipo de PASSUS </strong></p>
+                            <p><i style="font-size: 11px; line-height: 1.5;"> <strong>Aviso legal:</strong> El contenido
+                                    de este mensaje y cualquier archivo adjunto son confidenciales, por lo que la
+                                    información no puede ser utilizada por personas diferentes a su destinatario, ni
+                                    está autorizada su divulgación. Si usted no es la persona a la cual está dirigido
+                                    este mensaje, por favor notifique inmediatamente al remitente con respuesta a este
+                                    mensaje y en tal caso, por favor destruya todas las copias de este y los archivos
+                                    adjuntos. Cualquier uso, divulgación, copia, distribución, impresión o acto derivado
+                                    del conocimiento total o parcial de este mensaje sin autorización de PASSUS, será
+                                    sancionado de acuerdo con las normas legales vigentes. Al destinatario de este
+                                    mensaje se le considera custodio de la información contenida y debe velar por su
+                                    confidencialidad, integridad y privacidad. Las opiniones contenidas en este mensaje
+                                    electrónico no relacionadas con la actividad de nuestra organización. <strong>
+                                        Reciclar no es una obligación, es NUESTRA responsabilidad, evitemos imprimir, de
+                                        ser necesario hacerlo, hacer uso de ambas caras de la hoja</strong></i></p> <br>
 
                             <hr class="divider">
                             <a href="{{ url('https://passusips.com/index.php') }}" target="_blank"

@@ -38,8 +38,8 @@ function DropdownMultiSelect({
   // 👇 filtramos opciones
   const filteredOptions = searchable
     ? options.filter((o) =>
-        o.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      o.toLowerCase().includes(searchTerm.toLowerCase())
+    )
     : options;
 
   return (
@@ -79,6 +79,7 @@ function DropdownMultiSelect({
   );
 }
 
+
 function PqrsFilters({ filters, setFilters, onBuscar }) {
   const [tempFilters, setTempFilters] = useState(filters);
   const [usuariosOptions, setUsuariosOptions] = useState([]);
@@ -86,18 +87,15 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
   // Opciones existentes
   const servicios = [
     "Hidroterapia",
-    "Programa Rehabilitación",
+    "Programa de Rehabilitación",
     "Neuropediatría",
     "Psiquiatría",
     "Fisiatría",
     "Acuamotricidad",
-    "Natación infantil",
-    "Natación jóvenes-adultos",
+    "Natación",
     "Yoga",
-    "Yoga acuático",
-    "Mindfulness",
     "Pilates",
-    "Pilates acuático",
+    "Valoración por fisioterapia telemedicina",
   ];
   servicios.sort();
 
@@ -109,6 +107,16 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
     "Solicitud",
     "Tutela",
     "Derecho de peticion",
+  ];
+
+  const atributosCalidad = [
+    "Accesibilidad",
+    "Continuidad",
+    "Oportunidad",
+    "Pertinencia",
+    "Seguridad",
+    "Efectividad",
+    "Integralidad",
   ];
 
   const sedes = [
@@ -270,6 +278,17 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
             placeholder="Seleccione tipo(s) de solicitud"
           />
         </div>
+        
+        <div className="filtro-atributo-calidad">
+          <DropdownMultiSelect
+            options={atributosCalidad}
+            selected={tempFilters.atributo_calidad}
+            setSelected={(selected) =>
+              setTempFilters({ ...tempFilters, atributo_calidad: selected })
+            }
+            placeholder="Seleccione atributo(s) de calidad"
+          />
+        </div>
 
         <div className="filtro-clasificaciones">
           <DropdownMultiSelect
@@ -325,25 +344,25 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
           />
         </div>
         {tienePermiso(["Administrador"]) && (
-      <div className="filtro-asignados">
-  <DropdownMultiSelect
-    options={usuariosOptions.map((opt) => opt.label)} // array de nombres
-    selected={tempFilters.asignadosNombres || []}
-    setSelected={(selectedNames) => {
-      const selectedIds = usuariosOptions
-        .filter((opt) => selectedNames.includes(opt.label))
-        .map((opt) => opt.value);
+          <div className="filtro-asignados">
+            <DropdownMultiSelect
+              options={usuariosOptions.map((opt) => opt.label)} // array de nombres
+              selected={tempFilters.asignadosNombres || []}
+              setSelected={(selectedNames) => {
+                const selectedIds = usuariosOptions
+                  .filter((opt) => selectedNames.includes(opt.label))
+                  .map((opt) => opt.value);
 
-      setTempFilters({
-        ...tempFilters,
-        asignados: selectedIds,
-        asignadosNombres: selectedNames,
-      });
-    }}
-    placeholder="Asignado a"
-    searchable={true} // 👈 añadimos esta prop para activar buscador
-  />
-</div>
+                setTempFilters({
+                  ...tempFilters,
+                  asignados: selectedIds,
+                  asignadosNombres: selectedNames,
+                });
+              }}
+              placeholder="Asignado a"
+              searchable={true} // 👈 añadimos esta prop para activar buscador
+            />
+          </div>
 
         )}
         <div className="iconos-filtros">
@@ -378,6 +397,7 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
                 clasificaciones: [],
                 clasificacionesNombres: [],
                 asignados: [],
+                atributo_calidad: [],
               })
             }
             title="Limpiar filtros"

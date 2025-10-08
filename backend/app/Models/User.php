@@ -10,8 +10,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable;
-    use HasRoles;
+    use HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -79,6 +78,10 @@ class User extends Authenticatable implements JWTSubject
     }
     public function sedes()
     {
-         return $this->belongsToMany(Sede::class, 'sede_user', 'user_id', 'sede_id');
+        return $this->belongsToMany(Sede::class, 'sede_user', 'user_id', 'sede_id');
+    }
+    public function reembolsosAprobados()
+    {
+        return $this->hasMany(PqrReembolso::class, 'aprobado_por');
     }
 }

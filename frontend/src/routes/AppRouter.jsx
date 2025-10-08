@@ -23,6 +23,8 @@ import SolicitudForm from "../pqrs/SolicitudForm";
 import InicioPQRS from "../pqrs/InicioPQRS";
 import EventLogs from "../pqrs/EventLogs";
 import GestionApp from "../pqrs/GestionApp";
+import Dashboard from "../pqrs/Dashboard";
+import { DashInterno } from "../pqrs/DashInterno";
 
 export function AppRouter() {
   return (
@@ -47,6 +49,46 @@ export function AppRouter() {
       <Route path="/consultar-radicado" element={<InicioPQRS />} />
       <Route path="/event-logs" element={<EventLogs />} />
       <Route path="/pqr/:pqr_id/logs" element={<EventLogs />} />
+
+
+
+
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute
+            allowedRoles={[
+              "Administrador",
+              "Consultor",
+              "Supervisor/Atencion al usuario",
+              "Gestor",
+              "Gestor Administrativo",
+              "Digitador",
+            ]}
+          >
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dash-interno"
+        element={
+          <ProtectedRoute allowedRoles={["Administrador"]}>
+            <DashInterno />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["Administrador"]}>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      /> */}
 
       <Route
         path="/Pqr"
@@ -150,7 +192,7 @@ export function AppRouter() {
         path="/pqrs/:pqr_codigo/respuesta"
         element={
           <ProtectedRoute
-            allowedRoles={["Administrador", "Gestor", "Gestor Administrativo"]}
+            allowedRoles={["Administrador", "Gestor", "Gestor Administrativo", "Supervisor/Atencion al usuario"]}
           >
             <PqrsResponder />
           </ProtectedRoute>

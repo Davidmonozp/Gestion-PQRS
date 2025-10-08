@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import api from "../../api/api";
 import "../styles/SeguimientoPqrs.css";
 import Swal from "sweetalert2"; // Importa SweetAlert2
@@ -36,8 +36,23 @@ export default function SeguimientoPqrs({
   const [error, setError] = useState("");
   const [expandedItems, setExpandedItems] = useState([]);
   const [filtroTipoSeguimiento, setFiltroTipoSeguimiento] = useState(""); // Estado para el filtro en el frontend
+  const inputFileRef = useRef(null);
 
   const MAX_CARACTERES_DESCRIPCION = 3000;
+
+  const [adjuntos, setAdjuntos] = useState([]);
+
+  const handleRemoveAttachment = (index) => {
+    setAdjuntos((prev) => {
+      const updated = prev.filter((_, i) => i !== index);
+      if (updated.length === 0 && inputFileRef.current) {
+        inputFileRef.current.value = "";
+      }
+      return updated;
+    });
+  };
+
+
 
   useEffect(() => {
     if (pqr_codigo) {
@@ -65,30 +80,41 @@ export default function SeguimientoPqrs({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // **VALIDACIÓN DE CARACTERES AQUÍ (ANTES DE ENVIAR EL FORMULARIO)**
     if (descripcion.length > MAX_CARACTERES_DESCRIPCION) {
       Swal.fire({
         icon: "error",
         title: "Límite de caracteres excedido",
-        text: `La descripción excede el límite de ${MAX_CARACTERES_DESCRIPCION} caracteres. Por favor, acorte el texto.`,
+        text: `La descripción excede el límite de ${MAX_CARACTERES_DESCRIPCION} caracteres.`,
         confirmButtonText: "Entendido",
       });
-      return; // Detiene el envío del formulario
+      return;
     }
 
     setLoading(true);
     setError("");
 
     try {
-      await api.post(`/pqrs/${pqr_codigo}/seguimientos`, {
-        descripcion,
-        tipo_seguimiento: tipoSeguimiento,
+      const formData = new FormData();
+      formData.append("descripcion", descripcion);
+      formData.append("tipo_seguimiento", tipoSeguimiento);
+
+      adjuntos.forEach((file, index) => {
+        formData.append(`adjuntos[${index}]`, file);
       });
+
+      await api.post(`/pqrs/${pqr_codigo}/seguimientos`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      // reset
       setDescripcion("");
       setTipoSeguimiento("");
-      fetchSeguimientosBackend(); // Recargar todos los seguimientos
+      setAdjuntos([]);
+      fetchSeguimientosBackend();
+
       Swal.fire({
-        // Mensaje de éxito
         icon: "success",
         title: "Seguimiento registrado",
         text: "El seguimiento se ha registrado exitosamente.",
@@ -212,16 +238,101 @@ export default function SeguimientoPqrs({
                       textAlign: "start",
                     }}
                   >
-                    {item.user?.name || "Usuario desconocido"}
+                    {item.user
+                      ? [
+                        item.user?.name,
+                        item.user?.segundo_nombre,
+                        item.user?.primer_apellido,
+                        item.user?.segundo_apellido,
+                      ]
+                        .filter(Boolean) // quita valores null/undefined/vacíos
+                        .join(" ")
+                      : "Usuario desconocido"}
                     <span style={{ fontWeight: "normal", display: "block" }}>
                       ({new Date(item.created_at).toLocaleString()})
                     </span>
                   </div>
+
                   {expandedItems.includes(item.id) && (
-                    <p style={{ marginTop: "0.5rem" }}>
-                      <strong>Tipo:</strong> {item.tipo_seguimiento} <br />
-                      <strong>Descripción:</strong> {item.descripcion}
-                    </p>
+                    <div style={{ marginTop: "0.5rem" }}>
+                      <p>
+                        <strong>Tipo:</strong> {item.tipo_seguimiento} <br />
+                        <strong>Descripción:</strong> {item.descripcion}
+                      </p>
+                      {item.adjuntos && item.adjuntos.length > 0 && (
+                        <div style={{ marginTop: "0.5rem" }}>
+                          <strong>Archivos adjuntos:</strong>
+                          <ul>
+                            {item.adjuntos.map((file, idx) => {
+                              const extension = file.original_name
+                                ? file.original_name
+                                  .split(".")
+                                  .pop()
+                                  .toLowerCase()
+                                : "";
+
+                              return (
+                                <li key={idx} style={{ marginBottom: "1rem" }}>
+                                  {/* Enlace para abrir en otra pestaña */}
+                                  <a
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      color: "blue",
+                                      textDecoration: "underline",
+                                    }}
+                                  >
+                                    {file.original_name ||
+                                      file.path.split("/").pop()}
+                                  </a>
+
+                                  {/* Vista previa en la misma pantalla */}
+                                  <div style={{ marginTop: "0.5rem" }}>
+                                    {["jpg", "jpeg", "png", "gif"].includes(
+                                      extension
+                                    ) ? (
+                                      <img
+                                        src={file.url}
+                                        alt={file.original_name}
+                                        style={{
+                                          maxWidth: "200px",
+                                          maxHeight: "200px",
+                                          display: "block",
+                                          border: "1px solid #ddd",
+                                          marginTop: "5px",
+                                        }}
+                                      />
+                                    ) : extension === "pdf" ? (
+                                      <iframe
+                                        src={file.url}
+                                        style={{
+                                          width: "100%",
+                                          height: "400px",
+                                          border: "1px solid #ddd",
+                                          marginTop: "5px",
+                                        }}
+                                        title={file.original_name}
+                                      ></iframe>
+                                    ) : (
+                                      <p
+                                        style={{
+                                          fontStyle: "italic",
+                                          color: "#555",
+                                        }}
+                                      >
+                                        Vista previa no disponible para este
+                                        tipo de archivo
+                                      </p>
+                                    )}
+                                  </div>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </li>
               )
@@ -299,10 +410,99 @@ export default function SeguimientoPqrs({
               {descripcion.length} / {MAX_CARACTERES_DESCRIPCION} caracteres
             </small>
 
-          
-              <button type="submit" disabled={loading}>
-                {loading ? "Registrando..." : "Agregar seguimiento"}
-              </button>
+            <p>
+              <strong>Archivos adjuntos (opcional):</strong>
+            </p>
+            <input
+              ref={inputFileRef}
+              type="file"
+              multiple
+              onChange={(e) => {
+                const files = Array.from(e.target.files);
+
+                const tooBig = files.find(file => file.size > 7 * 1024 * 1024);
+                const invalidFile = files.find(file =>
+                  [
+                    "application/msword",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                  ].includes(file.type)
+                );
+
+                // Si hay algún archivo inválido o muy grande
+                if (tooBig || invalidFile) {
+                  let title = "";
+                  let text = "";
+
+                  if (tooBig) {
+                    title = "Archivo demasiado grande";
+                    text = "Solo se permiten archivos de máximo 7MB.";
+                  } else if (invalidFile) {
+                    title = "Tipo de archivo no permitido";
+                    text = `El archivo "${invalidFile.name}" no es válido. No se permiten documentos de Word.`;
+                  }
+
+                  Swal.fire({
+                    icon: "error",
+                    title,
+                    text,
+                    confirmButtonText: "OK",
+                  }).then(() => {
+                    // Limpiar solo si el archivo es inválido
+                    if (inputFileRef.current) {
+                      inputFileRef.current.value = "";
+                    }
+                  });
+
+                  return;
+                }
+
+                // ✅ Si todo está bien, agrega los archivos
+                setAdjuntos((prev) => [...prev, ...files]);
+
+                // Limpia el input solo si quieres permitir agregar el mismo archivo más de una vez
+                if (inputFileRef.current) {
+                  inputFileRef.current.value = "";
+                }
+              }}
+            />
+
+
+            {adjuntos.length > 0 && (
+              <div style={{ marginTop: "10px" }}>
+                <strong className="archivo-seleccionado">
+                  Archivos seleccionados:
+                </strong>
+                <ul>
+                  {adjuntos.map((file, index) => (
+                    <li
+                      key={index}
+                      style={{ display: "flex", alignItems: "center" }}
+                    >
+                      <span>{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAttachment(index)}
+                        style={{
+                          marginLeft: "10px",
+                          background: "#df3232",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          padding: "2px 6px",
+                        }}
+                      >
+                        X
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <button type="submit" disabled={loading}>
+              {loading ? "Registrando..." : "Agregar seguimiento"}
+            </button>
           </form>
         )
       )}

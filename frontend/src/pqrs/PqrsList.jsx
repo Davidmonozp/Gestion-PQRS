@@ -9,18 +9,23 @@ import PqrsSidebar from "../components/Sidebar/PqrsSidebar";
 import { getRole, getSedes } from "../auth/authService";
 import { Version } from "../components/Footer/Version";
 import Swal from "sweetalert2";
-// import BotonesFilters from "./components/BotonesFilters";
+import rangoDePaginacion from "../utils/RangoDePaginacion";
+import {
+  handleAsignacionMasiva,
+  handleDesasignacionMasiva,
+} from "../utils/asignacionMasiva";
+
 
 function PqrsList() {
   const [pqrs, setPqrs] = useState([]);
   const [pagination, setPagination] = useState({
     total: 0,
     current_page: 1,
-    per_page: 15,
+    per_page: 20,
     last_page: 1,
   });
 
-  const [selectedPqrs, setSelectedPqrs] = useState(new Set()); // Ya lo tienes, pero es clave.
+  const [selectedPqrs, setSelectedPqrs] = useState(new Set());
   const [usuarioAsignadoMasivo, setUsuarioAsignadoMasivo] = useState([]);
   const [showUserSelect, setShowUserSelect] = useState(false); // Para el selector de usuario
   const [searchTerm, setSearchTerm] = useState(""); // Para el input de búsqueda
@@ -50,12 +55,17 @@ function PqrsList() {
     respuesta_enviada: [],
     clasificaciones: [],
     asignados: [],
+    atributo_calidad: [],
   });
 
   useEffect(() => {
     api
       .get("/pqrs", {
-        params: { page: pagination?.current_page || 1, ...filters },
+        params: {
+          page: pagination.current_page,
+          per_page: pagination.per_page,
+          ...filters,
+        },
       })
       .then((res) => {
         setPqrs(res.data.pqrs);
@@ -66,7 +76,7 @@ function PqrsList() {
           last_page: res.data.last_page,
         });
       });
-  }, [pagination?.current_page, filters]);
+  }, [pagination.current_page, pagination.per_page, filters]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -95,7 +105,7 @@ function PqrsList() {
       queryParams.append("page", page);
 
       if (usuario.role === "Digitador") {
-        queryParams.append("per_page", 15);
+        queryParams.append("per_page", 20);
       }
 
       let apiUrl = "/pqrs";
@@ -126,6 +136,11 @@ function PqrsList() {
         if (filters.tipo_solicitud?.length) {
           filters.tipo_solicitud.forEach((t) =>
             queryParams.append("tipo_solicitud[]", t)
+          );
+        }
+        if (filters.atributo_calidad?.length) {
+          filters.atributo_calidad.forEach((a) =>
+            queryParams.append("atributo_calidad[]", a)
           );
         }
         if (filters.clasificaciones?.length) {
@@ -274,74 +289,6 @@ function PqrsList() {
     }
   };
 
-  const handleAsignacionMasiva = async () => {
-    // Verificar si hay PQRS seleccionadas o usuarios
-    if (selectedPqrs.size === 0 || usuarioAsignadoMasivo.length === 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "Campos incompletos",
-        text: "Por favor, selecciona al menos una PQR y uno o más usuarios para la asignación.",
-      });
-      return;
-    }
-
-    try {
-      const pqrCodigos = Array.from(selectedPqrs);
-      const usuarioIds = usuarioAsignadoMasivo;
-
-      const response = await api.post("/pqrs/asignacion-masiva", {
-        pqr_codigos: pqrCodigos,
-        usuario_ids: usuarioIds,
-      });
-
-      // Si la solicitud es exitosa
-      Swal.fire({
-        icon: "success",
-        title: "¡Asignación exitosa!",
-        text: response.data.message, // Usa el mensaje del backend
-        confirmButtonText: "OK",
-      });
-
-      // Lógica de éxito
-      fetchPqrs(); // Recarga los datos para actualizar la tabla
-      setSelectedPqrs(new Set()); // Limpia la selección de PQRS
-      setUsuarioAsignadoMasivo([]); // Limpia la selección de usuarios
-      setShowUserSelect(false); // Cierra el selector
-    } catch (error) {
-      // Manejo de errores
-      console.error("Error al asignar en masa:", error);
-
-      // Verifica si el error es una respuesta 422 (errores de validación de Laravel)
-      if (error.response && error.response.status === 422) {
-        const validationErrors = error.response.data.errors;
-        let errorMessage = "";
-
-        // Construye el mensaje de error para las PQRS sin atributo_calidad
-        if (validationErrors.hasOwnProperty("pqr_codigos.0")) {
-          errorMessage = validationErrors["pqr_codigos.0"][0];
-        } else {
-          errorMessage =
-            "Hubo un error de validación. Revisa los datos e intenta de nuevo.";
-        }
-
-        Swal.fire({
-          icon: "error",
-          title: "Error de validación",
-          text: errorMessage,
-          confirmButtonText: "OK",
-        });
-      } else {
-        // Maneja otros errores (ej. 500 Internal Server Error)
-        Swal.fire({
-          icon: "error",
-          title: "Error en el servidor",
-          text: "Hubo un error al realizar la asignación. Intenta más tarde.",
-          confirmButtonText: "OK",
-        });
-      }
-    }
-  };
-
   return (
     <>
       <div className="app-layout-container">
@@ -372,7 +319,30 @@ function PqrsList() {
                 setPagination((prev) => ({ ...prev, current_page: 1 }))
               }
             />
-          </div>
+          </div>        
+          {tienePermiso(["Administrador"]) && (
+            <div className="per-page-selector">
+              <label>Mostrar:</label>
+              <select
+                className="mostrar"
+                value={pagination.per_page}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value);
+                  setPagination((prev) => ({
+                    ...prev,
+                    per_page: value,
+                    current_page: 1, // Reinicia a la primera página si cambia la cantidad
+                  }));
+                }}
+              >
+                <option value={20}>20</option>
+                <option value={40}>40</option>
+                <option value={60}>60</option>
+                <option value={10000}>Todas</option>{" "}
+                {/* valor grande para representar "Todas" */}
+              </select>              
+            </div>
+          )}
 
           <div className="table-wrapper">
             {selectedPqrs.size > 0 && (
@@ -387,16 +357,15 @@ function PqrsList() {
                     {/* Muestra los nombres de los usuarios seleccionados o un mensaje por defecto */}
                     {usuarioAsignadoMasivo.length > 0
                       ? usuarioAsignadoMasivo
-                          .map((id) => {
-                            const usuario = usuarios.find((u) => u.id === id);
-                            return usuario
-                              ? `${usuario.name} ${
-                                  usuario.primer_apellido || ""
-                                }`
-                              : null;
-                          })
-                          .filter(Boolean) // Filtra IDs que no se encuentran
-                          .join(", ")
+                        .map((id) => {
+                          const usuario = usuarios.find((u) => u.id === id);
+                          return usuario
+                            ? `${usuario.name} ${usuario.primer_apellido || ""
+                            }`
+                            : null;
+                        })
+                        .filter(Boolean) // Filtra IDs que no se encuentran
+                        .join(", ")
                       : "Seleccione uno o más usuarios..."}
                   </div>
 
@@ -456,9 +425,34 @@ function PqrsList() {
                 </div>
                 <button
                   className="btn-asignar"
-                  onClick={handleAsignacionMasiva}
+                  onClick={() =>
+                    handleAsignacionMasiva({
+                      selectedPqrs,
+                      usuarioAsignadoMasivo,
+                      api,
+                      fetchPqrs,
+                      setSelectedPqrs,
+                      setUsuarioAsignadoMasivo,
+                      setShowUserSelect,
+                    })
+                  }
                 >
                   Asignar
+                </button>
+                <button
+                  className="btn-desasignar"
+                  onClick={() =>
+                    handleDesasignacionMasiva({
+                      selectedPqrs,
+                      usuarioAsignadoMasivo,
+                      fetchPqrs,
+                      setSelectedPqrs,
+                      setUsuarioAsignadoMasivo,
+                      setShowUserSelect,
+                    })
+                  }
+                >
+                  Desasignar
                 </button>
               </div>
             )}
@@ -540,14 +534,14 @@ function PqrsList() {
                             "Gestor Administrativo",
                             "Digitador",
                           ]) && (
-                            <button
-                              onClick={() =>
-                                navigate(`/pqrs/${pqr.pqr_codigo}`)
-                              }
-                            >
-                              <i className="fa fa-eye icono-ver"></i>
-                            </button>
-                          )}
+                              <button
+                                onClick={() =>
+                                  navigate(`/pqrs/${pqr.pqr_codigo}`)
+                                }
+                              >
+                                <i className="fa fa-eye icono-ver"></i>
+                              </button>
+                            )}
                           {tienePermiso(["Administrador"]) && (
                             <input
                               type="checkbox"
@@ -602,11 +596,10 @@ function PqrsList() {
                                   className="pqr-status-item"
                                 >
                                   <i
-                                    className={`fa-solid ${
-                                      respondio
-                                        ? "fa-check pqr-icon success"
-                                        : "fa-clock pqr-icon pending"
-                                    }`}
+                                    className={`fa-solid ${respondio
+                                      ? "fa-check pqr-icon success"
+                                      : "fa-clock pqr-icon pending"
+                                      }`}
                                     title={
                                       respondio
                                         ? "Respuesta enviada"
@@ -614,7 +607,8 @@ function PqrsList() {
                                     }
                                   ></i>
                                   <span className="pqr-user-name">
-                                    {usuario.name} {usuario.primer_apellido}
+                                    {usuario.name} {usuario.segundo_nombre}{" "}
+                                    {usuario.primer_apellido}
                                   </span>
                                 </li>
                               );
@@ -668,6 +662,7 @@ function PqrsList() {
 
           <nav className="paginacion">
             <ul className="elementosPaginacion">
+              {/* Botón anterior */}
               <li className="numero">
                 <a
                   href="#"
@@ -683,29 +678,33 @@ function PqrsList() {
                 </a>
               </li>
 
-              {[...Array(pagination.last_page)].map((_, index) => {
-                const page = index + 1;
-                return (
-                  <li
-                    key={page}
-                    className={`numero ${
-                      page === pagination.current_page ? "active" : ""
-                    }`}
-                  >
+              {/* Rango de paginación inteligente */}
+              {rangoDePaginacion(
+                pagination.current_page,
+                pagination.last_page
+              ).map((page, index) => (
+                <li
+                  key={index}
+                  className={`numero ${page === pagination.current_page ? "active" : ""
+                    } ${page === "..." ? "disabled" : ""}`}
+                >
+                  {page === "..." ? (
+                    <span className="ellipsis">...</span>
+                  ) : (
                     <a
                       href="#"
                       onClick={(e) => {
                         e.preventDefault();
-                        if (page !== pagination.current_page)
-                          handlePageChange(page);
+                        handlePageChange(page);
                       }}
                     >
                       {page}
                     </a>
-                  </li>
-                );
-              })}
+                  )}
+                </li>
+              ))}
 
+              {/* Botón siguiente */}
               <li className="numero">
                 <a
                   href="#"

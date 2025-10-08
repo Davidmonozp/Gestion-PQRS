@@ -182,7 +182,7 @@ function PqrsAsignadas() {
                         <button
                           onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}`)}
                         >
-                          <i className="fa-solid fa-eye"></i>
+                          {/* <i className="fa-solid fa-eye"></i> */}
                         </button>
                         {!yaRespondio && (
                           <button
