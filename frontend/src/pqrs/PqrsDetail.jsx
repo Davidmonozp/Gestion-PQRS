@@ -577,6 +577,12 @@ function PqrsDetail() {
     return estadoStyles[estado] || "";
   }
 
+  const crearMarkupConSaltosDeLinea = (texto) => {
+    if (!texto) return { __html: "" };
+    // Esta es la conversión crítica: \n a <br />
+    const html = texto.replace(/\n/g, '<br />');
+    return { __html: html };
+  };
   return (
     <>
       <Navbar />
@@ -843,26 +849,55 @@ function PqrsDetail() {
                     <ul className="logs-acordeon">
                       {pqr.event_logs && pqr.event_logs.length > 0 ? (
                         pqr.event_logs.map((log) => {
-                          const logUser = usuarios.find(
-                            (user) => user.id === log.user_id
-                          );
+                          const logUser = usuarios.find((user) => user.id === log.user_id);
                           const userName = logUser
-                            ? `${logUser.name ?? ""} ${logUser.segundo_nombre ?? ""
-                              } ${logUser.primer_apellido ?? ""} ${logUser.segundo_apellido ?? ""
-                              }`.trim()
+                            ? `${logUser.name ?? ""} ${logUser.segundo_nombre ?? ""} ${logUser.primer_apellido ?? ""} ${logUser.segundo_apellido ?? ""}`.trim()
                             : "Usuario Desconocido";
 
                           return (
                             <li key={log.id}>
                               <strong>{log.description}</strong>
                               <br />
-                              <strong>Estado anterior: </strong>{" "}
-                              {log.estado_anterior} <br />
-                              <strong>Estado nuevo: </strong>
-                              {log.estado_nuevo} <br />
+
+                              {/* ✅ Mostrar asociación a PQR Maestra */}
+                              {log.codigo_pqr_maestra && (
+                                <>
+                                  <br />
+                                  <strong>Asociada a: </strong>
+                                  <span
+                                    style={{ color: "blue", cursor: "pointer" }}
+                                    onClick={() => navigate(`/pqrs/${log.codigo_pqr_maestra}`)}
+                                  >
+                                    {log.codigo_pqr_maestra}
+                                  </span>
+                                  {/* <br /> */}
+                                </>
+                              )}
+
+                              {/* ✅ Mostrar duplicadas si el evento es de la Maestra */}
+                              {log.event_type === "PQR_MAESTRA_ASOCIACION" && log.duplicadas && log.duplicadas.length > 0 && (
+                                <>
+                                  <br />
+                                  <strong>PQRS duplicadas asociadas:</strong>
+                                  <ul style={{ marginTop: "5px" }}>
+                                    {log.duplicadas.map((dup) => (
+                                      <li
+                                        key={dup}
+                                        style={{ color: "blue", cursor: "pointer" }}
+                                        onClick={() => navigate(`/pqrs/${dup}`)}
+                                      >
+                                        {dup}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </>
+                              )}
+
+                              <br />
+                              <strong>Estado anterior: </strong> {log.estado_anterior} <br />
+                              <strong>Estado nuevo: </strong> {log.estado_nuevo} <br />
                               <strong>Autor: </strong> {userName} <br />
                               <strong>Fecha: </strong> {log.fecha_evento}
-                              <hr />
                               <hr />
                             </li>
                           );
@@ -1240,9 +1275,10 @@ function PqrsDetail() {
                       <div className="respuesta-content-box">
                         <strong>Contenido:</strong>{" "}
                         <p
-                          dangerouslySetInnerHTML={{
-                            __html: respuesta.contenido,
-                          }}
+                          dangerouslySetInnerHTML={
+                            // 💡 Asegúrate de usar la función de conversión aquí
+                            crearMarkupConSaltosDeLinea(respuesta.contenido)
+                          }
                         />
 
                       </div>

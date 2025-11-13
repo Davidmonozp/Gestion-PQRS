@@ -56,7 +56,7 @@ Route::middleware(['auth:api', 'check.role:Administrador,Supervisor/Atencion al 
     Route::get('/pqrs/{id}/reembolso', [PqrController::class, 'getReembolso']);
 
 
-     // RUTAS DE DASHBOARD
+    // RUTAS DE DASHBOARD
     Route::get('/resumen-global', [DashboardController::class, 'resumenGlobal']);
     Route::get('/resumen-filtrado', [DashboardController::class, 'resumenFiltrado']);
     Route::get('/por-mes', [DashboardController::class, 'porMes']);
@@ -74,6 +74,11 @@ Route::middleware(['auth:api', 'check.role:Administrador,Supervisor/Atencion al 
     Route::get('/export-pqrs', function () {
         return Excel::download(new PqrsFullExport, 'pqrs.xlsx');
     });
+
+    // RUTA PQRS DUPLICADAS
+    Route::post('pqrs/asociar-duplicadas', [PqrController::class, 'asociarDuplicadas']);
+    Route::post('/pqrs/desasociar-duplicadas', [PqrController::class, 'desasociarDuplicadas']);
+    Route::get('pqrs/grupo-completo-por-maestra/{id}', [PqrController::class, 'getGrupoCompletoPorMaestra']);
 });
 
 // RUTAS PROTEGIDAS QUE ACTUALIZAN LA PQRS
@@ -81,7 +86,6 @@ Route::middleware(['auth:api', 'check.role:Administrador,Gestor,Gestor Administr
     Route::put('pqrs/codigo/{pqr_codigo}', [PqrController::class, 'update']);
     Route::post('/pqrs/{pqr}/agregar-clasificacion', [ClasificacionController::class, 'agregarClasificacion']);
 });
-
 
 // RUTAS DE TODOS LOS ROLES AUTENTICADOS
 Route::middleware(['jwt.auth'])->group(function () {
@@ -110,8 +114,6 @@ Route::middleware(['auth:api', 'check.active', 'check.role:Administrador'])->gro
     Route::post('/crear-clasificacion', [GestionAppController::class, 'crearClasificacion']);
     Route::post('/pqrs/asignacion-masiva', [PqrController::class, 'asignacionMasiva']);
     Route::post('/pqrs/desasignacion-masiva', [PqrController::class, 'desasignacionMasiva']);
-
-   
 });
 
 

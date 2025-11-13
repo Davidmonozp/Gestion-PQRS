@@ -1,0 +1,139 @@
+/* El botón flotante (|||) */
+.menu {
+    width: 2.7rem;
+    height: 2.7rem;
+    /* background: #00933f; */
+    /* border-radius: 50%; */
+    position: absolute;
+    /* Anclado al .pqr-card-container */
+    top: 384px;
+    /* Posición desde la parte superior del contenedor */
+    right: -3px;
+    /* Posición desde la parte derecha del contenedor */
+    font-family: sans-serif;
+    font-size: 33px;
+    color: white;
+    text-align: center;
+    /* transition: right 0.7s; */
+    /* <-- ¡ELIMINADO! */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+/* El panel que se despliega */
+.left-panel-glosario {
+    /* width: 257px; */
+    width: 767px;
+    /* Ancho más pequeño para una lista pequeña */
+    height: auto;
+    /* Altura automática basada en el contenido */
+    background: #e6e6e6;
+    position: absolute;
+    /* Anclado al .pqr-card-container */
+    top: 25rem;
+    /* A la misma altura del botón */
+    margin-right: -18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    border-radius: 0.5rem;
+    z-index: 999;
+    padding: 1rem 0;
+
+    opacity: 0;
+    visibility: hidden;
+
+}
+
+/* Cuando el checkbox está marcado, el panel se hace visible */
+.checkbox:checked~.left-panel-glosario {
+    right: 62px;
+    opacity: 1;
+    visibility: visible;
+    /* transform: scale(1); */
+    top: 381px;
+}
+
+/* El checkbox se mantiene oculto */
+.checkbox {
+    display: none;
+}
+
+/* Estilos de la lista */
+.ul-panel-glosario {
+    padding: 0;
+    margin: 0;
+}
+
+.li-panel-glosario {
+    list-style: none;
+    font-size: 12px;
+    color: #000000;
+    /* text-align: center; */
+    padding: 0.5rem 0.5rem;
+    /* margin: 0.5rem 0; */
+    width: 100%;
+}
+
+.li-panel-glosario:hover {
+    color: #333333;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+@media (min-width: 1850px) and (max-width: 1980px) {
+    .menu {
+        width: 383px;
+        height: 2.7rem;
+        position: absolute;
+        top: 348px;
+        margin-right: -173px;
+    }
+
+    .left-panel {
+        width: 353px;
+        top: 43rem;
+        margin-right: -5px;
+
+    }
+
+    .li-panel {
+        font-size: 14px;
+    }
+
+    .checkbox:checked~.left-panel-glosario {
+        top: 337px;
+    }
+}
+
+@media (min-width: 833px) and (max-width: 840px) {
+    .checkbox:checked~.left-panel-glosario {
+        top: 514px;
+        width: auto;
+    }
+
+    .menu {
+        top: 524px;
+    }
+}
+
+@media (min-width: 767px) and (max-width: 832px) {
+    .checkbox:checked~.left-panel-glosario {
+        top: 558px;
+        width: auto;
+    }
+
+    .menu {
+        top: 566px;
+    }
+}
+
+@media (min-width: 375px) and (max-width: 575px) {
+    .menu {
+        display: none;
+    }
+}

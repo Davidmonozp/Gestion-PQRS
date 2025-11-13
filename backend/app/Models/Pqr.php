@@ -57,6 +57,11 @@ class Pqr extends Model
         'deadline_interno',
         'respondido_en',
         'estado_tiempo',
+        'id_pqrs_maestra',
+
+        // Flags
+        'es_duplicada', // Asumo que este campo también existe y es un booleano
+        'es_asociada', // Se agregó al fillable y se maneja en el controlador
 
         // token para respuesta del usuario
         'usuario_token'
@@ -65,6 +70,9 @@ class Pqr extends Model
     protected $casts = [
         'archivo' => 'array',
         'accionado' => 'array',
+        // 🔑 CASTS AGREGADOS PARA CORREGIR EL PROBLEMA DEL ICONO
+        'es_duplicada' => 'boolean',
+        'es_asociada' => 'boolean',
     ];
     public function respuestas()
     {
@@ -201,5 +209,14 @@ class Pqr extends Model
         return $this->hasMany(PqrReembolso::class, 'pqr_id');
     }
 
-    
+    public function maestra()
+    {
+        return $this->belongsTo(Pqr::class, 'id_pqrs_maestra', 'id');
+    }
+
+    // Relación para obtener las PQRS duplicadas asociadas (si esta PQR es la Maestra)
+    public function duplicadas()
+    {
+        return $this->hasMany(Pqr::class, 'id_pqrs_maestra', 'id');
+    }
 }

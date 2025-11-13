@@ -18,7 +18,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Validator;
+use App\Mail\PqrDuplicadaCerrada;
+use App\Models\EventLog;
 
 class PqrController extends Controller
 {
@@ -495,9 +497,6 @@ class PqrController extends Controller
     // }
 
 
-
-
-
     public function index(Request $request)
     {
         try {
@@ -629,8 +628,17 @@ class PqrController extends Controller
                 }
             }
 
-            $perPage = $request->input('per_page', 20); // usa 20 como valor por defecto
+            $documentosDuplicados = (clone $query)
+                ->whereNotNull('documento_numero') // Asegura que solo se consideren documentos válidos
+                ->where('documento_numero', '!=', '') // Opcional: para evitar cadenas vacías
+                ->select('documento_numero')
+                ->groupBy('documento_numero')
+                ->havingRaw('COUNT(documento_numero) > 1') // Contar solo los que tienen más de 1 registro
+                ->pluck('documento_numero') // Obtener solo los números de documento
+                ->toArray();
 
+
+            $perPage = $request->input('per_page', 20); // usa 20 como valor por defecto
             // Si el usuario selecciona "todas", puedes permitir algo como -1 o un número alto
             if ($perPage == -1) {
                 $perPage = 100000; // o cualquier número suficientemente grande
@@ -647,6 +655,14 @@ class PqrController extends Controller
 
                 ->paginate($perPage);
 
+
+            $pqrsConBanderin = $pqrs->getCollection()->map(function ($pqr) use ($documentosDuplicados) {
+                $pqr->es_duplicada = in_array($pqr->documento_numero, $documentosDuplicados);
+                return $pqr;
+            });
+
+            $pqrs->setCollection($pqrsConBanderin);
+
             return response()->json([
                 'pqrs' => $pqrs->items(),
                 'current_page' => $pqrs->currentPage(),
@@ -662,8 +678,6 @@ class PqrController extends Controller
     }
 
 
-
-
     // public function index(Request $request)
     // {
     //     try {
@@ -671,95 +685,147 @@ class PqrController extends Controller
 
     //         $query = Pqr::query();
 
-    //         // Si quieres aplicar el filtro por usuario Digitador, descomenta y ajusta
-    //         // if ($user->hasRole('Digitador')) {
-    //         //     $query->where(function ($digitadorFilter) use ($user) {
-    //         //         $digitadorFilter
-    //         //             ->where(function ($matchAsSolicitante) use ($user) {
-    //         //                 $matchAsSolicitante
-    //         //                     ->where('documento_tipo', $user->documento_tipo)
-    //         //                     ->where('documento_numero', $user->documento_numero);
-    //         //             })
-    //         //             ->orWhere(function ($matchAsRegistrador) use ($user) {
-    //         //                 $matchAsRegistrador
-    //         //                     ->where('registrador_documento_tipo', $user->documento_tipo)
-    //         //                     ->where('registrador_documento_numero', $user->documento_numero);
-    //         //             });
-    //         //     });
-    //         // }
+    //         // Si el usuario es Digitador, solo puede ver PQRs con tipo_solicitud = 'Solicitud'
+    //         if ($user->hasRole('Digitador')) {
+    //             $query->where('tipo_solicitud', 'Solicitud');
+    //         }
+    //         if ($user->hasRole('Gestor')) {
+    //             // Obtener las sedes asociadas al gestor
+    //             $sedesGestor = $user->sedes->pluck('name')->toArray();
 
-    //         // Filtros con OR
-    //         if (
-    //             $request->filled('pqr_codigo') ||
-    //             $request->filled('documento_numero') ||
-    //             $request->filled('servicio_prestado') ||
-    //             $request->filled('tipo_solicitud') ||
-    //             $request->filled('sede') ||
-    //             $request->filled('eps') ||
-    //             $request->filled('fecha_inicio') ||
-    //             $request->filled('fecha_fin')
-    //         ) {
-    //             $query->where(function ($q) use ($request) {
-    //                 if ($request->filled('pqr_codigo')) {
-    //                     $q->orWhere('pqr_codigo', 'like', '%' . $request->pqr_codigo . '%');
+    //             // Filtrar solo las PQRs cuya sede esté en las del gestor
+    //             $query->whereIn('sede', $sedesGestor);
+    //         }
+
+    //         if ($user->hasRole('Gestor Administrativo')) {
+    //             $clasificacionesPermitidas = [
+    //                 'Orden y aseo',
+    //                 'Infraestructura',
+    //                 'Solicitudes de Tesoreria'
+    //             ];
+
+    //             $query->whereHas('clasificaciones', function ($q) use ($clasificacionesPermitidas) {
+    //                 $q->whereIn('nombre', $clasificacionesPermitidas);
+    //             });
+    //         }
+
+    //         // Filtros con AND (no OR)
+    //         if ($request->filled('pqr_codigo')) {
+    //             $query->where('pqr_codigo', 'like', '%' . $request->pqr_codigo . '%');
+    //         }
+
+    //         if ($request->filled('documento_numero')) {
+    //             $query->where('documento_numero', 'like', '%' . $request->documento_numero . '%');
+    //         }
+
+    //         if ($request->has('servicio_prestado')) {
+    //             $servicios = $request->input('servicio_prestado');
+    //             if (is_array($servicios)) {
+    //                 $query->whereIn('servicio_prestado', $servicios);
+    //             } else {
+    //                 $query->where('servicio_prestado', 'like', '%' . $servicios . '%');
+    //             }
+    //         }
+
+    //         if ($request->has('tipo_solicitud')) {
+    //             $tipos = $request->input('tipo_solicitud');
+    //             if (is_array($tipos)) {
+    //                 $query->whereIn('tipo_solicitud', $tipos);
+    //             } else {
+    //                 $query->where('tipo_solicitud', 'like', '%' . $tipos . '%');
+    //             }
+    //         }
+
+    //         if ($request->filled('sede')) {
+    //             $query->whereIn('sede', (array) $request->sede);
+    //         }
+
+    //         if ($request->has('eps')) {
+    //             $epsOptions = $request->input('eps');
+    //             if (is_array($epsOptions)) {
+    //                 $query->whereIn('eps', $epsOptions);
+    //             } else {
+    //                 $query->where('eps', 'like', '%' . $epsOptions . '%');
+    //             }
+    //         }
+
+    //         if ($request->filled('fecha_inicio') || $request->filled('fecha_fin')) {
+    //             $query->where(function ($qDate) use ($request) {
+    //                 if ($request->filled('fecha_inicio')) {
+    //                     $qDate->whereDate('created_at', '>=', $request->fecha_inicio);
     //                 }
-
-    //                 if ($request->filled('documento_numero')) {
-    //                     $q->orWhere('documento_numero', 'like', '%' . $request->documento_numero . '%');
-    //                 }
-
-    //                 if ($request->has('servicio_prestado')) {
-    //                     $servicios = $request->input('servicio_prestado');
-    //                     if (is_array($servicios)) {
-    //                         $q->orWhereIn('servicio_prestado', $servicios);
-    //                     } else {
-    //                         $q->orWhere('servicio_prestado', 'like', '%' . $servicios . '%');
-    //                     }
-    //                 }
-
-    //                 if ($request->has('tipo_solicitud')) {
-    //                     $tipos = $request->input('tipo_solicitud');
-    //                     if (is_array($tipos)) {
-    //                         $q->orWhereIn('tipo_solicitud', $tipos);
-    //                     } else {
-    //                         $q->orWhere('tipo_solicitud', 'like', '%' . $tipos . '%');
-    //                     }
-    //                 }
-
-    //                 if ($request->filled('sede')) {
-    //                     $q->orWhereIn('sede', (array) $request->sede);
-    //                 }
-
-    //                 if ($request->has('eps')) {
-    //                     $epsOptions = $request->input('eps');
-    //                     if (is_array($epsOptions)) {
-    //                         $q->orWhereIn('eps', $epsOptions);
-    //                     } else {
-    //                         $q->orWhere('eps', 'like', '%' . $epsOptions . '%');
-    //                     }
-    //                 }
-
-    //                 if ($request->filled('fecha_inicio') || $request->filled('fecha_fin')) {
-    //                     $q->orWhere(function ($qDate) use ($request) {
-    //                         if ($request->filled('fecha_inicio')) {
-    //                             $qDate->whereDate('created_at', '>=', $request->fecha_inicio);
-    //                         }
-    //                         if ($request->filled('fecha_fin')) {
-    //                             $qDate->whereDate('created_at', '<=', $request->fecha_fin);
-    //                         }
-    //                     });
+    //                 if ($request->filled('fecha_fin')) {
+    //                     $qDate->whereDate('created_at', '<=', $request->fecha_fin);
     //                 }
     //             });
     //         }
 
-    //         // Ordenar por fecha más reciente
-    //         $pqrs = $query->orderBy('created_at', 'desc')
-    //             ->with([
-    //                 'asignados:id,name',
-    //                 'respuestas:id,pqrs_id,user_id,es_respuesta_usuario' // carga sólo los campos necesarios
-    //             ])
-    //             ->paginate(15);
+    //         if ($request->has('respuesta_enviada')) {
+    //             $respuestas = $request->input('respuesta_enviada');
+    //             if (is_array($respuestas)) {
+    //                 $query->whereIn('respuesta_enviada', $respuestas);
+    //             } else {
+    //                 $query->where('respuesta_enviada', $respuestas);
+    //             }
+    //         }
 
+    //         if ($request->has('clasificaciones') && is_array($request->clasificaciones) && count($request->clasificaciones) > 0) {
+    //             $ids = array_map('intval', $request->clasificaciones);
+    //             $query->whereHas('clasificaciones', function ($q) use ($ids) {
+    //                 $q->whereIn('clasificaciones.id', $ids);
+    //             });
+    //         }
+    //         if ($request->has('atributo_calidad')) {
+    //             $atributos = $request->input('atributo_calidad');
+
+    //             if (is_array($atributos)) {
+    //                 $query->whereIn('atributo_calidad', $atributos);
+    //             } else {
+    //                 $query->where('atributo_calidad', 'like', '%' . $atributos . '%');
+    //             }
+    //         }
+
+    //         if ($request->has('asignados') && is_array($request->asignados) && count($request->asignados) > 0) {
+    //             $ids = array_map('intval', $request->asignados);
+
+    //             $query->whereHas('asignados', function ($q) use ($ids) {
+    //                 $q->whereIn('users.id', $ids);
+    //             });
+    //         }
+
+
+    //         // 🔹 Antes de paginar, obtenemos todas las PQRs que se van a mostrar y actualizamos estado_tiempo
+    //         $pqrsSinRespuesta = (clone $query)
+    //             ->where('respuesta_enviada', 0)
+    //             ->get();
+
+    //         $tiempoService = new PqrTiempoService();
+
+    //         foreach ($pqrsSinRespuesta as $pqr) {
+    //             $nuevoEstado = $tiempoService->calcularEstadoTiempo($pqr)['estado'];
+    //             if ($pqr->estado_tiempo !== $nuevoEstado) {
+    //                 $pqr->estado_tiempo = $nuevoEstado;
+    //                 $pqr->save();
+    //             }
+    //         }
+
+    //         $perPage = $request->input('per_page', 20); // usa 20 como valor por defecto
+
+    //         // Si el usuario selecciona "todas", puedes permitir algo como -1 o un número alto
+    //         if ($perPage == -1) {
+    //             $perPage = 100000; // o cualquier número suficientemente grande
+    //         }
+
+    //         // Ordenar por fecha más reciente
+    //         $pqrs = $query->orderBy('respuesta_enviada', 'asc')
+    //             ->orderBy('created_at', 'desc')
+    //             ->with([
+    //                 'asignados:id,name,segundo_nombre,primer_apellido,segundo_apellido',
+    //                 'respuestas:id,pqrs_id,user_id,es_respuesta_usuario',
+    //                 'clasificaciones:id,nombre',
+    //             ])
+
+    //             ->paginate($perPage);
 
     //         return response()->json([
     //             'pqrs' => $pqrs->items(),
@@ -774,6 +840,11 @@ class PqrController extends Controller
     //         ], 500);
     //     }
     // }
+
+
+
+
+
     public function show($pqr_codigo)
     {
         try {
@@ -783,7 +854,9 @@ class PqrController extends Controller
                     'respuestas.autor',
                     'clasificaciones',
                     'eventLogs',
-                    'reembolsos.usuario'
+                    'reembolsos.usuario',
+                    'duplicadas',
+                    'maestra'
                 ])
                 ->firstOrFail();
 
@@ -1564,5 +1637,358 @@ class PqrController extends Controller
             'aprobado_por' => $nombreCompleto,
             'usuario' => $usuario, // datos completos opcionales
         ]);
+    }
+
+
+    // public function asociarDuplicadas(Request $request)
+    // {
+    //     // Iniciar transacción para asegurar que, si algo falla, no se modifique nada.
+    //     DB::beginTransaction();
+
+    //     $idMaestra = $request->id_maestra;
+    //     $idsDuplicadas = array_unique($request->ids_duplicadas);
+
+    //     // Usamos Carbon::now() para registrar el momento exacto en que se cierra la duplicada
+    //     $fechaCierre = Carbon::now(); 
+
+    //     // 🌟 LÓGICA: Determinar la PQR Maestra
+    //     $pqrMaestra = Pqr::find($idMaestra);
+
+    //     if (!$pqrMaestra) {
+    //         DB::rollBack();
+    //         return response()->json([
+    //             'error' => 'La PQR Maestra especificada no existe.'
+    //         ], 404);
+    //     }
+
+    //     // 🌟 CALCULAR LA VENTANA DE 3 DÍAS (Lógica de validación de tiempo) 🌟
+    //     $fechaMaestra = Carbon::parse($pqrMaestra->created_at);
+    //     $fechaLimiteInferior = $fechaMaestra->copy()->subDays(3)->startOfDay(); 
+    //     $fechaLimiteSuperior = $fechaMaestra->copy()->addDays(3)->endOfDay();
+
+    //     // Obtener SOLO los IDs duplicados que caen en este rango
+    //     $pqrsValidasParaAsociar = Pqr::whereIn('id', $idsDuplicadas)
+    //                                  ->where('created_at', '>=', $fechaLimiteInferior)
+    //                                  ->where('created_at', '<=', $fechaLimiteSuperior)
+    //                                  ->get(); // Usamos ->get() para obtener la colección
+
+    //     $countTotalSeleccionadas = count($idsDuplicadas);
+    //     $countValidosAsociados = $pqrsValidasParaAsociar->count();
+
+    //     if ($countTotalSeleccionadas > 0 && $countValidosAsociados === 0) {
+    //         DB::rollBack();
+    //         return response()->json([
+    //             'error' => 'Ninguna de las PQRS duplicadas seleccionadas está dentro del período de 3 días (antes o después) de la PQR Maestra.'
+    //         ], 422);
+    //     }
+
+    //     // 💡 Iniciar el servicio para calcular el tiempo
+    //     $tiempoService = app(PqrTiempoService::class);
+
+    //     try {
+    //         // 1. ITERAR Y MARCAR LAS DUPLICADAS INDIVIDUALMENTE
+    //         // ------------------------------------------------------------------
+    //         foreach ($pqrsValidasParaAsociar as $pqr) {
+    //             $pqr->id_pqrs_maestra = $idMaestra;
+    //             $pqr->es_asociada = true; // 🔑 Se garantiza que esta bandera se establece
+    //             $pqr->estado_respuesta = 'Cerrado';
+    //             $pqr->respuesta_enviada = true;
+    //             $pqr->respondido_en = $fechaCierre;
+    //             $pqr->deadline_interno = $fechaCierre; // Detiene el tiempo
+    //             $pqr->deadline_ciudadano = $fechaCierre; // Detiene el tiempo
+
+    //             // 💡 APLICAR EL SERVICIO DE TIEMPO
+    //             $estadoTiempo = $tiempoService->calcularEstadoTiempo($pqr);
+    //             $pqr->estado_tiempo = $estadoTiempo['estado']; 
+
+    //             $pqr->save(); // Guardar individualmente (necesario para el servicio)
+    //         }
+
+
+    //         // 2. MARCAR LA MAESTRA: Solo 'es_asociada' (mantiene su estado_respuesta ACTIVO)
+    //         // ------------------------------------------------------------------
+    //         Pqr::where('id', $idMaestra)
+    //             ->update([
+    //                 'es_asociada' => true, // La Maestra se marca como "tiene asociadas"
+    //                 // Mantiene su estado_respuesta, respondido_en, etc.
+    //             ]);
+
+    //         DB::commit();
+
+    //         // 3. Generar el mensaje de respuesta detallado
+    //         $pqrMaestraCodigo = $pqrMaestra->pqr_codigo ?? $idMaestra; 
+    //         $mensaje = "Se han asociado **{$countValidosAsociados}** PQRS a la PQR Maestra #{$pqrMaestraCodigo} y se han marcado como 'Cerrado' (Deadlines detenidos).";
+
+    //         if ($countValidosAsociados < $countTotalSeleccionadas) {
+    //             $excluidas = $countTotalSeleccionadas - $countValidosAsociados;
+    //             $mensaje .= " Se excluyeron {$excluidas} PQRS seleccionadas por no estar en la ventana de 6 días.";
+    //         }
+
+    //         return response()->json([
+    //             'message' => $mensaje,
+    //             'asociadas' => $countValidosAsociados,
+    //             'excluidas' => $countTotalSeleccionadas - $countValidosAsociados,
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+    //         return response()->json([
+    //             'error' => 'Error al asociar las PQRS: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+    public function asociarDuplicadas(Request $request)
+    {
+        // Iniciar transacción para asegurar que, si algo falla, no se modifique nada.
+        DB::beginTransaction();
+
+        $idMaestra = $request->id_maestra;
+        $idsDuplicadas = array_unique($request->ids_duplicadas);
+
+        // Usamos Carbon::now() para registrar el momento exacto en que se cierra la duplicada
+        $fechaCierre = Carbon::now();
+
+        // 🌟 LÓGICA: Determinar la PQR Maestra
+        $pqrMaestra = Pqr::find($idMaestra);
+
+        if (!$pqrMaestra) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'La PQR Maestra especificada no existe.'
+            ], 404);
+        }
+
+        // 🌟 CALCULAR LA VENTANA DE 3 DÍAS (Lógica de validación de tiempo) 🌟
+        $fechaMaestra = Carbon::parse($pqrMaestra->created_at);
+        $fechaLimiteInferior = $fechaMaestra->copy()->subDays(3)->startOfDay();
+        $fechaLimiteSuperior = $fechaMaestra->copy()->addDays(3)->endOfDay();
+
+        // Obtener SOLO los IDs duplicados que caen en este rango
+        $pqrsValidasParaAsociar = Pqr::whereIn('id', $idsDuplicadas)
+            ->where('created_at', '>=', $fechaLimiteInferior)
+            ->where('created_at', '<=', $fechaLimiteSuperior)
+            ->get(); // Usamos ->get() para obtener la colección
+
+        $countTotalSeleccionadas = count($idsDuplicadas);
+        $countValidosAsociados = $pqrsValidasParaAsociar->count();
+
+        if ($countTotalSeleccionadas > 0 && $countValidosAsociados === 0) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Ninguna de las PQRS duplicadas seleccionadas está dentro del período de 3 días (antes o después) de la PQR Maestra.'
+            ], 422);
+        }
+
+        // 💡 Iniciar el servicio para calcular el tiempo
+        $tiempoService = app(PqrTiempoService::class);
+
+        try {
+            // 1. ITERAR Y MARCAR LAS DUPLICADAS INDIVIDUALMENTE
+            // ------------------------------------------------------------------
+            foreach ($pqrsValidasParaAsociar as $pqr) {
+                // -- Actualización de campos de cierre y asociación --
+                $pqr->id_pqrs_maestra = $idMaestra;
+                $pqr->es_asociada = true;
+                $pqr->estado_respuesta = 'Cerrado por duplicidad';
+                $pqr->respuesta_enviada = true;
+                $pqr->respondido_en = $fechaCierre;
+                $pqr->deadline_interno = $fechaCierre; // Detiene el tiempo
+                $pqr->deadline_ciudadano = $fechaCierre; // Detiene el tiempo
+
+                // 💡 APLICAR EL SERVICIO DE TIEMPO
+                $estadoTiempo = $tiempoService->calcularEstadoTiempo($pqr);
+                $pqr->estado_tiempo = $estadoTiempo['estado'];
+
+                $pqr->save(); // Guardar individualmente (necesario para el servicio)
+                \App\Models\EventLog::create([
+                    'event_type' => 'PQR_ASOCIADA',
+                    'description' => 'La PQR fue marcada como duplicada y asociada a una PQR Maestra.',
+                    'pqr_id' => $pqr->id,
+                    'pqr_codigo' => $pqr->pqr_codigo,
+                    'id_pqr_maestra'    => $pqrMaestra->id,
+                    'codigo_pqr_maestra' => $pqrMaestra->pqr_codigo,
+                    'estado_anterior' => $pqr->estado_respuesta,
+                    'estado_nuevo' => $pqr->estado_respuesta,
+                    'fecha_evento' => now(),
+                    'user_id' => $request->user()->id,
+                ]);
+
+                // ------------------------------------------------------------------
+                // 📧 LÓGICA DE ENVÍO DE CORREO POR ASOCIACIÓN (Cierre de Duplicada)
+                // ------------------------------------------------------------------
+
+                if ($pqr->tipo_solicitud !== 'Tutela') {
+                    // Creamos la plantilla dentro del bucle para que contenga los datos correctos de $pqr
+                    $mailable = new PqrDuplicadaCerrada($pqr, $pqrMaestra);
+
+                    if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control') {
+                        // Si es Asegurador/Ente de control, solo se envía al registrador
+                        if (!empty($pqr->registrador_correo)) {
+                            Mail::to($pqr->registrador_correo)->send($mailable);
+                        }
+                    } else {
+                        // Si la condición es falsa, el correo se envía tanto al paciente...
+                        Mail::to($pqr->correo)->send($mailable);
+
+                        // ... como al registrador (si existe)
+                        if (!empty($pqr->registrador_correo)) {
+                            Mail::to($pqr->registrador_correo)->send($mailable);
+                        }
+                    }
+                }
+                // ------------------------------------------------------------------
+            }
+
+
+            // 2. MARCAR LA MAESTRA: Solo 'es_asociada' (mantiene su estado_respuesta ACTIVO)
+            // ------------------------------------------------------------------
+            Pqr::where('id', $idMaestra)
+                ->update([
+                    'es_asociada' => true, // La Maestra se marca como "tiene asociadas"
+                    // Mantiene su estado_respuesta, respondido_en, etc.
+                ]);
+            $codigosDuplicadas = $pqrsValidasParaAsociar->pluck('pqr_codigo')->toArray();
+
+            EventLog::create([
+                'event_type' => 'PQR_MAESTRA_ASOCIACION',
+                'description' => 'La PQR fue marcada como Maestra y se le asociaron duplicadas.',
+                'pqr_id' => $pqrMaestra->id,
+                'pqr_codigo' => $pqrMaestra->pqr_codigo,
+                'id_pqr_maestra'    => $pqrMaestra->id,
+                'codigo_pqr_maestra' => $pqrMaestra->pqr_codigo,
+                'duplicadas' => $codigosDuplicadas,
+                'estado_anterior' => $pqrMaestra->estado_respuesta,
+                'estado_nuevo' => $pqrMaestra->estado_respuesta, // se mantiene igual
+                'fecha_evento' => now(),
+                'user_id' => $request->user()->id,
+            ]);
+
+            DB::commit();
+
+            // 3. Generar el mensaje de respuesta detallado
+            $pqrMaestraCodigo = $pqrMaestra->pqr_codigo ?? $idMaestra;
+            $mensaje = "Se han asociado **{$countValidosAsociados}** PQRS a la PQR Maestra #{$pqrMaestraCodigo} y se han marcado como 'Cerrado' (Deadlines detenidos).";
+
+            if ($countValidosAsociados < $countTotalSeleccionadas) {
+                $excluidas = $countTotalSeleccionadas - $countValidosAsociados;
+                $mensaje .= " Se excluyeron {$excluidas} PQRS seleccionadas por no estar en la ventana de 6 días.";
+            }
+
+            return response()->json([
+                'message' => $mensaje,
+                'asociadas' => $countValidosAsociados,
+                'excluidas' => $countTotalSeleccionadas - $countValidosAsociados,
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Error al asociar las PQRS: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    public function desasociarDuplicadas(Request $request)
+    {
+        // 1. Validar manualmente los datos entrantes
+        $validator = Validator::make($request->all(), [
+            'ids_desasociar' => 'required|array',
+            'ids_desasociar.*' => 'integer|exists:pqrs,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Los datos proporcionados no son válidos.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $ids = $request->input('ids_desasociar');
+
+        // 🌟 PRIMER PASO CRUCIAL: Identificar la PQR Maestra antes de la desasociación
+        // Tomamos el ID de la Maestra de la primera PQR que vamos a desasociar
+        $pqrDesasociar = Pqr::find($ids[0]);
+        $idMaestra = $pqrDesasociar ? $pqrDesasociar->id_pqrs_maestra : null;
+
+        if (!$idMaestra) {
+            // Manejo de error si intentan desasociar una PQR no asociada
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // 2. Ejecutar la actualización masiva para desvincular las PQRS duplicadas
+            $count = Pqr::whereIn('id', $ids)
+                ->update([
+                    'id_pqrs_maestra' => null, // Limpia la referencia
+                    'es_asociada' => false, // Vuelve a ser individual
+                    'estado_respuesta' => 'En proceso', // Devuelve el estado inicial (string)
+                    'respuesta_enviada' => false,      // Establece a 0 (No enviada)
+                ]);
+
+            // 3. LÓGICA DE LA PQR MAESTRA (Solo si encontramos una Maestra)
+            if ($idMaestra) {
+                // Verificar si la Maestra tiene AÚN otras PQRS asociadas después de la desvinculación
+                // La maestra tiene 'es_asociada' = true si al menos una duplicada tiene 'id_pqrs_maestra' = idMaestra
+                $pqrsAsociadasRestantes = Pqr::where('id_pqrs_maestra', $idMaestra)
+                    // Excluir la maestra de la cuenta si se auto-referencia
+                    ->where('id', '!=', $idMaestra)
+                    ->count();
+
+                // Si no quedan PQRS asociadas, marcamos a la Maestra como individual
+                if ($pqrsAsociadasRestantes === 0) {
+                    Pqr::where('id', $idMaestra)
+                        ->update([
+                            'es_asociada' => false, // La Maestra vuelve a ser individual
+                        ]);
+                }
+            }
+
+            DB::commit();
+
+            // 4. Devolver una respuesta exitosa
+            $message = 'PQRS desasociadas exitosamente. ' . $count . ' registros actualizados.';
+
+            if ($idMaestra && $pqrsAsociadasRestantes === 0) {
+                $message .= " La PQR Maestra #{$idMaestra} fue marcada como individual.";
+            }
+
+            return response()->json([
+                'message' => $message,
+                'count' => $count
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // Manejo de errores de base de datos
+            return response()->json([
+                'message' => 'Error al ejecutar la desasociación en la base de datos.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getGrupoCompletoPorMaestra($id)
+    {
+        // 1. Encontrar la PQR Maestra por su ID
+        $pqrMaestra = Pqr::find($id);
+
+        if (!$pqrMaestra) {
+            // Manejo de error si la PQR no existe
+            return response()->json(['message' => 'PQR Maestra no encontrada'], 404);
+        }
+
+        // 2. Obtener todas las PQRS asociadas a esa Maestra
+        $pqrsAsociadas = Pqr::where('id_pqrs_maestra', $id)
+            ->get();
+
+        // 3. Crear el grupo de PQRS (Maestra + Asociadas)
+        // Usamos merge para combinar colecciones y asegurarnos de que la Maestra también esté en el grupo.
+        $grupoCompleto = collect([$pqrMaestra])->merge($pqrsAsociadas);
+
+        // 4. Devolver la respuesta en el formato esperado por el frontend
+        return response()->json([
+            'message' => 'Grupo de PQRS cargado exitosamente.',
+            'grupo' => $grupoCompleto->values()->unique('id'), // Retorna un array limpio y único
+            'maestra' => $pqrMaestra, // También podrías devolver la maestra por separado si es útil
+        ], 200);
     }
 }

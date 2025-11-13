@@ -442,31 +442,96 @@ class DashboardController extends Controller
     }
 
 
+  
     // public function promedioTiempoRespuesta()
     // {
     //     $promedio = DB::table('pqrs')
     //         ->whereNotNull('respondido_en')
-    //         ->select(DB::raw("AVG(TIMESTAMPDIFF(HOUR, created_at, respondido_en)) as promedio_horas"))
-    //         ->value('promedio_horas');
+    //         ->select(DB::raw("AVG(TIMESTAMPDIFF(SECOND, created_at, respondido_en)) as promedio_segundos"))
+    //         ->value('promedio_segundos');
+
+    //     // Convertir segundos a horas y minutos
+    //     $horas = floor($promedio / 3600);
+    //     $minutos = floor(($promedio % 3600) / 60);
 
     //     return response()->json([
-    //         'promedio_horas' => round($promedio, 2) // redondeado a 2 decimales
+    //         'promedio_horas_decimal' => round($promedio / 3600, 2), // en horas con decimales
+    //         'formato' => "{$horas} horas {$minutos} minutos"       // en formato legible
     //     ]);
     // }
-    public function promedioTiempoRespuesta()
-    {
-        $promedio = DB::table('pqrs')
-            ->whereNotNull('respondido_en')
-            ->select(DB::raw("AVG(TIMESTAMPDIFF(SECOND, created_at, respondido_en)) as promedio_segundos"))
-            ->value('promedio_segundos');
 
-        // Convertir segundos a horas y minutos
+    public function promedioTiempoRespuesta(Request $request)
+    {
+        // 📅 Obtener todos los filtros del request
+        $anio = $request->input('anio', date('Y'));
+        $mes = $request->input('mes');
+        $dia = $request->input('dia');
+        $sede = $request->input('sede');
+        $atributo = $request->input('atributo_calidad');
+        $estadoTiempo = $request->input('estado_tiempo');
+        $tipoSolicitud = $request->input('tipo_solicitud');
+        $eps = $request->input('eps');
+        $servicioPrestado = $request->input('servicio_prestado');
+        $clasificacion = $request->input('clasificacion');
+
+        // 📊 Consulta base
+        $query = DB::table('pqrs as p')
+            ->whereNotNull('p.respondido_en')
+            ->whereYear('p.created_at', $anio)
+            ->select(DB::raw("AVG(TIMESTAMPDIFF(SECOND, p.created_at, p.respondido_en)) as promedio_segundos"));
+
+        // Si se usa el filtro 'clasificacion', necesitamos un JOIN
+        if ($clasificacion) {
+            $query->join('clasificacion_pqr as cp', 'p.id', '=', 'cp.pqr_id')
+                ->join('clasificaciones as c', 'c.id', '=', 'cp.clasificacion_id')
+                ->whereIn('c.nombre', (array) $clasificacion);
+        }
+
+        // 📆 Filtro por mes
+        if ($mes) {
+            if (is_array($mes)) $query->whereIn(DB::raw('MONTH(p.created_at)'), $mes);
+            else $query->whereMonth('p.created_at', $mes);
+        }
+
+        // 📅 Filtro por día
+        if ($dia) $query->whereDay('p.created_at', $dia);
+
+        // 🏢 Filtro por sede
+        if ($sede) $query->whereIn('p.sede', (array) $sede);
+
+        // 🌟 Filtro por atributo de calidad
+        if ($atributo) $query->whereIn('p.atributo_calidad', (array) $atributo);
+
+        // ⏱️ Filtro por estado de tiempo
+        if ($estadoTiempo) $query->whereIn('p.estado_tiempo', (array) $estadoTiempo);
+
+        // 🏥 Filtro por EPS
+        if ($eps) $query->whereIn('p.eps', (array) $eps);
+
+        // 📝 Filtro por tipo de solicitud
+        if ($tipoSolicitud) $query->whereIn('p.tipo_solicitud', (array) $tipoSolicitud);
+
+        // 💬 Filtro por servicio prestado
+        if ($servicioPrestado) $query->whereIn('p.servicio_prestado', (array) $servicioPrestado);
+        
+        // Ejecutar la consulta para obtener el promedio en segundos
+        $promedio = $query->value('promedio_segundos');
+
+        // Si no hay resultados, retornar 0
+        if (is_null($promedio)) {
+            return response()->json([
+                'promedio_horas_decimal' => 0,
+                'formato' => "0 horas 0 minutos"
+            ]);
+        }
+
+        // Convertir segundos a horas y minutos para el formato legible
         $horas = floor($promedio / 3600);
         $minutos = floor(($promedio % 3600) / 60);
 
         return response()->json([
             'promedio_horas_decimal' => round($promedio / 3600, 2), // en horas con decimales
-            'formato' => "{$horas} horas {$minutos} minutos"       // en formato legible
+            'formato' => "{$horas} horas {$minutos} minutos"      // en formato legible
         ]);
     }
 
@@ -750,7 +815,7 @@ class DashboardController extends Controller
                 DB::raw('JSON_ARRAYAGG(JSON_OBJECT("tipo_solicitud", tipo_solicitud, "cantidad", cantidad)) as tipos')
             )
             ->groupBy('documento_numero', 'nombre', 'apellido')
-            ->havingRaw('SUM(cantidad) >= 1') // solo usuarios con 2 o más PQRs
+            ->havingRaw('SUM(cantidad) >= 3') 
             ->get();
 
         // Decodificar JSON de MySQL para que llegue como array en la API

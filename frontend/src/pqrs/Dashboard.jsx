@@ -40,19 +40,109 @@ export default function DashboardPqrs() {
     const [serviciosSeleccionados, setServiciosSeleccionados] = useState([]);
     const [clasificacionPorTipo, setClasificacionPorTipo] = useState([]);
 
-    const totalPacientes = 5343;
-    const pacientesSeptiembre = [
-        { tipo: "Felicitaciones", cantidad: 4 },
-        { tipo: "Peticiones", cantidad: 95 },
-        { tipo: "Quejas", cantidad: 52 },
-        { tipo: "Reclamos", cantidad: 30 },
-        { tipo: "Tutelas", cantidad: 2 },
-        { tipo: "Solicitudes", cantidad: 152 },
+
+    // ---- LOGICA: PARA GRAFICA DE TOATL DE PACIENTES ATENDIDOS POR MES ----
+    const dataPorMes = {
+        septiembre: {
+            total: 5343,
+            data: [
+                { tipo: "Felicitaciones", cantidad: 5 },
+                { tipo: "Peticiones", cantidad: 95 },
+                { tipo: "Quejas", cantidad: 52 },
+                { tipo: "Reclamos", cantidad: 30 },
+                { tipo: "Tutelas", cantidad: 2 },
+                { tipo: "Solicitudes", cantidad: 152 },
+            ],
+        },
+        octubre: {
+            total: 5257,
+            data: [
+                { tipo: "Felicitaciones", cantidad: 2 },
+                { tipo: "Peticiones", cantidad: 150 },
+                { tipo: "Quejas", cantidad: 66 },
+                { tipo: "Reclamos", cantidad: 33 },
+                { tipo: "Tutelas", cantidad: 0 },
+                { tipo: "Solicitudes", cantidad: 203 },
+            ],
+        },
+    };
+
+    // ---- OPCIONES DEL SELECT (renombrado para evitar colisión) ----
+    const mesesOptions = [
+        { value: 1, label: "Enero" },
+        { value: 2, label: "Febrero" },
+        { value: 3, label: "Marzo" },
+        { value: 4, label: "Abril" },
+        { value: 5, label: "Mayo" },
+        { value: 6, label: "Junio" },
+        { value: 7, label: "Julio" },
+        { value: 8, label: "Agosto" },
+        { value: 9, label: "Septiembre" },
+        { value: 10, label: "Octubre" },
+        { value: 11, label: "Noviembre" },
+        { value: 12, label: "Diciembre" },
     ];
-    const pqrsConPorcentaje = pacientesSeptiembre.map((item) => ({
+
+    // mapeo número de mes -> clave en dataPorMes (usa minúsculas como tus keys)
+    const monthKeyByNumber = {
+        1: "enero",
+        2: "febrero",
+        3: "marzo",
+        4: "abril",
+        5: "mayo",
+        6: "junio",
+        7: "julio",
+        8: "agosto",
+        9: "septiembre",
+        10: "octubre",
+        11: "noviembre",
+        12: "diciembre",
+    };
+
+
+   const selectedMonthNumbers = mesesSeleccionados.length > 0
+    ? mesesSeleccionados.map(m => (typeof m === "object" ? m.value : m))
+    : Object.keys(dataPorMes).map(key =>
+        Object.entries(monthKeyByNumber).find(([_, val]) => val === key)?.[0]
+    );
+
+    // Si quieres comportamiento por defecto (ej. mostrar Septiembre si no hay selección), descomenta:
+    // const selectedMonthNumbers = selectedMonthNumbers.length ? selectedMonthNumbers : [9];
+
+    // Convertir números -> claves como 'septiembre','octubre' (sólo las que existan en dataPorMes)
+    const selectedMonthKeys = selectedMonthNumbers
+        .map(n => monthKeyByNumber[n])
+        .filter(k => k && dataPorMes[k]); // filtra claves inexistentes en dataPorMes
+
+    // ---- SUMAR LOS DATOS ENTRE MESES SELECCIONADOS ----
+    const tiposBase = ["Felicitaciones", "Peticiones", "Quejas", "Reclamos", "Tutelas", "Solicitudes"];
+
+    // total pacientes sumado (solo meses que existen en dataPorMes)
+    const totalPacientes = selectedMonthKeys.reduce((acc, k) => acc + (dataPorMes[k]?.total || 0), 0);
+
+    // sumar cantidades por tipo
+    const dataSumada = tiposBase.map(tipo => {
+        const cantidad = selectedMonthKeys.reduce((acc, k) => {
+            const item = (dataPorMes[k]?.data || []).find(d => d.tipo === tipo);
+            return acc + (item ? item.cantidad : 0);
+        }, 0);
+        return { tipo, cantidad };
+    });
+
+    // agregar porcentaje (protegemos división por cero)
+    const pqrsConPorcentaje = dataSumada.map(item => ({
         ...item,
-        porcentaje: ((item.cantidad / totalPacientes) * 100).toFixed(2),
+        porcentaje: totalPacientes > 0 ? ((item.cantidad / totalPacientes) * 100).toFixed(2) : "0.00",
     }));
+
+    // Para mostrar el texto del/los meses en la cabecera:
+    const selectedMonthLabels = selectedMonthNumbers.map(n => mesesOptions.find(m => m.value === n)?.label).filter(Boolean);
+    const mesesTexto = selectedMonthLabels.length ? selectedMonthLabels.join(", ") : "—";
+    // ----FIN LOGICA: PARA GRAFICA DE TOATL DE PACIENTES ATENDIDOS POR MES ----
+
+
+
+
 
     const tipoColor = {
         "Solicitud": "#10b981",
@@ -219,15 +309,35 @@ export default function DashboardPqrs() {
     useEffect(() => {
         fetchDatos();
 
-        // Llamar API de promedio
-        api.get("/promedio-tiempo-respuesta")
+        const params = {
+            anio: anioSeleccionado,
+            sede: sedesSeleccionadas.length ? sedesSeleccionadas : undefined,
+            mes: mesesSeleccionados.length ? mesesSeleccionados : undefined,
+            eps: epsSeleccionadas.length ? epsSeleccionadas : undefined,
+            atributo_calidad: atributosCalidadSeleccionados.length ? atributosCalidadSeleccionados : undefined,
+            tipo_solicitud: tiposSolicitudSeleccionados.length ? tiposSolicitudSeleccionados.map(t => t.value || t) : undefined,
+            servicio_prestado: serviciosSeleccionados.length ? serviciosSeleccionados.map(s => s.value || s) : undefined,
+            clasificacion: clasificacionesSeleccionadas.length ? clasificacionesSeleccionadas.map(c => c.value || c) : undefined
+        };
+
+        api.get("/promedio-tiempo-respuesta", { params })
             .then((res) => {
                 setPromedioRespuesta(res.data.promedio_horas_decimal);
                 setPromedioRespuestaFormato(res.data.formato);
             })
             .catch((err) => console.error("Error cargando promedio:", err));
 
-    }, [sedesSeleccionadas, mesesSeleccionados, atributosCalidadSeleccionados, anioSeleccionado, tiposSolicitudSeleccionados, serviciosSeleccionados]);
+    }, [
+        anioSeleccionado,
+        mesesSeleccionados,
+        sedesSeleccionadas,
+        epsSeleccionadas,
+        atributosCalidadSeleccionados,
+        tiposSolicitudSeleccionados,
+        serviciosSeleccionados,
+        clasificacionesSeleccionadas
+    ]);
+
 
     // Ejecutar al montar el componente y al cambiar filtros
     useEffect(() => {
@@ -821,8 +931,12 @@ export default function DashboardPqrs() {
                 </div>
                 <div className="charts-container4">
                     <div className="chart-card">
-                        <h3>{totalPacientes} Pacientes atendidos en Septiembre</h3>
-                        <h2>Total FPQRS: 336</h2>
+                        <h3>
+                            {totalPacientes} Pacientes atendidos
+                            {mesesTexto !== "—" ? ` en ${mesesTexto}` : ""}
+                        </h3>
+                        {/* <h2>Total FPQRS: 336</h2> */}
+                        <h2>Total FPQRS registradas: {resumenFiltrado.total ?? 0}</h2>
 
                         <ResponsiveContainer width="100%" height={260}>
                             <PieChart>
@@ -921,11 +1035,6 @@ export default function DashboardPqrs() {
 
 
 
-
-
-
-
-
 // import { useEffect, useState } from "react";
 // import "./styles/Dashboard.css";
 // import {
@@ -981,6 +1090,19 @@ export default function DashboardPqrs() {
 //         ...item,
 //         porcentaje: ((item.cantidad / totalPacientes) * 100).toFixed(2),
 //     }));
+
+//     const tipoColor = {
+//         "Solicitud": "#10b981",
+//         "Queja": "#e9ec1e",
+//         "Reclamo": "#ef4444",
+//         "Peticion": "#2325a7ff",      // si tu backend usa "Peticion" sin tilde
+//         "Petición": "#2325a7ff",      // incluye la versión con tilde si aplica
+//         "Tutela": "#f59e0b",
+//         "Felicitacion": "#3b82f6",
+//         "Felicitación": "#3b82f6"
+//     };
+
+//     const defaultColors = ["#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#2325a7ff", "#e9ec1e"];
 
 
 //     // Opciones
@@ -1107,6 +1229,12 @@ export default function DashboardPqrs() {
 //             servicio_prestado: serviciosSeleccionados.length
 //                 ? serviciosSeleccionados.map(s => s.value || s)
 //                 : undefined,
+//             clasificacion: clasificacionesSeleccionadas.length
+//                 ? clasificacionesSeleccionadas.map(c => c.value || c)
+//                 : undefined,
+//             clasificacion_id: clasificacionesSeleccionadas.length
+//                 ? clasificacionesSeleccionadas.map(c => c.value)
+//                 : undefined,
 //         };
 
 //         api.get("/por-mes", { params }).then(res => setPorMes(Array.isArray(res.data) ? res.data : []));
@@ -1115,24 +1243,53 @@ export default function DashboardPqrs() {
 //         api.get("/por-atributo", { params }).then(res => setPorAtributoCalidad(Array.isArray(res.data) ? res.data : []));
 //         api.get("/por-anio").then(res => setPorAnio(Array.isArray(res.data) ? res.data : []));
 //         api.get("/resumen-global").then(res => setResumenGlobal(res.data || {}));
+//         api.get("/clasificacion-por-tipo-solicitud", { params })
+//             .then(res => {
+//                 const data = Array.isArray(res.data) ? res.data : [];
+//                 setClasificacionPorTipo(data);
+//             })
+//             .catch(err => {
+//                 console.error("Error cargando clasificación por tipo:", err);
+//                 setClasificacionPorTipo([]);
+//             });
 //     };
 //     useEffect(() => {
 //         fetchDatos();
 
-//         // Llamar API de promedio
-//         api.get("/promedio-tiempo-respuesta")
+//         const params = {
+//             anio: anioSeleccionado,
+//             sede: sedesSeleccionadas.length ? sedesSeleccionadas : undefined,
+//             mes: mesesSeleccionados.length ? mesesSeleccionados : undefined,
+//             eps: epsSeleccionadas.length ? epsSeleccionadas : undefined,
+//             atributo_calidad: atributosCalidadSeleccionados.length ? atributosCalidadSeleccionados : undefined,
+//             tipo_solicitud: tiposSolicitudSeleccionados.length ? tiposSolicitudSeleccionados.map(t => t.value || t) : undefined,
+//             servicio_prestado: serviciosSeleccionados.length ? serviciosSeleccionados.map(s => s.value || s) : undefined,
+//             clasificacion: clasificacionesSeleccionadas.length ? clasificacionesSeleccionadas.map(c => c.value || c) : undefined
+//         };
+
+//         api.get("/promedio-tiempo-respuesta", { params })
 //             .then((res) => {
 //                 setPromedioRespuesta(res.data.promedio_horas_decimal);
 //                 setPromedioRespuestaFormato(res.data.formato);
 //             })
 //             .catch((err) => console.error("Error cargando promedio:", err));
 
-//     }, [sedesSeleccionadas, mesesSeleccionados, atributosCalidadSeleccionados, anioSeleccionado, tiposSolicitudSeleccionados, serviciosSeleccionados]);
+//     }, [
+//         anioSeleccionado,
+//         mesesSeleccionados,
+//         sedesSeleccionadas,
+//         epsSeleccionadas,
+//         atributosCalidadSeleccionados,
+//         tiposSolicitudSeleccionados,
+//         serviciosSeleccionados,
+//         clasificacionesSeleccionadas
+//     ]);
+
 
 //     // Ejecutar al montar el componente y al cambiar filtros
 //     useEffect(() => {
 //         fetchDatos();
-//     }, [sedesSeleccionadas, mesesSeleccionados, atributosCalidadSeleccionados, anioSeleccionado, epsSeleccionadas, tiposSolicitudSeleccionados, serviciosSeleccionados]);
+//     }, [sedesSeleccionadas, mesesSeleccionados, atributosCalidadSeleccionados, anioSeleccionado, epsSeleccionadas, tiposSolicitudSeleccionados, serviciosSeleccionados, clasificacionesSeleccionadas]);
 
 //     // Resumen filtrado
 //     const fetchResumenFiltrado = () => {
@@ -1149,6 +1306,7 @@ export default function DashboardPqrs() {
 //                 servicio_prestado: serviciosSeleccionados.length
 //                     ? serviciosSeleccionados.map(s => s.value || s)
 //                     : undefined,
+//                 clasificacion: clasificacionesSeleccionadas,
 //             },
 //         })
 //             .then((res) => setResumenFiltrado(res.data || {}))
@@ -1157,7 +1315,7 @@ export default function DashboardPqrs() {
 
 //     useEffect(() => {
 //         fetchResumenFiltrado();
-//     }, [sedesSeleccionadas, mesesSeleccionados, atributosCalidadSeleccionados, anioSeleccionado, epsSeleccionadas, tiposSolicitudSeleccionados, serviciosSeleccionados]);
+//     }, [sedesSeleccionadas, mesesSeleccionados, atributosCalidadSeleccionados, anioSeleccionado, epsSeleccionadas, tiposSolicitudSeleccionados, serviciosSeleccionados, clasificacionesSeleccionadas]);
 
 //     // useEffect ya dentro de DashboardPqrs
 //     useEffect(() => {
@@ -1173,6 +1331,7 @@ export default function DashboardPqrs() {
 //             servicio_prestado: serviciosSeleccionados.length
 //                 ? serviciosSeleccionados.map(s => s.value || s)
 //                 : undefined,
+//             clasificacion: clasificacionesSeleccionadas,
 //         };
 
 //         api
@@ -1190,6 +1349,7 @@ export default function DashboardPqrs() {
 //         JSON.stringify(epsSeleccionadas),
 //         JSON.stringify(tiposSolicitudSeleccionados),
 //         JSON.stringify(serviciosSeleccionados),
+//         JSON.stringify(clasificacionesSeleccionadas),
 //     ]);
 
 //     useEffect(() => {
@@ -1205,6 +1365,7 @@ export default function DashboardPqrs() {
 //             servicio_prestado: serviciosSeleccionados.length
 //                 ? serviciosSeleccionados.map(s => s.value || s)
 //                 : undefined,
+//             clasificacion: clasificacionesSeleccionadas,
 //         };
 
 //         api.get("/por-servicio-prestado", { params })
@@ -1218,6 +1379,7 @@ export default function DashboardPqrs() {
 //         JSON.stringify(epsSeleccionadas || []),
 //         JSON.stringify(tiposSolicitudSeleccionados || []),
 //         JSON.stringify(serviciosSeleccionados || []),
+//         JSON.stringify(clasificacionesSeleccionadas),
 //     ]);
 
 //     useEffect(() => {
@@ -1232,12 +1394,13 @@ export default function DashboardPqrs() {
 //             servicio_prestado: serviciosSeleccionados.length
 //                 ? serviciosSeleccionados.map(s => s.value || s)
 //                 : undefined,
+//             clasificacion: clasificacionesSeleccionadas,
 //         };
 
 //         api.get("/pqrs/por-sede-tipo-solicitud", { params })
 //             .then((res) => setPorSedeTipo(res.data || []))
 //             .catch(() => setPorSedeTipo([]));
-//     }, [anioSeleccionado, mesesSeleccionados, sedesSeleccionadas, epsSeleccionadas, atributosCalidadSeleccionados, tiposSolicitudSeleccionados, serviciosSeleccionados,]);
+//     }, [anioSeleccionado, mesesSeleccionados, sedesSeleccionadas, epsSeleccionadas, atributosCalidadSeleccionados, tiposSolicitudSeleccionados, serviciosSeleccionados, clasificacionesSeleccionadas]);
 
 
 //     useEffect(() => {
@@ -1253,6 +1416,7 @@ export default function DashboardPqrs() {
 //             servicio_prestado: serviciosSeleccionados.length
 //                 ? serviciosSeleccionados.map(s => s.value || s)
 //                 : undefined,
+//             clasificacion: clasificacionesSeleccionadas,
 //         };
 
 //         api.get("/clasificacion-por-tipo-solicitud", { params })
@@ -1266,7 +1430,9 @@ export default function DashboardPqrs() {
 //         JSON.stringify(epsSeleccionadas),
 //         JSON.stringify(tiposSolicitudSeleccionados),
 //         JSON.stringify(serviciosSeleccionados),
+//         JSON.stringify(clasificacionesSeleccionadas),
 //     ]);
+
 //     const tiposSolicitud = [
 //         ...new Set(
 //             clasificacionPorTipo.flatMap(item =>
@@ -1403,7 +1569,7 @@ export default function DashboardPqrs() {
 //                     </div>
 //                     <div className="clasificacion">
 //                         <DropDownMultiSelect
-//                             options={clasificaciones} // lista con las clasificaciones disponibles
+//                             options={clasificaciones}
 //                             selected={clasificacionesSeleccionadas}
 //                             setSelected={setClasificacionesSeleccionadas}
 //                             placeholder="Seleccione clasificación(es)"
@@ -1451,27 +1617,27 @@ export default function DashboardPqrs() {
 //                                     outerRadius={100}
 //                                     label
 //                                 >
-//                                     {porTipo.map((entry, index) => (
-//                                         <Cell
-//                                             key={`cell-${index}`}
-//                                             fill={["#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#2325a7ff", "#e9ec1e"][index % 6]}
-//                                         />
-//                                     ))}
+//                                     {porTipo.map((entry, index) => {
+//                                         const key = (entry.tipo_solicitud || "").trim();
+//                                         const fill = tipoColor[key] ?? defaultColors[index % defaultColors.length];
+//                                         return <Cell key={`cell-${index}`} fill={fill} />;
+//                                     })}
 //                                 </Pie>
 //                                 <Tooltip />
 //                             </PieChart>
 //                         </ResponsiveContainer>
 
 //                         <div className="custom-legend">
-//                             {porTipo.map((entry, index) => (
-//                                 <div key={index} className="legend-item">
-//                                     <span
-//                                         className="legend-color"
-//                                         style={{ backgroundColor: ["#3b82f6", "#10b981", "#ef4444", "#f59e0b", "#2325a7ff", "#e9ec1e"][index % 6] }}
-//                                     ></span>
-//                                     <span className="legend-text">{entry.tipo_solicitud}</span>
-//                                 </div>
-//                             ))}
+//                             {porTipo.map((entry, index) => {
+//                                 const key = (entry.tipo_solicitud || "").trim();
+//                                 const color = tipoColor[key] ?? defaultColors[index % defaultColors.length];
+//                                 return (
+//                                     <div key={index} className="legend-item">
+//                                         <span className="legend-color" style={{ backgroundColor: color }}></span>
+//                                         <span className="legend-text">{entry.tipo_solicitud}</span>
+//                                     </div>
+//                                 );
+//                             })}
 //                         </div>
 //                     </div>
 
@@ -1679,7 +1845,6 @@ export default function DashboardPqrs() {
 //                         )}
 //                     </div>
 
-
 //                     <div className="chart-card">
 //                         <h3>PQRS por Clasificación</h3>
 //                         <ResponsiveContainer width="100%" height={400}>
@@ -1701,13 +1866,11 @@ export default function DashboardPqrs() {
 //                                 <Tooltip />
 //                                 <Legend />
 
-//                                 {/* 🎨 Aquí defines directamente el color para cada tipo */}
 //                                 <Bar dataKey="Queja" stackId="a" fill="#e9ec1e" />
 //                                 <Bar dataKey="Reclamo" stackId="a" fill="#ef4444" />
 //                                 <Bar dataKey="Peticion" stackId="a" fill="#2325a7ff" />
 //                                 <Bar dataKey="Solicitud" stackId="a" fill="#10b981" />
 //                                 <Bar dataKey="Tutela" stackId="a" fill="#f59e0b" />
-//                                 {/* <Bar dataKey="Derecho de petición" stackId="a" fill="#b40c90ff" /> */}
 //                                 <Bar dataKey="Felicitacion" stackId="a" fill="#3b82f6" />
 //                             </BarChart>
 //                         </ResponsiveContainer>
@@ -1778,3 +1941,70 @@ export default function DashboardPqrs() {
 //         </>
 //     );
 // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

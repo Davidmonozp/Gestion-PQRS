@@ -106,6 +106,7 @@ const PqrsResponder = () => {
     setAdjuntos((prev) => prev.filter((_, index) => index !== indexToRemove));
   };
 
+
   return (
     <>
       <Navbar />

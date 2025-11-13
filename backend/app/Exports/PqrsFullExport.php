@@ -3,21 +3,44 @@
 namespace App\Exports;
 
 use App\Models\Pqr;
-use App\Models\Pqrs;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
-class PqrsFullExport implements FromCollection, WithHeadings
+class PqrsFullExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize
 {
-    public function collection()
+    use Exportable;
+
+    public function query()
     {
-        // Retorna todos los registros de la tabla Pqrs
-        return Pqr::all();
+        return Pqr::query();
+    }
+
+    public function map($pqr): array
+    {
+        return $pqr->toArray();
     }
 
     public function headings(): array
     {
-        // Devuelve los nombres de las columnas
         return array_keys(Pqr::first()->toArray());
     }
 }
+
+
+// class PqrsFullExport implements FromCollection, WithHeadings
+// {
+//     public function collection()
+//     {
+//         // Retorna todos los registros de la tabla Pqrs
+//         return Pqr::all();
+//     }
+
+//     public function headings(): array
+//     {
+//         // Devuelve los nombres de las columnas
+//         return array_keys(Pqr::first()->toArray());
+//     }
+// }

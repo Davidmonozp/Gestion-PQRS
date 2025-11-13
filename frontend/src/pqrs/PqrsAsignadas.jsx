@@ -182,7 +182,9 @@ function PqrsAsignadas() {
                         <button
                           onClick={() => navigate(`/pqrs/${pqr.pqr_codigo}`)}
                         >
-                          {/* <i className="fa-solid fa-eye"></i> */}
+                          {yaRespondio && (
+                            <i className="fa-solid fa-eye"></i>
+                          )}
                         </button>
                         {!yaRespondio && (
                           <button
@@ -263,11 +265,10 @@ function PqrsAsignadas() {
                             return (
                               <li key={usuario.id} className="pqr-status-item">
                                 <i
-                                  className={`fa-solid ${
-                                    respondio
+                                  className={`fa-solid ${respondio
                                       ? "fa-check pqr-icon success"
                                       : "fa-clock pqr-icon pending"
-                                  }`}
+                                    }`}
                                   title={
                                     respondio
                                       ? "Respuesta enviada"

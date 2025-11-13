@@ -16,10 +16,13 @@ class EventLog extends Model
         'description',
         'pqr_id',
         'pqr_codigo',
+        'id_pqr_maestra',
+        'codigo_pqr_maestra',
         'estado_anterior',
         'estado_nuevo',
         'fecha_evento',
         'user_id',
+        'duplicadas',
     ];
 
     public $timestamps = false;
@@ -27,4 +30,7 @@ class EventLog extends Model
     {
         return $this->belongsTo(User::class);
     }
+    protected $casts = [
+        'duplicadas' => 'array', 
+    ];
 }

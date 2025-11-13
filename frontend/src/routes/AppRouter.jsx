@@ -75,7 +75,7 @@ export function AppRouter() {
       <Route
         path="/dash-interno"
         element={
-          <ProtectedRoute allowedRoles={["Administrador"]}>
+          <ProtectedRoute allowedRoles={["Administrador", "Consultor"]}>
             <DashInterno />
           </ProtectedRoute>
         }

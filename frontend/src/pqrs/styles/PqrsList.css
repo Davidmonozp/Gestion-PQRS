@@ -408,6 +408,25 @@ tbody td:hover::before {
     color: #0087cd;
 }
 
+.icono-duplicada {
+    /* Color de alerta: Amarillo o Naranja */
+    color: #ff9900; 
+    margin-left: 5px; /* Pequeña separación del texto */
+    font-size: 0.9em; /* Para que no sea demasiado grande */
+    cursor: pointer;
+}
+
+.icono-duplicada:hover {
+    color: #cc7a00; /* Un color un poco más oscuro al pasar el ratón */
+}
+
+/* Estilos para el ícono en el número de documento (clon) */
+.icono-duplicada-doc {
+    color: #e6b800; /* Un amarillo distinto para variedad */
+    margin-left: 5px;
+    font-size: 0.9em;
+    cursor: default;
+}
 
 /* FIN PAGINACION */
 @media (max-width: 1365px) {
