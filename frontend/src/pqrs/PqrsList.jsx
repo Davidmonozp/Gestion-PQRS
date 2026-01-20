@@ -415,7 +415,7 @@ function PqrsList() {
               </select>
             </div>
           )}
-             <GlosarioIconos />
+          <GlosarioIconos />
           <div className="table-wrapper">
             {selectedPqrs.size > 0 && (
               <div className="bulk-assign-controls">
@@ -646,29 +646,45 @@ function PqrsList() {
                         <td>{pqr.documento_tipo}</td>
                         <td>
                           {pqr.documento_numero}
-
                           {/* Mostrar botón si es duplicada pero no asociada */}
-                          {pqr.es_duplicada == 1 && pqr.es_asociada == 0 && (
-                            <button
-                              onClick={() => handleOpenAsociarModal(pqr)}
-                              title={`Atención: Duplicados para ${pqr.documento_numero}. Click para asociar.`}
-                              className="btn-link-icon"
-                              style={{ border: 'none', background: 'none', padding: '0', marginLeft: '5px' }}
-                            >
-                              <i className="fa-solid fa-clone icono-duplicada"></i>
-                            </button>
-                          )}
+                          {tienePermiso(["Administrador", "Supervisor/Atencion al usuario"]) && (
+                            <>
+                              {pqr.es_duplicada == 1 && pqr.es_asociada == 0 && (
+                                <button
+                                  onClick={() => handleOpenAsociarModal(pqr)}
+                                  title={`Atención: Duplicados para ${pqr.documento_numero}. Click para asociar.`}
+                                  className="btn-link-icon"
+                                  style={{
+                                    border: "none",
+                                    background: "none",
+                                    padding: "0",
+                                    marginLeft: "5px",
+                                  }}
+                                >
+                                  <i className="fa-solid fa-clone icono-duplicada"></i>
+                                </button>
+                              )}
 
-                          {/* Mostrar botón verde si ya está asociada */}
-                          {pqr.es_asociada == 1 && (
-                            <button
-                              onClick={() => handleOpenAsociarModal(pqr)}
-                              title={`PQR Asociada/Maestra. Click para gestionar/desasociar.`}
-                              className="btn-link-icon"
-                              style={{ border: 'none', background: 'none', padding: '0', marginLeft: '5px' }}
-                            >
-                              <i className="fa-solid fa-link" style={{ color: 'green', fontSize: '12px' }}></i>
-                            </button>
+                              {/* Mostrar botón verde si ya está asociada */}
+                              {pqr.es_asociada == 1 && (
+                                <button
+                                  onClick={() => handleOpenAsociarModal(pqr)}
+                                  title={`PQR Asociada/Maestra. Click para gestionar/desasociar.`}
+                                  className="btn-link-icon"
+                                  style={{
+                                    border: "none",
+                                    background: "none",
+                                    padding: "0",
+                                    marginLeft: "5px",
+                                  }}
+                                >
+                                  <i
+                                    className="fa-solid fa-link"
+                                    style={{ color: "green", fontSize: "12px" }}
+                                  ></i>
+                                </button>
+                              )}
+                            </>
                           )}
                         </td>
 
@@ -733,18 +749,14 @@ function PqrsList() {
                           )}
                         </td> */}
                         <td>
-                          {pqr.estado_respuesta === "Cerrado" ? (
-                            <span
-                              style={{ color: "#474646", fontStyle: "italic" }}
-                            >
+                          {["Cerrado", "Validacion del juez"].includes(pqr.estado_respuesta) ? (
+                            <span style={{ color: "#474646", fontStyle: "italic" }}>
                               Finalizado
                             </span>
                           ) : pqr.deadline_interno ? (
                             <CountdownTimer targetDate={pqr.deadline_interno} />
                           ) : (
-                            <span
-                              style={{ color: "#474646", fontStyle: "italic" }}
-                            >
+                            <span style={{ color: "#474646", fontStyle: "italic" }}>
                               No iniciado
                             </span>
                           )}

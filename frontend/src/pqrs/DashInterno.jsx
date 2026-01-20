@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
+    LineChart,
+    Line,
     BarChart,
     Bar,
     XAxis,
@@ -17,6 +19,7 @@ export const DashInterno = () => {
     const [usuariosData, setUsuariosData] = useState([]);
     const [tiempoData, setTiempoData] = useState([]);
 
+
     // 🔹 Usuarios con 2+ PQRs
     useEffect(() => {
         api.get("/users-varias-pqrs")
@@ -25,7 +28,10 @@ export const DashInterno = () => {
 
                 // Transformamos para recharts
                 const transformed = usuarios.map((u) => {
-                    const entry = { nombre: `${u.nombre} ${u.apellido}` };
+                    const entry = {
+                        nombre: `${u.nombre} ${u.apellido}`,
+                        documento: u.documento_numero,
+                    };
                     u.tipos.forEach((t) => {
                         entry[t.tipo_solicitud] = t.cantidad;
                     });
@@ -48,12 +54,12 @@ export const DashInterno = () => {
 
     // Colores para cada tipo de solicitud
     const colors = {
-        Peticion: "#ff0000ff",
-        Queja: "#82ca9d",
-        Felicitacion: "#ffc658",
-        Reclamo: "#ff8042",
-        Solicitud: "#0088FE",
-        Tutela: "#a83279",
+        Queja: "#e9ec1e",
+        Reclamo: "#ef4444",
+        Peticion: "#2325a7ff",
+        Solicitud: "#10b981",
+        Tutela: "#f59e0b",
+        Felicitacion: "#3b82f6",
     };
 
     return (
@@ -65,20 +71,34 @@ export const DashInterno = () => {
                     <h3>Usuarios con 3 o más PQRS</h3>
                     <ResponsiveContainer width="100%" height={400}>
                         <BarChart
-                            layout="vertical"
+                            // layout="vertical"
                             data={usuariosData}
                             margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                         >
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis type="number" />
-                            <YAxis dataKey="nombre" type="category" />
+                            {/* <XAxis type="number" />
+                             */}
+                            <XAxis
+                                dataKey="nombre"
+                                angle={-30}
+                                textAnchor="end"
+                                interval={0}
+                                height={70}
+                            />
+                            {/* <YAxis dataKey="nombre" type="category" /> */}
+                            <YAxis />
+
                             <Tooltip
                                 content={({ active, payload, label }) => {
                                     if (active && payload && payload.length) {
                                         const total = payload.reduce((sum, entry) => sum + (entry.value || 0), 0);
+                                        const row = payload.find(p => p.payload?.documento)?.payload;
+                                        const documento = row?.documento;
+
                                         return (
                                             <div style={{ background: "#fff", padding: "10px", border: "1px solid #ccc" }}>
                                                 <p><strong>{label}</strong></p>
+                                                <p><strong>Documento: {documento}</strong></p>
                                                 {payload.map((entry, index) => (
                                                     <p key={index} style={{ color: entry.color }}>
                                                         {entry.name}: {entry.value}
@@ -103,6 +123,83 @@ export const DashInterno = () => {
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
+
+                <div className="grafica1">
+                    <h3>Usuarios con 3 o más PQRS</h3>
+
+                    <ResponsiveContainer width="100%" height={400}>
+                        <LineChart
+                            data={usuariosData}
+                            margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                        >
+                            <CartesianGrid strokeDasharray="3 3" />
+
+                            {/* Eje X → Usuarios */}
+                            <XAxis
+                                dataKey="nombre"
+                                angle={-30}
+                                textAnchor="end"
+                                interval={0}
+                                height={70}
+                            />
+
+                            {/* Eje Y → Cantidad */}
+                            <YAxis />
+
+                            <Tooltip
+                                content={({ active, payload, label }) => {
+                                    if (active && payload && payload.length) {
+                                        const total = payload.reduce(
+                                            (sum, entry) => sum + (entry.value || 0),
+                                            0
+                                        );
+
+                                        const documento = payload[0]?.payload?.documento;
+
+                                        return (
+                                            <div
+                                                style={{
+                                                    background: "#fff",
+                                                    padding: "10px",
+                                                    border: "1px solid #ccc",
+                                                }}
+                                            >
+                                                <p><strong>{label}</strong></p>
+                                                <p><strong>Documento: {documento}</strong></p>
+
+                                                {payload.map((entry, index) => (
+                                                    <p key={index} style={{ color: entry.color }}>
+                                                        {entry.name}: {entry.value}
+                                                    </p>
+                                                ))}
+
+                                                <p><strong>Total: {total}</strong></p>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                }}
+                            />
+
+                            <Legend />
+
+                            {/* Líneas por tipo de solicitud */}
+                            {Object.keys(colors).map((tipo, idx) => (
+                                <Line
+                                    key={idx}
+                                    type="monotone"
+                                    dataKey={tipo}
+                                    stroke={colors[tipo]}
+                                    strokeWidth={2}
+                                    dot={{ r: 4 }}
+                                    activeDot={{ r: 6 }}
+                                />
+                            ))}
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+
+
 
                 {/* 📊 Gráfica 2: Tiempo por área */}
                 <div className="grafica2">

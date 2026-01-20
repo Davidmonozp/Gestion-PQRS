@@ -73,6 +73,8 @@ export async function createPqr(formData) {
 //   }
 // }
 
+
+
 export async function getPqrsAsignadas() {
   try {
     const token = localStorage.getItem("token");
@@ -125,6 +127,51 @@ export async function registrarRespuesta(pqrsId, contenido, adjuntos = []) {
   }
 }
 
+export async function createTutela(data) {
+  try {
+    const formData = new FormData();
+
+    // Convertir todos los campos
+    Object.entries(data).forEach(([key, value]) => {
+      if (value === null || value === undefined) return;
+
+      if (Array.isArray(value)) {
+        value.forEach((v) => formData.append(`${key}[]`, v));
+      } else {
+        formData.append(key, value);
+      }
+    });
+
+    // Archivos principales
+    if (data.archivos) {
+      [...data.archivos].forEach((file) => {
+        formData.append("archivos[]", file);
+      });
+    }
+
+    // Archivos adicionales si existen
+    if (data.archivos_adicionales) {
+      [...data.archivos_adicionales].forEach((file) => {
+        formData.append("archivos_adicionales[]", file);
+      });
+    }
+
+    const res = await axios.post(`${API_URL}/pqrs/tutela`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    console.error("Error enviando tutela:", error);
+
+    if (error.response) {
+      throw new Error(error.response.data.message || "Error en servidor");
+    }
+    throw new Error(error.message);
+  }
+}
 
 
 export const registrarRespuestaCiudadano = async (
@@ -139,10 +186,10 @@ export const registrarRespuestaCiudadano = async (
   }
 
   const response = await fetch(
-    // `http://127.0.0.1:8000/api/respuesta-usuario/${token}`,
+    `http://127.0.0.1:8000/api/respuesta-usuario/${token}`,
     // `http://192.168.1.15:8000/api/respuesta-usuario/${token}`,    
     // `https://pqrs.passusips.com/api/respuesta-usuario/${token}`,
-    `https://test-pqrs.passus.cloud/api/respuesta-usuario/${token}`,
+    // `https://test-pqrs.passus.cloud/api/respuesta-usuario/${token}`,
     // `https://pqrs.passus.cloud/api/respuesta-usuario/${token}`,
 
 

@@ -278,7 +278,7 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
             placeholder="Seleccione tipo(s) de solicitud"
           />
         </div>
-        
+
         <div className="filtro-atributo-calidad">
           <DropdownMultiSelect
             options={atributosCalidad}
@@ -366,7 +366,7 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
 
         )}
         <div className="iconos-filtros">
-          <button
+          {/* <button
             type="button"
             onClick={() => {
               setFilters(tempFilters);
@@ -378,9 +378,16 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
             <i className="fas fa-xl fa-search">
               <span className="texto-iconos">Buscar</span>
             </i>
-          </button>
-
-          <button
+          </button> */}
+          <span 
+            type="button"
+            onClick={() => {
+              setFilters(tempFilters);
+              onBuscar();
+            }}
+            title="Buscar"
+          >🔎Buscar</span>
+          {/* <button
             type="button"
             className="eraser-button"
             onClick={() =>
@@ -405,9 +412,29 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
             <i className="fas fa-xl fa-eraser">
               <span className="texto-iconos">Limpiar</span>
             </i>
-          </button>
+          </button> */}
 
-          <button
+          <span
+            onClick={() =>
+              setTempFilters({
+                pqr_codigo: "",
+                documento_numero: "",
+                servicio_prestado: [],
+                tipo_solicitud: [],
+                sede: [],
+                eps: [],
+                fecha_inicio: "",
+                fecha_fin: "",
+                respuesta_enviada: [],
+                clasificaciones: [],
+                clasificacionesNombres: [],
+                asignados: [],
+                atributo_calidad: [],
+              })
+            }
+          >🧽Limpiar</span>
+
+          {/* <button
             type="button"
             className="boton-refrescar"
             onClick={() => window.location.reload()}
@@ -416,7 +443,12 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
             <i className="fas fa-xl fa-sync-alt">
               <span className="texto-iconos">Actualizar</span>
             </i>
-          </button>
+          </button> */}
+          <span
+            onClick={() => window.location.reload()}
+          >
+            🔄️Actualizar
+          </span>
         </div>
       </div>
     </>

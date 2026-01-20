@@ -31,7 +31,7 @@ class PqrObserver
                 'estado_anterior' => $pqr->getOriginal('estado_respuesta'),
                 'estado_nuevo' => $pqr->estado_respuesta,
                 'fecha_evento' => now(),
-                'user_id' => Auth::id(), 
+                'user_id' => Auth::id(),
             ]);
         }
     }

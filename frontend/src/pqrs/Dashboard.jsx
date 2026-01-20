@@ -11,6 +11,7 @@ import { Version } from "../components/Footer/Version";
 import DropDownMultiSelect from "./components/DropDownMultiselect";
 import { NavLink } from "react-router-dom";
 
+
 export default function DashboardPqrs() {
     // Estados de datos
     const [porMes, setPorMes] = useState([]);
@@ -33,12 +34,29 @@ export default function DashboardPqrs() {
     // Estados de filtros
     const [mesesSeleccionados, setMesesSeleccionados] = useState([]);
     const [atributosCalidadSeleccionados, setAtributosCalidadSeleccionados] = useState([]);
-    const [anioSeleccionado, setAnioSeleccionado] = useState(new Date().getFullYear());
+    // const [anioSeleccionado, setAnioSeleccionado] = useState(new Date().getFullYear());
+    const [anioSeleccionado, setAnioSeleccionado] = useState("");
     const [sedesSeleccionadas, setSedesSeleccionadas] = useState([]);
     const [tiposSolicitudSeleccionados, setTiposSolicitudSeleccionados] = useState([]);
     const [porServicio, setPorServicio] = useState([]);
     const [serviciosSeleccionados, setServiciosSeleccionados] = useState([]);
     const [clasificacionPorTipo, setClasificacionPorTipo] = useState([]);
+    const [respuestaEnviadaSeleccionada, setRespuestaEnviadaSeleccionada] = useState(undefined);
+    const [diaSeleccionado, setDiaSeleccionado] = useState('');
+    const [porDiaTipo, setPorDiaTipo] = useState([]);
+
+
+    const limpiarFiltros = () => {
+        setSedesSeleccionadas([]);
+        setMesesSeleccionados([]);
+        setDiaSeleccionado("");
+        setAtributosCalidadSeleccionados([]);
+        setEpsSeleccionadas([]);
+        setTiposSolicitudSeleccionados([]);
+        setServiciosSeleccionados([]);
+        setClasificacionesSeleccionadas([]);
+        setRespuestaEnviadaSeleccionada("");
+    };
 
 
     // ---- LOGICA: PARA GRAFICA DE TOATL DE PACIENTES ATENDIDOS POR MES ----
@@ -100,11 +118,11 @@ export default function DashboardPqrs() {
     };
 
 
-   const selectedMonthNumbers = mesesSeleccionados.length > 0
-    ? mesesSeleccionados.map(m => (typeof m === "object" ? m.value : m))
-    : Object.keys(dataPorMes).map(key =>
-        Object.entries(monthKeyByNumber).find(([_, val]) => val === key)?.[0]
-    );
+    const selectedMonthNumbers = mesesSeleccionados.length > 0
+        ? mesesSeleccionados.map(m => (typeof m === "object" ? m.value : m))
+        : Object.keys(dataPorMes).map(key =>
+            Object.entries(monthKeyByNumber).find(([_, val]) => val === key)?.[0]
+        );
 
     // Si quieres comportamiento por defecto (ej. mostrar Septiembre si no hay selección), descomenta:
     // const selectedMonthNumbers = selectedMonthNumbers.length ? selectedMonthNumbers : [9];
@@ -141,7 +159,10 @@ export default function DashboardPqrs() {
     // ----FIN LOGICA: PARA GRAFICA DE TOATL DE PACIENTES ATENDIDOS POR MES ----
 
 
-
+    const getDiasDelMes = (anio, mes) => {
+        // mes viene como 1–12
+        return new Date(anio, mes, 0).getDate();
+    };
 
 
     const tipoColor = {
@@ -274,6 +295,7 @@ export default function DashboardPqrs() {
             anio: anioSeleccionado,
             sede: sedesSeleccionadas.length > 0 ? sedesSeleccionadas : undefined,
             mes: mesesSeleccionados.length > 0 ? mesesSeleccionados : undefined,
+            dia: diaSeleccionado || undefined,
             atributo_calidad: atributosCalidadSeleccionados.length > 0 ? atributosCalidadSeleccionados : undefined,
             eps: epsSeleccionadas.length > 0 ? epsSeleccionadas : undefined,
             tipo_solicitud: tiposSolicitudSeleccionados.length
@@ -287,6 +309,9 @@ export default function DashboardPqrs() {
                 : undefined,
             clasificacion_id: clasificacionesSeleccionadas.length
                 ? clasificacionesSeleccionadas.map(c => c.value)
+                : undefined,
+            respuesta_enviada: respuestaEnviadaSeleccionada !== null
+                ? respuestaEnviadaSeleccionada
                 : undefined,
         };
 
@@ -313,11 +338,13 @@ export default function DashboardPqrs() {
             anio: anioSeleccionado,
             sede: sedesSeleccionadas.length ? sedesSeleccionadas : undefined,
             mes: mesesSeleccionados.length ? mesesSeleccionados : undefined,
+            dia: diaSeleccionado || undefined,
             eps: epsSeleccionadas.length ? epsSeleccionadas : undefined,
             atributo_calidad: atributosCalidadSeleccionados.length ? atributosCalidadSeleccionados : undefined,
             tipo_solicitud: tiposSolicitudSeleccionados.length ? tiposSolicitudSeleccionados.map(t => t.value || t) : undefined,
             servicio_prestado: serviciosSeleccionados.length ? serviciosSeleccionados.map(s => s.value || s) : undefined,
-            clasificacion: clasificacionesSeleccionadas.length ? clasificacionesSeleccionadas.map(c => c.value || c) : undefined
+            clasificacion: clasificacionesSeleccionadas.length ? clasificacionesSeleccionadas.map(c => c.value || c) : undefined,
+            respuesta_enviada: respuestaEnviadaSeleccionada,
         };
 
         api.get("/promedio-tiempo-respuesta", { params })
@@ -330,19 +357,21 @@ export default function DashboardPqrs() {
     }, [
         anioSeleccionado,
         mesesSeleccionados,
+        diaSeleccionado,
         sedesSeleccionadas,
         epsSeleccionadas,
         atributosCalidadSeleccionados,
         tiposSolicitudSeleccionados,
         serviciosSeleccionados,
-        clasificacionesSeleccionadas
+        clasificacionesSeleccionadas,
+        respuestaEnviadaSeleccionada
     ]);
 
 
     // Ejecutar al montar el componente y al cambiar filtros
     useEffect(() => {
         fetchDatos();
-    }, [sedesSeleccionadas, mesesSeleccionados, atributosCalidadSeleccionados, anioSeleccionado, epsSeleccionadas, tiposSolicitudSeleccionados, serviciosSeleccionados, clasificacionesSeleccionadas]);
+    }, [sedesSeleccionadas, mesesSeleccionados, diaSeleccionado, atributosCalidadSeleccionados, anioSeleccionado, epsSeleccionadas, tiposSolicitudSeleccionados, serviciosSeleccionados, clasificacionesSeleccionadas, respuestaEnviadaSeleccionada]);
 
     // Resumen filtrado
     const fetchResumenFiltrado = () => {
@@ -350,6 +379,7 @@ export default function DashboardPqrs() {
             params: {
                 sede: sedesSeleccionadas.length > 0 ? sedesSeleccionadas : undefined,
                 mes: mesesSeleccionados || undefined,
+                dia: diaSeleccionado || undefined,
                 atributo_calidad: atributosCalidadSeleccionados.length > 0 ? atributosCalidadSeleccionados : undefined,
                 anio: anioSeleccionado || undefined,
                 eps: epsSeleccionadas.length > 0 ? epsSeleccionadas : undefined,
@@ -360,6 +390,7 @@ export default function DashboardPqrs() {
                     ? serviciosSeleccionados.map(s => s.value || s)
                     : undefined,
                 clasificacion: clasificacionesSeleccionadas,
+                respuesta_enviada: respuestaEnviadaSeleccionada,
             },
         })
             .then((res) => setResumenFiltrado(res.data || {}))
@@ -368,7 +399,7 @@ export default function DashboardPqrs() {
 
     useEffect(() => {
         fetchResumenFiltrado();
-    }, [sedesSeleccionadas, mesesSeleccionados, atributosCalidadSeleccionados, anioSeleccionado, epsSeleccionadas, tiposSolicitudSeleccionados, serviciosSeleccionados, clasificacionesSeleccionadas]);
+    }, [sedesSeleccionadas, mesesSeleccionados, diaSeleccionado, atributosCalidadSeleccionados, anioSeleccionado, epsSeleccionadas, tiposSolicitudSeleccionados, serviciosSeleccionados, clasificacionesSeleccionadas, respuestaEnviadaSeleccionada,]);
 
     // useEffect ya dentro de DashboardPqrs
     useEffect(() => {
@@ -376,6 +407,7 @@ export default function DashboardPqrs() {
             anio: anioSeleccionado || undefined,
             sede: sedesSeleccionadas.length > 0 ? sedesSeleccionadas : undefined,
             mes: mesesSeleccionados.length > 0 ? mesesSeleccionados : undefined,
+            dia: diaSeleccionado || undefined,
             atributo_calidad: atributosCalidadSeleccionados.length > 0 ? atributosCalidadSeleccionados : undefined,
             eps: epsSeleccionadas.length > 0 ? epsSeleccionadas : undefined,
             tipo_solicitud: tiposSolicitudSeleccionados.length
@@ -385,6 +417,7 @@ export default function DashboardPqrs() {
                 ? serviciosSeleccionados.map(s => s.value || s)
                 : undefined,
             clasificacion: clasificacionesSeleccionadas,
+            respuesta_enviada: respuestaEnviadaSeleccionada,
         };
 
         api
@@ -396,13 +429,15 @@ export default function DashboardPqrs() {
             });
     }, [
         anioSeleccionado,
-        JSON.stringify(sedesSeleccionadas),
-        JSON.stringify(mesesSeleccionados),
-        JSON.stringify(atributosCalidadSeleccionados),
-        JSON.stringify(epsSeleccionadas),
-        JSON.stringify(tiposSolicitudSeleccionados),
-        JSON.stringify(serviciosSeleccionados),
-        JSON.stringify(clasificacionesSeleccionadas),
+        sedesSeleccionadas,
+        mesesSeleccionados,
+        diaSeleccionado,
+        atributosCalidadSeleccionados,
+        epsSeleccionadas,
+        tiposSolicitudSeleccionados,
+        serviciosSeleccionados,
+        clasificacionesSeleccionadas,
+        respuestaEnviadaSeleccionada
     ]);
 
     useEffect(() => {
@@ -410,6 +445,7 @@ export default function DashboardPqrs() {
             anio: anioSeleccionado || undefined,
             sede: sedesSeleccionadas.length > 0 ? sedesSeleccionadas : undefined,
             mes: mesesSeleccionados.length > 0 ? mesesSeleccionados : undefined,
+            dia: diaSeleccionado || undefined,
             atributo_calidad: atributosCalidadSeleccionados.length > 0 ? atributosCalidadSeleccionados : undefined,
             eps: epsSeleccionadas.length > 0 ? epsSeleccionadas : undefined,
             tipo_solicitud: tiposSolicitudSeleccionados.length
@@ -419,6 +455,7 @@ export default function DashboardPqrs() {
                 ? serviciosSeleccionados.map(s => s.value || s)
                 : undefined,
             clasificacion: clasificacionesSeleccionadas,
+            respuesta_enviada: respuestaEnviadaSeleccionada,
         };
 
         api.get("/por-servicio-prestado", { params })
@@ -426,20 +463,24 @@ export default function DashboardPqrs() {
             .catch(err => console.error(err));
     }, [
         anioSeleccionado,
-        JSON.stringify(sedesSeleccionadas || []),
-        JSON.stringify(mesesSeleccionados || []),
-        JSON.stringify(atributosCalidadSeleccionados || []),
-        JSON.stringify(epsSeleccionadas || []),
-        JSON.stringify(tiposSolicitudSeleccionados || []),
-        JSON.stringify(serviciosSeleccionados || []),
-        JSON.stringify(clasificacionesSeleccionadas),
+        sedesSeleccionadas,
+        mesesSeleccionados,
+        diaSeleccionado,
+        atributosCalidadSeleccionados,
+        epsSeleccionadas,
+        tiposSolicitudSeleccionados,
+        serviciosSeleccionados,
+        clasificacionesSeleccionadas,
+        respuestaEnviadaSeleccionada
     ]);
+
 
     useEffect(() => {
         const params = {
             anio: anioSeleccionado,
             sede: sedesSeleccionadas.length ? sedesSeleccionadas : undefined,
             mes: mesesSeleccionados.length ? mesesSeleccionados : undefined,
+            dia: diaSeleccionado || undefined,
             eps: epsSeleccionadas.length ? epsSeleccionadas : undefined,
             atributo_calidad: atributosCalidadSeleccionados.length ? atributosCalidadSeleccionados : undefined,
             estado_tiempo: undefined,
@@ -448,12 +489,13 @@ export default function DashboardPqrs() {
                 ? serviciosSeleccionados.map(s => s.value || s)
                 : undefined,
             clasificacion: clasificacionesSeleccionadas,
+            respuesta_enviada: respuestaEnviadaSeleccionada,
         };
 
         api.get("/pqrs/por-sede-tipo-solicitud", { params })
             .then((res) => setPorSedeTipo(res.data || []))
             .catch(() => setPorSedeTipo([]));
-    }, [anioSeleccionado, mesesSeleccionados, sedesSeleccionadas, epsSeleccionadas, atributosCalidadSeleccionados, tiposSolicitudSeleccionados, serviciosSeleccionados, clasificacionesSeleccionadas]);
+    }, [anioSeleccionado, mesesSeleccionados, diaSeleccionado, sedesSeleccionadas, epsSeleccionadas, atributosCalidadSeleccionados, tiposSolicitudSeleccionados, serviciosSeleccionados, clasificacionesSeleccionadas, respuestaEnviadaSeleccionada]);
 
 
     useEffect(() => {
@@ -461,6 +503,7 @@ export default function DashboardPqrs() {
             anio: anioSeleccionado,
             sede: sedesSeleccionadas.length ? sedesSeleccionadas : undefined,
             mes: mesesSeleccionados.length ? mesesSeleccionados : undefined,
+            dia: diaSeleccionado || undefined,
             eps: epsSeleccionadas.length ? epsSeleccionadas : undefined,
             atributo_calidad: atributosCalidadSeleccionados.length ? atributosCalidadSeleccionados : undefined,
             tipo_solicitud: tiposSolicitudSeleccionados.length
@@ -470,6 +513,7 @@ export default function DashboardPqrs() {
                 ? serviciosSeleccionados.map(s => s.value || s)
                 : undefined,
             clasificacion: clasificacionesSeleccionadas,
+            respuesta_enviada: respuestaEnviadaSeleccionada,
         };
 
         api.get("/clasificacion-por-tipo-solicitud", { params })
@@ -477,13 +521,15 @@ export default function DashboardPqrs() {
             .catch(() => setClasificacionPorTipo([]));
     }, [
         anioSeleccionado,
-        JSON.stringify(sedesSeleccionadas),
-        JSON.stringify(mesesSeleccionados),
-        JSON.stringify(atributosCalidadSeleccionados),
-        JSON.stringify(epsSeleccionadas),
-        JSON.stringify(tiposSolicitudSeleccionados),
-        JSON.stringify(serviciosSeleccionados),
-        JSON.stringify(clasificacionesSeleccionadas),
+        sedesSeleccionadas,
+        mesesSeleccionados,
+        diaSeleccionado,
+        atributosCalidadSeleccionados,
+        epsSeleccionadas,
+        tiposSolicitudSeleccionados,
+        serviciosSeleccionados,
+        clasificacionesSeleccionadas,
+        respuestaEnviadaSeleccionada
     ]);
 
     const tiposSolicitud = [
@@ -507,6 +553,36 @@ export default function DashboardPqrs() {
             .catch((err) => console.error("Error cargando clasificaciones", err));
     }, []);
 
+    useEffect(() => {
+        setDiaSeleccionado('');
+    }, [mesesSeleccionados]);
+
+    useEffect(() => {
+        if (!mesesSeleccionados.length) {
+            setPorDiaTipo([]);
+            return;
+        }
+
+        const mesNumero =
+            typeof mesesSeleccionados[0] === "object"
+                ? mesesSeleccionados[0].value
+                : mesesSeleccionados[0];
+
+        api.get("/por-dia-tipo", {
+            params: {
+                anio: anioSeleccionado,
+                mes: mesNumero
+            }
+        })
+            .then(res => {
+                setPorDiaTipo(Array.isArray(res.data) ? res.data : []);
+            })
+            .catch(err => {
+                console.error("Error cargando porDiaTipo", err);
+                setPorDiaTipo([]);
+            });
+    }, [anioSeleccionado, mesesSeleccionados]);
+
     return (
         <>
             <Navbar />
@@ -524,7 +600,11 @@ export default function DashboardPqrs() {
                         <h2>{resumenFiltrado.total ?? 0}</h2>
                         <p>Total PQRS</p>
                     </div>
-                    <div className="card-dash pendientes">
+                    <div
+                        className={`card-dash pendientes ${respuestaEnviadaSeleccionada === 0 ? "activo" : ""
+                            }`}
+                        onClick={() => setRespuestaEnviadaSeleccionada(0)}
+                    >
                         <h2>{resumenFiltrado.pendientes ?? 0}</h2>
                         <p>PQRS Pendientes</p>
                     </div>
@@ -603,14 +683,34 @@ export default function DashboardPqrs() {
                             searchable={true}
                         />
                     </div>
-                    {/* <div className="dia">
-                        <select value={diaSeleccionado} onChange={(e) => setDiaSeleccionado(e.target.value)}>
-                            <option value="">-- Seleccione un día --</option>
-                            {Array.from({ length: 31 }, (_, index) => (
-                                <option key={index + 1} value={index + 1}>{index + 1}</option>
-                            ))}
-                        </select>
-                    </div> */}
+
+                    {mesesSeleccionados.length === 1 && (
+                        <div className="dia">
+                            <select
+                                value={diaSeleccionado}
+                                onChange={(e) => setDiaSeleccionado(e.target.value)}
+                            >
+                                <option value="">Seleccione un día</option>
+
+                                {(() => {
+                                    // Obtener el número del mes seleccionado (1–12)
+                                    const mes =
+                                        mesesSeleccionados[0]?.value ??
+                                        mesesSeleccionados[0];
+
+                                    // Calcular días reales del mes
+                                    const diasDelMes = new Date(anioSeleccionado, mes, 0).getDate();
+
+                                    return Array.from({ length: diasDelMes }, (_, index) => (
+                                        <option key={index + 1} value={index + 1}>
+                                            {index + 1}
+                                        </option>
+                                    ));
+                                })()}
+                            </select>
+                        </div>
+                    )}
+
                     <div className="atributo-calidad">
                         <DropDownMultiSelect
                             options={atributosCalidad}
@@ -628,6 +728,18 @@ export default function DashboardPqrs() {
                             placeholder="Seleccione clasificación(es)"
                             searchable={true}
                         />
+                    </div>
+                    <div className="actualizar-container">
+                        <span
+                            className="actualizar-texto actualizar-hover"
+                            onClick={() => window.location.reload()}>
+                            <span className="icono-actualizar">🔄</span> Actualizar
+                        </span>
+                        <span
+                            className="actualizar-texto"
+                            onClick={limpiarFiltros}>
+                            <span className="icono-actualizar">🧽</span>Limpiar
+                        </span>
                     </div>
                 </div>
 
@@ -930,12 +1042,55 @@ export default function DashboardPqrs() {
                     </div>
                 </div>
                 <div className="charts-container4">
-                    <div className="chart-card">
+                    {diaSeleccionado && porDiaTipo.length > 0 && (
+                        <div className="chart-card">
+                            <h3>PQRS por día y tipo de solicitud</h3>
+
+                            {porDiaTipo.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={400}>
+                                    <LineChart
+                                        data={porDiaTipo}
+                                        margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" />
+
+                                        {/* EJE X → DÍAS */}
+                                        <XAxis
+                                            dataKey="dia"
+                                            interval={0}
+                                            fontSize={10}
+                                            tickFormatter={(dia) => `Día ${dia}`}
+                                        />
+
+                                        {/* EJE Y → CANTIDAD */}
+                                        <YAxis allowDecimals={false} />
+
+                                        <Tooltip
+                                            formatter={(value, name) => [value, name]}
+                                            labelFormatter={(label) => `Día ${label}`}
+                                        />
+
+                                        <Legend />
+
+                                        {/* LÍNEAS */}
+                                        <Line type="monotone" dataKey="Queja" stroke="#e9ec1e" strokeWidth={2} />
+                                        <Line type="monotone" dataKey="Reclamo" stroke="#ef4444" strokeWidth={2} />
+                                        <Line type="monotone" dataKey="Peticion" stroke="#2325a7ff" strokeWidth={2} />
+                                        <Line type="monotone" dataKey="Solicitud" stroke="#10b981" strokeWidth={2} />
+                                        <Line type="monotone" dataKey="Tutela" stroke="#f59e0b" strokeWidth={2} />
+                                        <Line type="monotone" dataKey="Felicitacion" stroke="#3b82f6" strokeWidth={2} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <p>No hay datos con los filtros seleccionados</p>
+                            )}
+                        </div>
+                    )}
+                    {/* <div className="chart-card">
                         <h3>
                             {totalPacientes} Pacientes atendidos
                             {mesesTexto !== "—" ? ` en ${mesesTexto}` : ""}
                         </h3>
-                        {/* <h2>Total FPQRS: 336</h2> */}
                         <h2>Total FPQRS registradas: {resumenFiltrado.total ?? 0}</h2>
 
                         <ResponsiveContainer width="100%" height={260}>
@@ -991,7 +1146,7 @@ export default function DashboardPqrs() {
                                 </div>
                             ))}
                         </div>
-                    </div>
+                    </div> */}
                 </div>
             </div>
             <Version />

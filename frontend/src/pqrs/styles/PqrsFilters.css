@@ -158,21 +158,28 @@
 .iconos-filtros {
   display: flex;
   flex-direction: row;
-  gap: 52px;
-  /* justify-content:  space-between; */
+  gap: 10px;
+  justify-content: center;
   align-items: center;
   background-color: rgb(255, 255, 255);
   border: solid 1px #00933f;
   height: 37px;
-  width: 224px;
+  width: auto;
+  cursor: pointer;
+  padding: 0 7px;
 }
 
-.iconos-filtros button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  /* Espacio entre el icono y el texto */
-  /* Otros estilos del botón... */
+.iconos-filtros span {
+  color: #042977;
+  font-weight: 900;
+  font-size: 14px;
+  font-family: 'Oxygen';
+  transition: transform 0.2s , color 0.2s ;
+}
+
+.iconos-filtros span:hover {
+  transform: scale(1.05);
+  color: #021d5a;
 }
 
 .boton-refrescar:hover,

@@ -41,7 +41,7 @@
 /* estilos.css o tu archivo de estilos */
 .container-dash-interno {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* grid-template-columns: 1fr 1fr; */
     /* dos columnas iguales */
     gap: 20px;
     /* espacio entre columnas */
@@ -60,18 +60,53 @@
 /* ---------------- Filtros ---------------- */
 .datos {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, max-content));
+    grid-template-columns: repeat(auto-fit, minmax(14%, max-content));
     gap: 12px;
     padding: 8px;
     font-weight: bold;
     margin-top: 27px;
-
     justify-content: center;
     /* centra cada fila completa */
 }
 
+.actualizar-container {
+    background: #ffffff;
+    padding: 0px 12px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    border: solid 1px #2563eb;
+    border-radius: 6px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    color: rgb(13, 37, 146);
+}
+
+.actualizar-texto {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 14px;
+    transition: transform 0.2s, color 0.2s;
+}
+
+.actualizar-texto:hover {
+     transform: scale(1.05);
+       color: #021d5a;
+}
+
+.icono-actualizar {
+  display: inline-block; 
+  transition: transform 0.8s ease;
+  font-size: 17px;
+}
+
+.actualizar-hover:hover .icono-actualizar {
+  transform: rotate(360deg);
+}
+
 
 .mes,
+.dia,
 .atributo-calidad,
 .sedes-dashboard,
 .anio {
@@ -95,6 +130,30 @@
     outline: none;
     cursor: pointer;
     transition: border 0.3s, box-shadow 0.3s;
+}
+
+.dia select {
+    width: 100%;
+    height: 41px;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    background: #ffffff;
+    border-radius: 6px;
+    border: solid 1px #2563eb;
+    font-size: 14px;
+    color: rgb(13, 37, 146);
+    font-weight: 700;
+    appearance: none;
+    outline: none;
+    cursor: pointer;
+    transition: border 0.3s, box-shadow 0.3s;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+}
+
+.dia option {
+    padding: 10px;
+    background-color: #ffffff;
+    color: #111827;
 }
 
 .mes option,
@@ -365,6 +424,24 @@
     background: #088b9c;
 }
 
+.card-dash.activo {
+    border: 3px solid #000000;
+    background-color: #f0f8ff;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+    transform: scale(1.02);
+    background: linear-gradient(135deg, #8d2404, #d45e04);
+}
+
+.actualizar {
+    width: 37px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.actualizar:hover {
+    transform: rotate(900deg) scale(1.1);
+    opacity: 0.7;
+}
+
 /* ---------------- Responsive General ---------------- */
 @media (min-width: 1600px) and (max-width: 1920px) {
     .sedes-dashboard button {
@@ -394,7 +471,7 @@
     }
 
     .mes {
-        width: 24%;
+        width: 100%;
         padding: 5px;
     }
 
@@ -461,7 +538,7 @@
     }
 
     .mes {
-        width: 24%;
+        width: 100%;
         padding: 4px;
     }
 

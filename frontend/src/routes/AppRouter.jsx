@@ -18,13 +18,15 @@ import RespuestaUsuario from "../pqrs/RespuestaUsuario";
 import { Solicitudes } from "../pages/Solicitudes";
 import FelicitacionForm from "../pqrs/FelicitacionForm";
 import DerechoPeticionForm from "../pqrs/DerechoPeticionForm";
-import TutelaForm from "../pqrs/TutelaForm";
 import SolicitudForm from "../pqrs/SolicitudForm";
 import InicioPQRS from "../pqrs/InicioPQRS";
 import EventLogs from "../pqrs/EventLogs";
 import GestionApp from "../pqrs/GestionApp";
 import Dashboard from "../pqrs/Dashboard";
 import { DashInterno } from "../pqrs/DashInterno";
+import TutelasForm from "../pqrs/TutelasForm";
+import TutelaForm from "../pqrs/TutelaForm";
+import EncuestaPage from "../pqrs/EncuestaPage";
 
 export function AppRouter() {
   return (
@@ -44,12 +46,13 @@ export function AppRouter() {
       <Route path="/solicitudes" element={<Solicitudes />} />
       <Route path="/felicitacion" element={<FelicitacionForm />} />
       <Route path="/tutela" element={<TutelaForm />} />
+      <Route path="/tutelas" element={<TutelasForm />} />
       <Route path="/derecho-peticion" element={<DerechoPeticionForm />} />
       <Route path="/solicitud" element={<SolicitudForm />} />
       <Route path="/consultar-radicado" element={<InicioPQRS />} />
       <Route path="/event-logs" element={<EventLogs />} />
       <Route path="/pqr/:pqr_id/logs" element={<EventLogs />} />
-
+      <Route path="/encuesta/:token" element={<EncuestaPage />} />
 
 
 
@@ -202,7 +205,7 @@ export function AppRouter() {
         path="/gestion-app"
         element={
           <ProtectedRoute
-            allowedRoles={["Administrador"]}
+            allowedRoles={["Administrador", "Consultor", "Supervisor/Atencion al usuario"]}
           >
             <GestionApp />
           </ProtectedRoute>

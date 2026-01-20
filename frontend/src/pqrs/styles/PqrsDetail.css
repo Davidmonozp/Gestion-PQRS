@@ -1,3 +1,7 @@
+.tox.tox-silver-sink {
+    position: fixed !important;
+}
+
 .pqr-card-container {
     width: 80%;
     margin: 210px auto;
@@ -121,6 +125,22 @@
     box-sizing: border-box;
 }
 
+.styled-input-plantilla {
+    width: auto;
+    height: 34px;
+    background: transparent;
+    border: 1px solid #00933f;
+    border-radius: 2px;
+    color: #525252;
+    /* font-family: 'Exo', sans-serif; */
+    font-size: 16px;
+    font-weight: 400;
+    padding: 4px 10px;
+    margin-top: 0px;
+    margin-bottom: 12px;
+    box-sizing: border-box;
+}
+
 .respuesta-final {
     width: 100%;
     height: auto;
@@ -207,6 +227,11 @@ h4 {
     background-color: #2E7D32;
 }
 
+.estado-validacion-juez {
+    background-color: #f7b501;
+    color: white;
+}
+
 .pqr-card-container .boton-enviar-respuesta {
     display: block;
     margin: 4px auto 0;
@@ -266,6 +291,8 @@ h4 {
     background-color: rgb(194, 222, 241);
     border-radius: 10px;
     width: 477px;
+    overflow: hidden;
+    word-wrap: break-word;
 }
 
 /* ESTILOS INPUT ASIGNADO A */
@@ -345,6 +372,7 @@ h4 {
     margin-bottom: 5px;
     border-radius: 4px;
     background-color: #e2e2e2;
+    padding: 7px;
 }
 
 .log-header {
@@ -418,7 +446,7 @@ h4 {
     font-size: 20px;
 }
 
-.search-input{
+.search-input {
     width: 342px;
     height: 24px;
     font-size: 15px;
@@ -448,7 +476,7 @@ h4 {
 
 @media (min-width: 800px) and (max-width: 1051px) {
     .solicitante {
-        width: 355px;
+        width: 314px;
     }
 }
 

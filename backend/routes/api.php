@@ -10,14 +10,17 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UsuarioRespuestaController;
 use App\Http\Controllers\Api\FelicitacionController;
 use App\Http\Controllers\Api\PqrAlertaController;
-use App\Http\Controllers\EncuestaController;
 use App\Http\Controllers\EventLogController;
 use App\Http\Controllers\Api\GestionAppController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use App\Exports\PqrsFullExport;
+use App\Http\Controllers\Api\PqrTutelaController;
+use App\Http\Controllers\Api\EncuestaController;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
+
 
 
 
@@ -38,6 +41,11 @@ Route::get('/pqrs/alertas-tiempo', [PqrAlertaController::class, 'alertas']);
 Route::post('/pqrs/consultar-radicado', [PqrController::class, 'consultarRadicado']);
 Route::post('/encuesta', [EncuestaController::class, 'store']);
 Route::get('/clasificaciones', [ClasificacionController::class, 'index']);
+Route::post('/pqrs/tutela', [PqrTutelaController::class, 'store']);
+
+// rutas para encuesta de satisfaccion
+Route::get('/encuesta/{token}', [EncuestaController::class, 'validarToken']);
+Route::post('/encuesta/{token}', [EncuestaController::class, 'guardarRespuesta']);
 
 
 
@@ -56,6 +64,7 @@ Route::middleware(['auth:api', 'check.role:Administrador,Supervisor/Atencion al 
     Route::get('/pqrs/{id}/reembolso', [PqrController::class, 'getReembolso']);
 
 
+
     // RUTAS DE DASHBOARD
     Route::get('/resumen-global', [DashboardController::class, 'resumenGlobal']);
     Route::get('/resumen-filtrado', [DashboardController::class, 'resumenFiltrado']);
@@ -67,6 +76,7 @@ Route::middleware(['auth:api', 'check.role:Administrador,Supervisor/Atencion al 
     Route::get('/por-estado-respuesta', [DashboardController::class, 'porEstadoRespuesta']);
     Route::get('/promedio-tiempo-respuesta', [DashboardController::class, 'promedioTiempoRespuesta']);
     Route::get('/por-servicio-prestado', [DashboardController::class, 'porServicioPrestado']);
+    Route::get('/por-dia-tipo', [DashboardController::class, 'porDiaTipo']);
     Route::get('/pqrs/por-sede-tipo-solicitud', [DashboardController::class, 'porSedeTipoSolicitud']);
     Route::get('/users-varias-pqrs', [DashboardController::class, 'usuariosConVariasPqrs']);
     Route::get('/tiempo-por-area', [DashboardController::class, 'tiempoPorArea']);
@@ -79,6 +89,9 @@ Route::middleware(['auth:api', 'check.role:Administrador,Supervisor/Atencion al 
     Route::post('pqrs/asociar-duplicadas', [PqrController::class, 'asociarDuplicadas']);
     Route::post('/pqrs/desasociar-duplicadas', [PqrController::class, 'desasociarDuplicadas']);
     Route::get('pqrs/grupo-completo-por-maestra/{id}', [PqrController::class, 'getGrupoCompletoPorMaestra']);
+
+    // RUTA PARA CAMBIAR SEDE
+    Route::post('pqrs/cambiar-sede/{pqr_codigo}', [PqrController::class, 'cambiarSede']);
 });
 
 // RUTAS PROTEGIDAS QUE ACTUALIZAN LA PQRS

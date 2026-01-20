@@ -393,7 +393,7 @@ export const pqrsSchema = Yup.object().shape({
         )
         .test(
           "multiple-emails",
-          "Uno o más correos tienen un formato inválido",
+          "Uno o más correos tiene un formato inválido",
           (value) => {
             if (!value) return true; // si no es requerido, dejar pasar vacío
             const correos = value.split(",").map((c) => c.trim());

@@ -89,3 +89,10 @@
   box-shadow: none;
   transform: none;
 }
+.swal2-input::placeholder {
+  color: #4e4e4e; /* rojo, por ejemplo */
+  opacity: 1; /* opcional: para que se vea bien en todos los navegadores */
+}
+div:where(.swal2-container) .swal2-select {
+    width: 277px;
+}

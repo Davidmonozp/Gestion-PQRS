@@ -16,6 +16,55 @@ class DashboardController extends Controller
             'resueltas'  => DB::table('pqrs')->where('respuesta_enviada', 1)->count(),
         ]);
     }
+
+    public function resumenPendientes(Request $request)
+    {
+        $query = DB::table('pqrs')
+            ->leftJoin('clasificacion_pqr', 'clasificacion_pqr.pqr_id', '=', 'pqrs.id')
+            ->leftJoin('clasificaciones', 'clasificaciones.id', '=', 'clasificacion_pqr.clasificacion_id')
+            ->select('pqrs.*')
+            ->where('pqrs.respuesta_enviada', 0); // Solo PQRs sin respuesta enviada
+
+        // Aplicar filtros si existen
+        if ($request->filled('sede')) {
+            $query->whereIn('pqrs.sede', (array) $request->sede);
+        }
+        if ($request->filled('mes')) {
+            $query->whereIn(DB::raw('MONTH(pqrs.created_at)'), (array) $request->mes);
+        }
+        if ($request->filled('dia')) {
+            $query->whereDay('pqrs.created_at', $request->dia);
+        }
+        if ($request->filled('anio')) {
+            $query->whereIn(DB::raw('YEAR(pqrs.created_at)'), (array) $request->anio);
+        }
+        if ($request->filled('atributo_calidad')) {
+            $query->whereIn('pqrs.atributo_calidad', (array) $request->atributo_calidad);
+        }
+        if ($request->filled('eps')) {
+            $query->whereIn('pqrs.eps', (array) $request->eps);
+        }
+        if ($request->filled('tipo_solicitud')) {
+            $query->whereIn('pqrs.tipo_solicitud', (array) $request->tipo_solicitud);
+        }
+        if ($request->filled('servicio_prestado')) {
+            $query->whereIn('pqrs.servicio_prestado', (array) $request->servicio_prestado);
+        }
+
+        // Filtro de clasificación
+        if ($request->filled('clasificacion_id')) {
+            $query->whereIn('clasificaciones.id', (array) $request->clasificacion_id);
+        } elseif ($request->filled('clasificacion')) {
+            $query->whereIn('clasificaciones.nombre', (array) $request->clasificacion);
+        }
+
+        $totalPendientes = $query->distinct('pqrs.id')->count('pqrs.id');
+
+        return response()->json([
+            'pendientes' => $totalPendientes
+        ]);
+    }
+
     public function resumenFiltrado(Request $request)
     {
         $query = DB::table('pqrs')
@@ -80,7 +129,8 @@ class DashboardController extends Controller
 
     public function porMes(Request $request)
     {
-        $anio = $request->input('anio', date('Y'));
+        $anio = $request->input('anio');
+        // $anio = $request->input('anio', date('Y'));
         $mes = $request->input('mes'); // opcional
         $dia = $request->input('dia'); // opcional
         $sede = $request->input('sede'); // opcional
@@ -91,12 +141,18 @@ class DashboardController extends Controller
         $eps = $request->input('eps');
         $clasificacion_id = $request->input('clasificacion_id');
         $clasificacion = $request->input('clasificacion');
+        $respuestaEnviada = $request->input('respuesta_enviada');
 
         $query = DB::table('pqrs')
             ->leftJoin('clasificacion_pqr', 'clasificacion_pqr.pqr_id', '=', 'pqrs.id')
             ->leftJoin('clasificaciones', 'clasificaciones.id', '=', 'clasificacion_pqr.clasificacion_id')
             ->select(DB::raw('MONTH(pqrs.created_at) as mes'), DB::raw('COUNT(DISTINCT pqrs.id) as cantidad'))
-            ->whereYear('pqrs.created_at', $anio);
+            // ->whereYear('pqrs.created_at', $anio)
+        ;
+
+        if ($anio) {
+            $query->whereYear('pqrs.created_at', $anio);
+        }
 
         if ($mes) {
             if (is_array($mes)) {
@@ -105,8 +161,11 @@ class DashboardController extends Controller
                 $query->whereMonth('pqrs.created_at', $mes);
             }
         }
-        
-        if ($dia) $query->whereDay('created_at', $dia);
+
+        // if ($dia) $query->whereDay('created_at', $dia);
+        if ($mes && $dia) {
+            $query->whereDay('pqrs.created_at', $dia);
+        }
         if ($sede) {
             if (is_array($sede)) {
                 $query->whereIn('sede', $sede);
@@ -155,6 +214,9 @@ class DashboardController extends Controller
             $query->whereIn('clasificaciones.nombre', (array) $clasificacion);
         }
 
+        if (isset($respuestaEnviada)) {
+            $query->where('pqrs.respuesta_enviada', $respuestaEnviada);
+        }
 
         $results = $query->groupBy('mes')->orderBy('mes')->get();
 
@@ -170,11 +232,63 @@ class DashboardController extends Controller
         return $meses;
     }
 
+    public function porDiaTipo(Request $request)
+    {
+        // $anio = $request->input('anio', date('Y'));
+        $anio = $request->input('anio');
+        $mes  = $request->input('mes'); // obligatorio para días
+
+        if (!$mes) {
+            return response()->json([
+                'error' => 'Debe enviar el mes'
+            ], 400);
+        }
+
+        $results = DB::table('pqrs')
+            ->select(
+                DB::raw('DAY(created_at) as dia'),
+                'tipo_solicitud',
+                DB::raw('COUNT(*) as cantidad')
+            )
+            ->whereYear('created_at', $anio)
+            ->whereMonth('created_at', $mes)
+            ->groupBy('dia', 'tipo_solicitud')
+            ->orderBy('dia')
+            ->get();
+
+        // Transformar a formato Recharts
+        $diasDelMes = collect(range(1, 31))->map(function ($dia) use ($results) {
+            $row = ['dia' => $dia];
+
+            foreach (
+                [
+                    'Queja',
+                    'Reclamo',
+                    'Peticion',
+                    'Solicitud',
+                    'Tutela',
+                    'Felicitacion'
+                ] as $tipo
+            ) {
+                $row[$tipo] = $results
+                    ->where('dia', $dia)
+                    ->where('tipo_solicitud', $tipo)
+                    ->sum('cantidad');
+            }
+
+            return $row;
+        });
+
+        return $diasDelMes;
+    }
+
+
 
 
     public function porTipo(Request $request)
     {
-        $anio = $request->input('anio', date('Y'));
+        // $anio = $request->input('anio', date('Y'));
+        $anio = $request->input('anio');
         $mes = $request->input('mes');
         $dia = $request->input('dia');
         $sede = $request->input('sede');
@@ -185,13 +299,19 @@ class DashboardController extends Controller
         $eps = $request->input('eps');
         $clasificacion_id = $request->input('clasificacion_id');
         $clasificacion = $request->input('clasificacion');
+        $respuestaEnviada = $request->input('respuesta_enviada');
 
         // ✅ JOIN para incluir clasificaciones
         $query = DB::table('pqrs')
             ->leftJoin('clasificacion_pqr', 'clasificacion_pqr.pqr_id', '=', 'pqrs.id')
             ->leftJoin('clasificaciones', 'clasificaciones.id', '=', 'clasificacion_pqr.clasificacion_id')
             ->select('pqrs.tipo_solicitud', DB::raw('COUNT(DISTINCT pqrs.id) as cantidad'))
-            ->whereYear('pqrs.created_at', $anio);
+            // ->whereYear('pqrs.created_at', $anio)
+        ;
+
+        if ($anio) {
+            $query->whereYear('pqrs.created_at', $anio);
+        }
 
         if ($mes) {
             if (is_array($mes)) {
@@ -201,7 +321,9 @@ class DashboardController extends Controller
             }
         }
 
-        if ($dia) $query->whereDay('pqrs.created_at', $dia);
+        if ($dia) {
+            $query->whereDay('pqrs.created_at', $dia);
+        }
 
         if ($sede) {
             $query->whereIn('pqrs.sede', (array) $sede);
@@ -234,12 +356,14 @@ class DashboardController extends Controller
             $query->whereIn('clasificaciones.nombre', (array) $clasificacion);
         }
 
+        if (isset($respuestaEnviada)) {
+            $query->where('pqrs.respuesta_enviada', $respuestaEnviada);
+        }
+
         $resultados = $query->groupBy('pqrs.tipo_solicitud')->get();
 
         // Obtener todas las categorías que existen en BD
-        $categorias = DB::table('pqrs')
-            ->distinct()
-            ->pluck('tipo_solicitud');
+        $categorias = (clone $query)->distinct()->pluck('tipo_solicitud');
 
         // Construir arreglo final con ceros donde no hay registros
         $tipos = collect($categorias)->map(function ($cat) use ($resultados) {
@@ -257,7 +381,8 @@ class DashboardController extends Controller
 
     public function porEps(Request $request)
     {
-        $anio = $request->input('anio', date('Y'));
+        // $anio = $request->input('anio', date('Y'));
+        $anio = $request->input('anio');
         $mes = $request->input('mes');
         $dia = $request->input('dia');
         $sede = $request->input('sede');
@@ -268,12 +393,18 @@ class DashboardController extends Controller
         $eps = $request->input('eps');
         $clasificacion_id = $request->input('clasificacion_id');
         $clasificacion = $request->input('clasificacion');
+        $respuestaEnviada = $request->input('respuesta_enviada');
 
         $query = DB::table('pqrs')
             ->leftJoin('clasificacion_pqr', 'clasificacion_pqr.pqr_id', '=', 'pqrs.id')
             ->leftJoin('clasificaciones', 'clasificaciones.id', '=', 'clasificacion_pqr.clasificacion_id')
             ->select('eps', DB::raw('COUNT(DISTINCT pqrs.id) as cantidad'))
-            ->whereYear('pqrs.created_at', $anio);
+            // ->whereYear('pqrs.created_at', $anio)
+        ;
+
+        if ($anio) {
+            $query->whereYear('pqrs.created_at', $anio);
+        }
 
         if ($mes) {
             if (is_array($mes)) {
@@ -283,7 +414,10 @@ class DashboardController extends Controller
             }
         }
 
-        if (!empty($dia)) $query->whereDay('created_at', $dia);
+        // if (!empty($dia)) $query->whereDay('created_at', $dia);
+        if ($mes && $dia) {
+            $query->whereDay('pqrs.created_at', $dia);
+        }
         if (!empty($sede)) $query->whereIn('sede', (array) $sede);
         if (!empty($atributo)) $query->whereIn('atributo_calidad', (array) $atributo);
         if (!empty($estadoTiempo)) $query->where('estado_tiempo', $estadoTiempo);
@@ -295,6 +429,9 @@ class DashboardController extends Controller
             $query->whereIn('clasificaciones.id', $clasificacion_id);
         } elseif (!empty($clasificacion)) {
             $query->whereIn('clasificaciones.nombre', $clasificacion);
+        }
+        if (isset($respuestaEnviada)) {
+            $query->where('pqrs.respuesta_enviada', $respuestaEnviada);
         }
 
         return $query->groupBy('eps')->get();
@@ -313,7 +450,8 @@ class DashboardController extends Controller
 
     public function porAtributoCalidad(Request $request)
     {
-        $anio = $request->input('anio', date('Y'));
+        // $anio = $request->input('anio', date('Y'));
+        $anio = $request->input('anio');
         $mes = $request->input('mes');
         $dia = $request->input('dia');
         $sede = $request->input('sede');
@@ -324,6 +462,7 @@ class DashboardController extends Controller
         $servicioPrestado = $request->input('servicio_prestado');
         $clasificacion_id = $request->input('clasificacion_id');
         $clasificacion = $request->input('clasificacion');
+        $respuestaEnviada = $request->input('respuesta_enviada');
 
         $query = DB::table('pqrs')
             ->leftJoin('clasificacion_pqr', 'clasificacion_pqr.pqr_id', '=', 'pqrs.id')
@@ -332,7 +471,12 @@ class DashboardController extends Controller
                 DB::raw("COALESCE(atributo_calidad, 'No definido') as atributo_calidad"),
                 DB::raw('COUNT(DISTINCT pqrs.id) as cantidad')
             )
-            ->whereYear('pqrs.created_at', $anio);
+            // ->whereYear('pqrs.created_at', $anio)
+        ;
+
+        if ($anio) {
+            $query->whereYear('pqrs.created_at', $anio);
+        }
 
         if ($mes) {
             if (is_array($mes)) {
@@ -342,7 +486,10 @@ class DashboardController extends Controller
             }
         }
 
-        if (!empty($dia)) $query->whereDay('created_at', $dia);
+        // if (!empty($dia)) $query->whereDay('created_at', $dia);
+        if ($mes && $dia) {
+            $query->whereDay('pqrs.created_at', $dia);
+        }
         if (!empty($sede)) $query->whereIn('sede', (array) $sede);
         if (!empty($atributo)) $query->whereIn('atributo_calidad', (array) $atributo);
         if (!empty($estadoTiempo)) $query->where('estado_tiempo', $estadoTiempo);
@@ -355,6 +502,10 @@ class DashboardController extends Controller
         } elseif (!empty($clasificacion)) {
             $query->whereIn('clasificaciones.nombre', (array) $clasificacion);
         }
+        if (isset($respuestaEnviada)) {
+            $query->where('pqrs.respuesta_enviada', $respuestaEnviada);
+        }
+
 
         return $query->groupBy('atributo_calidad')->get();
     }
@@ -363,7 +514,8 @@ class DashboardController extends Controller
     public function clasificacionPorTipoSolicitud(Request $request)
     {
         // 📅 Filtros principales
-        $anio = $request->input('anio', date('Y'));
+        // $anio = $request->input('anio', date('Y'));
+        $anio = $request->input('anio');
         $mes = $request->input('mes');
         $dia = $request->input('dia');
         $sede = $request->input('sede');
@@ -373,6 +525,7 @@ class DashboardController extends Controller
         $eps = $request->input('eps');
         $servicioPrestado = $request->input('servicio_prestado');
         $clasificacion = $request->input('clasificacion');
+        $respuestaEnviada = $request->input('respuesta_enviada');
 
         // 📊 Consulta base
         $query = DB::table('clasificacion_pqr as cp')
@@ -383,7 +536,12 @@ class DashboardController extends Controller
                 'p.tipo_solicitud',
                 DB::raw('COUNT(DISTINCT p.id) as total')
             )
-            ->whereYear('p.created_at', $anio);
+            // ->whereYear('p.created_at', $anio)
+        ;
+
+        if ($anio) {
+            $query->whereYear('p.created_at', $anio);
+        }
 
         // 📆 Filtro por mes
         if ($mes) {
@@ -392,7 +550,10 @@ class DashboardController extends Controller
         }
 
         // 📅 Filtro por día
-        if ($dia) $query->whereDay('p.created_at', $dia);
+        // if ($dia) $query->whereDay('p.created_at', $dia);
+        if ($mes && $dia) {
+            $query->whereDay('p.created_at', $dia);
+        }
 
         // 🏢 Filtro por sede
         if ($sede) $query->whereIn('p.sede', (array) $sede);
@@ -414,6 +575,12 @@ class DashboardController extends Controller
 
         // 🔹 Filtro por nombre de clasificación
         if ($clasificacion) $query->whereIn('c.nombre', (array) $clasificacion);
+
+        if (isset($respuestaEnviada)) {
+            // se asegura que sea 0 o 1
+            $query->where('p.respuesta_enviada', $respuestaEnviada);
+        }
+
 
         // 📈 Agrupación base
         $rawData = $query
@@ -442,7 +609,7 @@ class DashboardController extends Controller
     }
 
 
-  
+
     // public function promedioTiempoRespuesta()
     // {
     //     $promedio = DB::table('pqrs')
@@ -463,7 +630,8 @@ class DashboardController extends Controller
     public function promedioTiempoRespuesta(Request $request)
     {
         // 📅 Obtener todos los filtros del request
-        $anio = $request->input('anio', date('Y'));
+        // $anio = $request->input('anio', date('Y'));
+        $anio = $request->input('anio');
         $mes = $request->input('mes');
         $dia = $request->input('dia');
         $sede = $request->input('sede');
@@ -473,12 +641,17 @@ class DashboardController extends Controller
         $eps = $request->input('eps');
         $servicioPrestado = $request->input('servicio_prestado');
         $clasificacion = $request->input('clasificacion');
+        $respuestaEnviada = $request->input('respuesta_enviada');
 
         // 📊 Consulta base
         $query = DB::table('pqrs as p')
             ->whereNotNull('p.respondido_en')
-            ->whereYear('p.created_at', $anio)
+            // ->whereYear('p.created_at', $anio)
             ->select(DB::raw("AVG(TIMESTAMPDIFF(SECOND, p.created_at, p.respondido_en)) as promedio_segundos"));
+
+        if ($anio) {
+            $query->whereYear('p.created_at', $anio);
+        }
 
         // Si se usa el filtro 'clasificacion', necesitamos un JOIN
         if ($clasificacion) {
@@ -494,7 +667,10 @@ class DashboardController extends Controller
         }
 
         // 📅 Filtro por día
-        if ($dia) $query->whereDay('p.created_at', $dia);
+        // if ($dia) $query->whereDay('p.created_at', $dia);
+        if ($mes && $dia) {
+            $query->whereDay('p.created_at', $dia);
+        }
 
         // 🏢 Filtro por sede
         if ($sede) $query->whereIn('p.sede', (array) $sede);
@@ -513,7 +689,12 @@ class DashboardController extends Controller
 
         // 💬 Filtro por servicio prestado
         if ($servicioPrestado) $query->whereIn('p.servicio_prestado', (array) $servicioPrestado);
-        
+
+        if (isset($respuestaEnviada)) {
+            $query->where('p.respuesta_enviada', $respuestaEnviada);
+        }
+
+
         // Ejecutar la consulta para obtener el promedio en segundos
         $promedio = $query->value('promedio_segundos');
 
@@ -539,7 +720,8 @@ class DashboardController extends Controller
 
     public function porEstadoRespuesta(Request $request)
     {
-        $anio = $request->input('anio', date('Y'));
+        // $anio = $request->input('anio', date('Y'));
+        $anio = $request->input('anio');
         $mes = $request->input('mes');
         $dia = $request->input('dia');
         $sede = $request->input('sede');
@@ -550,13 +732,18 @@ class DashboardController extends Controller
         $servicioPrestado = $request->input('servicio_prestado');
         $clasificacion_id = $request->input('clasificacion_id');
         $clasificacion = $request->input('clasificacion');
+        $respuestaEnviada = $request->input('respuesta_enviada');
 
         $query = DB::table('pqrs')
             ->leftJoin('clasificacion_pqr', 'clasificacion_pqr.pqr_id', '=', 'pqrs.id')
             ->leftJoin('clasificaciones', 'clasificaciones.id', '=', 'clasificacion_pqr.clasificacion_id')
             ->select(DB::raw("COALESCE(estado_tiempo, 'No se ha clasificado') as estado_tiempo"), DB::raw('COUNT(DISTINCT pqrs.id) as cantidad'))
-            ->whereYear('pqrs.created_at', $anio);
+            // ->whereYear('pqrs.created_at', $anio)
+        ;
 
+        if ($anio) {
+            $query->whereYear('pqrs.created_at', $anio);
+        }
         if ($mes) {
             if (is_array($mes)) {
                 // Asegúrate de usar el prefijo en la función RAW si es necesario, 
@@ -566,7 +753,10 @@ class DashboardController extends Controller
                 $query->whereMonth('pqrs.created_at', $mes);
             }
         }
-        if ($dia) $query->whereDay('created_at', $dia);
+        // if ($dia) $query->whereDay('created_at', $dia);
+        if ($mes && $dia) {
+            $query->whereDay('pqrs.created_at', $dia);
+        }
 
         if ($sede) {
             if (is_array($sede)) {
@@ -615,6 +805,9 @@ class DashboardController extends Controller
             } else {
                 $query->where('servicio_prestado', $servicioPrestado);
             }
+        }
+        if (isset($respuestaEnviada)) {
+            $query->where('pqrs.respuesta_enviada', $respuestaEnviada);
         }
         if ($clasificacion_id) {
             $query->whereIn('clasificaciones.id', (array) $clasificacion_id);
@@ -651,7 +844,8 @@ class DashboardController extends Controller
 
     public function porServicioPrestado(Request $request)
     {
-        $anio = $request->input('anio', date('Y'));
+        // $anio = $request->input('anio', date('Y'));
+        $anio = $request->input('anio');
         $mes = $request->input('mes');
         $dia = $request->input('dia');
         $sede = $request->input('sede');
@@ -662,24 +856,35 @@ class DashboardController extends Controller
         $servicioPrestado = $request->input('servicio_prestado');
         $clasificacion_id = $request->input('clasificacion_id');
         $clasificacion = $request->input('clasificacion');
+        $respuestaEnviada = $request->input('respuesta_enviada');
 
         $query = DB::table('pqrs')
             ->leftJoin('clasificacion_pqr', 'clasificacion_pqr.pqr_id', '=', 'pqrs.id')
             ->leftJoin('clasificaciones', 'clasificaciones.id', '=', 'clasificacion_pqr.clasificacion_id')
-            ->whereYear('pqrs.created_at', $anio);
+            // ->whereYear('pqrs.created_at', $anio)
+        ;
 
+        if ($anio) {
+            $query->whereYear('pqrs.created_at', $anio);
+        }
         // Filtros
         if (!empty($mes)) {
             if (is_array($mes)) $query->whereIn(DB::raw('MONTH(pqrs.created_at)'), $mes);
             else $query->whereMonth('pqrs.created_at', $mes);
         }
         if (!empty($dia)) $query->whereDay('pqrs.created_at', $dia);
+        // if ($mes && $dia) {
+        //     $query->whereDay('pqrs.created_at', $dia);
+        // }
         if (!empty($sede)) $query->whereIn('sede', (array) $sede);
         if (!empty($atributo)) $query->whereIn('atributo_calidad', (array) $atributo);
         if (!empty($estadoTiempo)) $query->whereIn('estado_tiempo', (array) $estadoTiempo);
         if (!empty($eps)) $query->whereIn('eps', (array) $eps);
         if (!empty($tipoSolicitud)) $query->whereIn('tipo_solicitud', (array) $tipoSolicitud);
         if (!empty($servicioPrestado)) $query->whereIn('servicio_prestado', (array) $servicioPrestado);
+        if (isset($respuestaEnviada)) {
+            $query->where('pqrs.respuesta_enviada', $respuestaEnviada);
+        }
 
         // 🔹 Filtrar por clasificación correctamente
         if (!empty($clasificacion_id)) {
@@ -712,7 +917,8 @@ class DashboardController extends Controller
 
     public function porSedeTipoSolicitud(Request $request)
     {
-        $anio = $request->input('anio', date('Y'));
+        // $anio = $request->input('anio', date('Y'));
+        $anio = $request->input('anio');
         $mes = $request->input('mes');
         $dia = $request->input('dia');
         $sede = $request->input('sede');
@@ -723,11 +929,17 @@ class DashboardController extends Controller
         $servicioPrestado = $request->input('servicio_prestado');
         $clasificacion_id = $request->input('clasificacion_id');
         $clasificacion = $request->input('clasificacion');
+        $respuestaEnviada = $request->input('respuesta_enviada');
 
         $query = DB::table('pqrs')
             ->leftJoin('clasificacion_pqr', 'clasificacion_pqr.pqr_id', '=', 'pqrs.id')
             ->leftJoin('clasificaciones', 'clasificaciones.id', '=', 'clasificacion_pqr.clasificacion_id')
-            ->whereYear('pqrs.created_at', $anio);
+            // ->whereYear('pqrs.created_at', $anio)
+        ;
+
+        if ($anio) {
+            $query->whereYear('pqrs.created_at', $anio);
+        }
 
         // 🔹 Mes
         if (!empty($mes)) {
@@ -755,6 +967,10 @@ class DashboardController extends Controller
 
         // 🔹 Servicio prestado
         if (!empty($servicioPrestado)) $query->whereIn('servicio_prestado', (array) $servicioPrestado);
+
+        if (isset($respuestaEnviada)) {
+            $query->where('pqrs.respuesta_enviada', $respuestaEnviada);
+        }
 
         // 🔹 Clasificación
         if (!empty($clasificacion_id)) {
@@ -791,6 +1007,8 @@ class DashboardController extends Controller
     }
 
 
+
+    // DASHBOARD INTERNO
     public function usuariosConVariasPqrs(Request $request)
     {
         // Paso 1: Agrupar por usuario + tipo de solicitud
@@ -815,7 +1033,7 @@ class DashboardController extends Controller
                 DB::raw('JSON_ARRAYAGG(JSON_OBJECT("tipo_solicitud", tipo_solicitud, "cantidad", cantidad)) as tipos')
             )
             ->groupBy('documento_numero', 'nombre', 'apellido')
-            ->havingRaw('SUM(cantidad) >= 3') 
+            ->havingRaw('SUM(cantidad) >= 3')
             ->get();
 
         // Decodificar JSON de MySQL para que llegue como array en la API

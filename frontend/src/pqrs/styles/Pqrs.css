@@ -205,8 +205,12 @@
     margin-left: -495px;
 }
 
-
-
+.titulo-form-tutela {
+    /* font-family: 'Exo', sans-serif; */
+    font-size: 20px;
+    font-weight: 600;
+    color: rgb(4, 61, 126);
+}
 
 .radio-group {
     display: flex;
@@ -813,11 +817,16 @@
     list-style: none;
 }
 
-.text-gray-500{
+.text-gray-500 {
     color: rgb(99, 99, 99);
     font-size: 12px;
 }
 
+.peso-archivo {
+    color: rgb(224, 8, 8);
+    font-size: 10px;
+    font-style: italic;
+}
 
 @media (max-width: 575px) {
     .cabecera h2 {
@@ -834,7 +843,7 @@
 
     .titulo-form-felicitacion {
         margin-left: 4px;
-    }   
+    }
 }
 
 @media (min-width: 576px) and (max-width: 900px) {

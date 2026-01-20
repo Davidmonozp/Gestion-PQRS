@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar/Navbar";
 import "./styles/GestionApp.css";
 import DescargarPqrsExcel from "./components/DescargarPqrsExcel";
 import { Version } from "../components/Footer/Version";
+import { tienePermiso } from "../utils/permisoHelper";
 
 function GestionApp() {
   const [codigo, setCodigo] = useState("");
@@ -49,7 +50,15 @@ function GestionApp() {
     }
   };
 
-
+  const sedes = [
+    "Bogota-Norte",
+    "Bogota-Centro",
+    "Bogota-Sur-Occidente-Rehabilitación",
+    "Bogota-Sur-Occidente-Hidroterapia",
+    "Ibague",
+    "Chia",
+    "Florencia",
+  ];
   // 👉 Función para agregar clasificación
   const handleNuevaClasificacion = async () => {
     const { value: nombre } = await Swal.fire({
@@ -72,6 +81,22 @@ function GestionApp() {
           "error"
         );
       }
+    }
+  };
+
+  const [sedeSeleccionada, setSedeSeleccionada] = useState("");
+
+  const handleGuardarSede = async () => {
+    if (!sedeSeleccionada) return;
+    try {
+      const res = await api.post("/crear-clasificacion", { nombre: sedeSeleccionada });
+      Swal.fire("Éxito", res.data.message, "success");
+    } catch (err) {
+      Swal.fire(
+        "Error",
+        err.response?.data?.message || "No se pudo crear la clasificación",
+        "error"
+      );
     }
   };
 
@@ -107,41 +132,92 @@ function GestionApp() {
 
       <div className="gestion-app">
         <div className="cards-row">
+          <div className="card-config">
+            <h3>Cambiar sede</h3>
+            <p>Cambiar la sede de una PQRS.</p>
+            <button
+              className="boton-reabrir"
+              onClick={async () => {
+                const { value: formValues } = await Swal.fire({
+                  title: "Cambiar la sede de una PQR",
+                  html: `
+          <input id="swal-pqr-codigo" class="swal2-input" placeholder="Código de la PQR">
+          <select id="swal-pqr-sede" class="swal2-select">
+            <option value="">-- Selecciona una sede --</option>
+            ${sedes.map(sede => `<option value="${sede}">${sede}</option>`).join('')}
+          </select>
+        `,
+                  focusConfirm: false,
+                  showCancelButton: true,
+                  preConfirm: () => {
+                    const codigo = document.getElementById('swal-pqr-codigo').value.trim();
+                    const sede = document.getElementById('swal-pqr-sede').value;
+                    if (!codigo || !sede) {
+                      Swal.showValidationMessage('Debes ingresar el código y seleccionar una sede');
+                      return null;
+                    }
+                    return { codigo, sede };
+                  },
+                });
+
+                if (formValues) {
+                  try {
+                    const res = await api.post(`/pqrs/cambiar-sede/${formValues.codigo}`, {
+                      sede: formValues.sede,
+                    });
+                    Swal.fire("Éxito", res.data.message, "success");
+                  } catch (err) {
+                    Swal.fire(
+                      "Error",
+                      err.response?.data?.message || "No se pudo cambiar la sede",
+                      "error"
+                    );
+                  }
+                }
+              }}
+            >
+              Cambiar Sede
+            </button>
+          </div>
+
           {/* Card Reabrir */}
-          <div className="card-config">
-            <h3>Reabrir una PQR</h3>
-            <div className="form-group">
-              <label className="label-config" htmlFor="codigo">
-                Código de la PQR:
-              </label>
-              <input
-                className="input-config"
-                type="text"
-                id="codigo"
-                value={codigo}
-                onChange={(e) => setCodigo(e.target.value)}
-                placeholder="Ej: PT00017-1105695518"
-              />
-            </div>
-            <button className="boton-reabrir" onClick={handleReabrir} disabled={loading}>
-              {loading ? "Reabriendo..." : "Reabrir PQR"}
-            </button>
-          </div>
+          {tienePermiso(["Administrador"]) && (
+            <>
+              <div className="card-config">
+                <h3>Reabrir una PQR</h3>
+                <div className="form-group">
+                  <label className="label-config" htmlFor="codigo">
+                    Código de la PQR:
+                  </label>
+                  <input
+                    className="input-config"
+                    type="text"
+                    id="codigo"
+                    value={codigo}
+                    onChange={(e) => setCodigo(e.target.value)}
+                    placeholder="Ej: PT00017-1105695518"
+                  />
+                </div>
+                <button className="boton-reabrir" onClick={handleReabrir} disabled={loading}>
+                  {loading ? "Reabriendo..." : "Reabrir PQR"}
+                </button>
+              </div>
 
-          {/* Card Clasificación */}
-          <div className="card-config">
-            <h3>Clasificaciones</h3>
-            <p>Agrega nuevas clasificaciones de PQRs.</p>
-            <button className="boton-reabrir" onClick={handleNuevaClasificacion}>
-              Agregar Clasificación
-            </button>
-          </div>
-          <div className="card-config">
-            <h3>Informe PQRS</h3>
-            <p>Descarga de archivo Excel de PQRS</p>
-            <DescargarPqrsExcel />
-          </div>
-
+              {/* Card Clasificación */}
+              <div className="card-config">
+                <h3>Clasificaciones</h3>
+                <p>Agrega nuevas clasificaciones de PQRS.</p>
+                <button className="boton-reabrir" onClick={handleNuevaClasificacion}>
+                  Agregar Clasificación
+                </button>
+              </div>
+              <div className="card-config">
+                <h3>Informe PQRS</h3>
+                <p>Descarga de archivo Excel de PQRS</p>
+                <DescargarPqrsExcel />
+              </div>
+            </>
+          )}
           {/* Card Cargo */}
           {/* <div className="card-config">
             <h3>Sedes</h3>

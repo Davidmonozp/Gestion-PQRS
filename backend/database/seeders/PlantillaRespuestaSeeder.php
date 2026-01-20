@@ -97,7 +97,7 @@ Cordialmente,
 PASSUS IPS Taller Psicomotriz S.A.S.
 ',
             ],
-                  [
+            [
                 'nombre' => 'RESPUESTA DE EXONERACIÓN JUSTIFICADA.',
                 'contenido' => '
 Bogotá, [FECHA]
@@ -120,7 +120,7 @@ Cordialmente,
 PASSUS IPS Taller Psicomotriz S.A.S.
 ',
             ],
-                   [
+            [
                 'nombre' => 'PROFORMA DE RESPUESTA A QUEJA / SUGERENCIA',
                 'contenido' => '
 Bogotá, [FECHA]
@@ -145,7 +145,7 @@ Cordialmente,
 PASSUS IPS Taller Psicomotriz S.A.S.
 ',
             ],
-                          [
+            [
                 'nombre' => ' RESPUESTA TRASLADO DE SEDE',
                 'contenido' => '
 Bogotá, [FECHA]
@@ -168,7 +168,7 @@ Cordialmente,
 PASSUS IPS Taller Psicomotriz S.A.S.
 ',
             ],
-                         [
+            [
                 'nombre' => 'REPROGRAMACIÓN O CANCELACIÓN CUANDO NO ADJUNTA LOS SOPORTES',
                 'contenido' => '
 Bogotá, [FECHA]
@@ -204,7 +204,7 @@ Cordialmente,
 PASSUS IPS Taller Psicomotriz S.A.S.
 ',
             ],
-                            [
+            [
                 'nombre' => 'REPROGRAMACION O CANCELACIÓN JUSTIFICADA. ',
                 'contenido' => '
 Bogotá, [FECHA]
@@ -226,8 +226,8 @@ Cordialmente,
 Área de Experiencia al Usuario
 PASSUS IPS Taller Psicomotriz S.A.S.
 ',
-            ],   
-                            [
+            ],
+            [
                 'nombre' => 'RESPUESTA DE ENVIO DE INFORME FINAL ',
                 'contenido' => '
 Bogotá, [FECHA]
@@ -248,7 +248,157 @@ Cordialmente,
 Área de Experiencia al Usuario
 PASSUS IPS Taller Psicomotriz S.A.S.
 ',
-            ],         
+            ],
+            [
+                'nombre' => 'FORMATO RESPUESTA A TUTELAS ',
+                'contenido' => '
+Señor
+
+[JUEZ] @cendoj.ramajudicial.gov.co
+
+
+
+REF. Acción de tutela de __xxxxxxxxxxxxxxxxxx________ contra ___xxxxxxxxxxxx___________
+
+Rad. [RADICADO]
+
+
+Asunto: Descorre traslado PASSUS IPS TALLER PSICOMOTRIZ SAS
+
+
+ANAMARIA CABAL GALINDO, mayor de edad, identificada como aparece al pie de mi firma, actuando en nombre y representación de PASSUS IPS TALLER PSICOMOTRIZ SAS, entidad identificada con NIT. 900308007-1; todo lo cual se puede acreditar mediante certificado de existencia y representación legal el cual se aporta al presente documento; me permito atender el requerimiento del despacho como vinculado a la acción de tutela de la referencia así:
+
+
+I. FRENTE A LOS HECHOS
+
+(relación de los hechos desde el punto de vista de passus, si está involucrada en los eventos en que se fundamenta la tutela)
+
+
+II. FRENTE A LAS PRETENSIONES
+
+PASSUS se opone a la prosperidad de las pretensiones teniendo en cuenta que ……XXXXXXXXXXXXX…
+
+
+III. PRUEBAS
+
+Solicito al despacho tener como pruebas de los argumentos presentados en nombre de la entidad que represento.
+
+
+DOCUMENTALES
+
+1. XXXXX
+
+2. XXXXX
+
+IV. ANEXOS
+
+- Certificado de existencia y representación de PASSUS
+
+
+Cordialmente:
+
+
+ANAMARIA CABAL GALINDO
+
+C.C. 66814219
+
+Representante Legal
+',
+            ],
+            [
+                'nombre' => 'FORMATO DE DESVINCULACION DE PASSUS IPS -1',
+                'contenido' => '
+Señor
+
+[JUEZ] @cendoj.ramajudicial.gov.co
+
+
+
+REF. Acción de tutela de __xxxxxxxxxxxxxxxxxx________ contra ___xxxxxxxxxxxx___________
+
+Rad. [RADICADO]
+
+Asunto: Descorre traslado PASSUS IPS TALLER PSICOMOTRIZ SAS
+
+
+
+Respetado Señor(a);
+
+
+ANAMARIA CABAL GALINDO, mayor de edad, identificada como aparece al pie de mi firma, actuando en nombre y representación de PASSUS IPS TALLER PSICOMOTRIZ SAS, entidad identificada con NIT. 900308007-1; todo lo cual se puede acreditar mediante certificado de existencia y representación legal el cual se aporta al presente documento; me permito atender el requerimiento del despacho como vinculado a la acción de tutela de la referencia así:
+
+I. FRENTE A LOS HECHOS
+
+No me constan y me atengo a lo que se pruebe.
+
+II. FRENTE A LAS PRETENSIONES
+
+PASSUS al no tener ningún tipo de participación o estar relacionado en los hechos en lo que se funda la presente acción, ni estar vinculada a las pretensiones, se abstiene de pronunciarse sobre la prosperidad de estas. No obstante, sí solicitamos el juzgado desvincule formalmente a la entidad que represento del proceso que nos convoca.
+
+III. ANEXOS
+
+- Certificado de existencia y representación de PASSUS
+
+Cordialmente;
+
+
+
+ANAMARIA CABAL GALINDO
+
+C.C. 66814219
+
+Representante Legal
+',
+            ],
+                        [
+                'nombre' => 'FORMATO DE DESVINCULACION DE PASSUS IPS -2',
+                'contenido' => '
+Señor
+
+[JUEZ] @cendoj.ramajudicial.gov.co
+
+
+
+REF. Acción de tutela de __xxxxxxxxxxxxxxxxxx________ contra ___xxxxxxxxxxxx___________
+
+Rad. [RADICADO]
+
+Asunto: Descorre traslado PASSUS IPS TALLER PSICOMOTRIZ SAS
+
+
+
+Respetado Señor;
+
+
+ANAMARIA CABAL GALINDO, mayor de edad, identificada como aparece al pie de mi firma, actuando en nombre y representación de PASSUS IPS TALLER PSICOMOTRIZ SAS, entidad identificada con NIT. 900308007-1; todo lo cual se puede acreditar mediante certificado de existencia y representación legal el cual se aporta al presente documento; me permito atender el requerimiento del despacho como vinculado a la acción de tutela de la referencia así:
+
+
+
+II. FRENTE A LAS PRETENSIONES
+
+PASSUS es un proveedor de la EPS, xxxxxxxxxxxxxxxxxxxx
+
+
+No obstante, sí solicitamos el juzgado desvincule formalmente a la entidad que represento del proceso que nos convoca.
+
+
+III. ANEXOS
+
+- Certificado de existencia y representación de PASSUS
+
+
+
+Cordialmente;
+
+
+
+ANAMARIA CABAL GALINDO
+
+C.C. 66814219
+
+Representante Legal
+',
+            ],
         ];
 
         foreach ($plantillas as $plantilla) {

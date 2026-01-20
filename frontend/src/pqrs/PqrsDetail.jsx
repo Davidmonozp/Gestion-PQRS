@@ -69,9 +69,11 @@ function PqrsDetail() {
     Asignado: "estado-asignado",
     "En proceso": "estado-en-proceso",
     Cerrado: "estado-cerrado",
+    "Validacion del juez": "estado-validacion-juez",
   };
   const [plantillas, setPlantillas] = useState([]);
   const [plantillaSeleccionada, setPlantillaSeleccionada] = useState("");
+
 
   const [formData, setFormData] = useState({
     atributo_calidad: "",
@@ -91,12 +93,17 @@ function PqrsDetail() {
 
   // Función para ajustar la altura del textarea
   const adjustTextareaHeight = () => {
-    if (respuestaFinalTextareaRef.current) {
-      respuestaFinalTextareaRef.current.style.height = "auto"; // Resetear a auto
-      respuestaFinalTextareaRef.current.style.height =
-        respuestaFinalTextareaRef.current.scrollHeight + "px";
-    }
+    const textarea = respuestaFinalTextareaRef.current;
+    if (!textarea) return;
+
+    const scrollY = window.scrollY; // ⬅️ guardar scroll
+
+    textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
+
+    window.scrollTo({ top: scrollY }); // ⬅️ restaurar scroll
   };
+
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -601,7 +608,11 @@ function PqrsDetail() {
             {pqr.registrador_nombre && (
               <div className="solicitante">
                 <p>
-                  <strong>Parentesco:</strong> {pqr.parentesco}{" "}
+                  <strong>
+                    {pqr.tipo_solicitud === 'Tutela' ? 'Entidad:' : 'Parentesco:'}
+                  </strong>
+                  {" "}
+                  {pqr.parentesco}
                 </p>
                 {pqr.nombre_entidad && (
                   <p>
@@ -609,11 +620,24 @@ function PqrsDetail() {
                   </p>
                 )}
 
-                <p>
-                  <strong>Nombre Solicitante:</strong> {pqr.registrador_nombre}{" "}
-                  {pqr.registrador_segundo_nombre} {pqr.registrador_apellido}{" "}
-                  {pqr.registrador_segundo_apellido}
-                </p>
+                {pqr.tipo_solicitud === 'Tutela' ? (
+                  // CASO 1: Si la solicitud es 'Tutela' (Se muestra el Nombre del Juzgado y el apellido en un párrafo aparte)
+                  <>
+                    <p>
+                      <strong>Nombre del Juzgado:</strong> {pqr.registrador_nombre}
+                    </p>
+                    <p>
+                      <strong>Nombre del Juez:</strong> {pqr.registrador_apellido}
+                    </p>
+                  </>
+                ) : (
+                  // CASO 2: Si la solicitud NO es 'Tutela' (Se muestra el Nombre completo del Solicitante en un solo párrafo)
+                  <p>
+                    <strong>Nombre Solicitante:</strong> {pqr.registrador_nombre}{" "}
+                    {pqr.registrador_segundo_nombre} {pqr.registrador_apellido}{" "}
+                    {pqr.registrador_segundo_apellido}
+                  </p>
+                )}
 
                 {pqr.registrador_documento_numero && (
                   <p>
@@ -685,7 +709,7 @@ function PqrsDetail() {
 
             <p>
               <strong>⏱ Tiempo de Passus:</strong>{" "}
-              {pqr.estado_respuesta === "Cerrado" ? (
+              {["Cerrado", "Validacion del juez"].includes(pqr.estado_respuesta) ? (
                 <span style={{ color: "gray", fontStyle: "italic" }}>
                   Finalizado
                 </span>
@@ -704,7 +728,7 @@ function PqrsDetail() {
             ]) && (
                 <p>
                   <strong>⏱ Tiempo de usuario:</strong>{" "}
-                  {pqr.estado_respuesta === "Cerrado" ? (
+                  {["Cerrado", "Validacion del juez"].includes(pqr.estado_respuesta) ? (
                     <span style={{ color: "gray", fontStyle: "italic" }}>
                       Finalizado
                     </span>
@@ -1274,7 +1298,8 @@ function PqrsDetail() {
                       </p>
                       <div className="respuesta-content-box">
                         <strong>Contenido:</strong>{" "}
-                        <p
+                        <p className="recuadro"
+
                           dangerouslySetInnerHTML={
                             // 💡 Asegúrate de usar la función de conversión aquí
                             crearMarkupConSaltosDeLinea(respuesta.contenido)
@@ -1320,7 +1345,7 @@ function PqrsDetail() {
             )}
             {/* --- FIN Sección para mostrar TODAS las respuestas --- */}
 
-            {["Asignado", "En proceso", "Cerrado"].includes(
+            {["Asignado", "En proceso", "Cerrado", "Validacion del juez"].includes(
               pqr?.estado_respuesta
             ) &&
               // Mostrar siempre para Supervisor y Administrador
@@ -1370,7 +1395,86 @@ function PqrsDetail() {
 
                   {/* Dropdown de plantillas */}
                   <select
-                    className="styled-input"
+                    className="styled-input-plantilla"
+                    value={plantillaSeleccionada}
+                    onChange={(e) => {
+                      const idSeleccionado = e.target.value;
+                      setPlantillaSeleccionada(idSeleccionado);
+
+                      const plantilla = plantillas.find(
+                        (p) => p.id.toString() === idSeleccionado
+                      );
+
+                      if (plantilla && pqr) {
+                        let contenido = plantilla.contenido;
+
+                        let fechaOrigen = pqr.fecha_inicio_real || pqr.created_at;
+
+                        const fechaPqrCreada = new Date(fechaOrigen).toLocaleDateString(
+                          "es-CO",
+                          {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          }
+                        );
+
+                        const placeholders = {
+                          "[NOMBRE]": `${pqr.nombre || ""} ${pqr.segundo_nombre || ""} ${pqr.apellido || ""
+                            } ${pqr.segundo_apellido || ""}`.trim(),
+                          "[JUEZ]": `${pqr.registrador_apellido || ""}`.trim(),
+                          "[RADICADO]": `${pqr.radicado_juzgado || ""}`.trim(),
+                          "[CIUDAD]": pqr.sede || "Ciudad",
+                          "[CORREO]": pqr.correo || "",
+                          "[TIPO_DOC]": pqr.documento_tipo || "",
+                          "[NUMERO_DOC]": pqr.documento_numero || "",
+                          "[TELEFONO]": pqr.telefono || "",
+                          "[FECHA]": new Date().toLocaleDateString("es-CO", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          }),
+                          "[PQR_CREADA]": fechaPqrCreada,
+                          "[PACIENTE]": `${pqr.nombre || ""} ${pqr.segundo_nombre || ""} ${pqr.apellido || ""
+                            } ${pqr.segundo_apellido || ""}`.trim(),
+                          "[CC]": pqr.documento_tipo || "",
+                        };
+
+                        for (const clave in placeholders) {
+                          contenido = contenido.replaceAll(clave, placeholders[clave]);
+                        }
+
+                        setRespuestaFinal(contenido);
+                      }
+                    }}
+                    disabled={yaTieneFinal && !editandoRespuestaFinal}
+                  >
+                    <option value="">-- Selecciona una plantilla --</option>
+
+                    {plantillas
+                      .filter((p) => {
+                        const esFormato = p.nombre.toLowerCase().includes("formato");
+                        const esTutela = pqr?.tipo_solicitud === "Tutela";
+
+                        if (esTutela) {
+                          // Si es tutela → solo plantillas que contienen "formato"
+                          return esFormato;
+                        } else {
+                          // Si NO es tutela → NO mostrar plantillas de tutela
+                          return !esFormato;
+                        }
+                      })
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nombre}
+                        </option>
+                      ))}
+
+                  </select>
+
+
+                  {/* <select
+                    className="styled-input-plantilla"
                     value={plantillaSeleccionada}
                     onChange={(e) => {
                       const idSeleccionado = e.target.value;
@@ -1404,6 +1508,8 @@ function PqrsDetail() {
                           "[NOMBRE]": `${pqr.nombre || ""} ${pqr.segundo_nombre || ""
                             } ${pqr.apellido || ""} ${pqr.segundo_apellido || ""
                             }`.trim(),
+                          "[JUEZ]": `${pqr.registrador_apellido || ""}`.trim(),
+                          "[RADICADO]": `${pqr.radicado_juzgado || ""}`.trim(),
                           "[CIUDAD]": pqr.sede || "Ciudad",
                           "[CORREO]": pqr.correo || "",
                           "[TIPO_DOC]": pqr.documento_tipo || "",
@@ -1437,7 +1543,7 @@ function PqrsDetail() {
                         {p.nombre}
                       </option>
                     ))}
-                  </select>
+                  </select> */}
 
                   {/* Área de texto editable */}
                   <textarea

@@ -641,12 +641,12 @@ function PqrsForm({
     const selectedFile = e.target.files[0]; // solo 1 archivo por requisito
     if (!selectedFile) return;
 
-    // Validar tamaño (7MB)
-    if (selectedFile.size > 7 * 1024 * 1024) {
+    // Validar tamaño (15MB)
+    if (selectedFile.size > 15 * 1024 * 1024) {
       Swal.fire({
         icon: "error",
         title: "Archivo demasiado grande",
-        html: `El archivo <b>${selectedFile.name}</b> supera el tamaño máximo (7 MB).`,
+        html: `El archivo <b>${selectedFile.name}</b> supera el tamaño máximo (15 MB).`,
         confirmButtonColor: "#d33",
       });
       e.target.value = ""; // reset input
@@ -1174,7 +1174,7 @@ function PqrsForm({
             Envía tu <span>PQR</span>
           </div>
           <label className="registra-otro-label">
-            ¿Está registrando esta solicitud en nombre de otra persona o
+            ¿Está registrando esta solicitud a nombre de otra persona o
             entidad?
           </label>
           <div className="radio-group">
@@ -1239,27 +1239,27 @@ function PqrsForm({
                   </div>
                   {(form.parentesco === "Ente de control" ||
                     form.parentesco === "Asegurador") && (
-                    <div className="floating-label">
-                      <input
-                        id="nombre_entidad"
-                        name="nombre_entidad"
-                        value={form.nombre_entidad}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        // 🔹 Solo requerido si el parentesco es "Ente de control" o "Entidad"
-                        required={
-                          form.parentesco === "Ente de control" ||
-                          form.parentesco === "Asegurador"
-                        }
-                      />
-                      <label htmlFor="nombre_entidad">
-                        Nombre de la entidad
-                      </label>
-                      {errors.nombre_entidad && (
-                        <p className="error">{errors.nombre_entidad}</p>
-                      )}
-                    </div>
-                  )}
+                      <div className="floating-label">
+                        <input
+                          id="nombre_entidad"
+                          name="nombre_entidad"
+                          value={form.nombre_entidad}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          // 🔹 Solo requerido si el parentesco es "Ente de control" o "Entidad"
+                          required={
+                            form.parentesco === "Ente de control" ||
+                            form.parentesco === "Asegurador"
+                          }
+                        />
+                        <label htmlFor="nombre_entidad">
+                          Nombre de la entidad
+                        </label>
+                        {errors.nombre_entidad && (
+                          <p className="error">{errors.nombre_entidad}</p>
+                        )}
+                      </div>
+                    )}
 
                   <div className="floating-label">
                     <input
@@ -1416,24 +1416,24 @@ function PqrsForm({
 
                   {(form.parentesco === "Ente de control" ||
                     form.parentesco === "Asegurador") && (
-                    <div className="floating-label">
-                      <input
-                        id="registrador_cargo"
-                        name="registrador_cargo"
-                        value={form.registrador_cargo}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        required={
-                          form.parentesco === "Ente de control" ||
-                          form.parentesco === "Asegurador"
-                        }
-                      />
-                      <label htmlFor="registrador_cargo">Cargo</label>
-                      {errors.registrador_cargo && (
-                        <p className="error">{errors.registrador_cargo}</p>
-                      )}
-                    </div>
-                  )}
+                      <div className="floating-label">
+                        <input
+                          id="registrador_cargo"
+                          name="registrador_cargo"
+                          value={form.registrador_cargo}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          required={
+                            form.parentesco === "Ente de control" ||
+                            form.parentesco === "Asegurador"
+                          }
+                        />
+                        <label htmlFor="registrador_cargo">Cargo</label>
+                        {errors.registrador_cargo && (
+                          <p className="error">{errors.registrador_cargo}</p>
+                        )}
+                      </div>
+                    )}
 
                   <div className="floating-label">
                     <input
@@ -1685,9 +1685,8 @@ function PqrsForm({
               </div>
 
               <div
-                className={`floating-label regimen-select ${
-                  form.regimen ? "has-value" : ""
-                }`}
+                className={`floating-label regimen-select ${form.regimen ? "has-value" : ""
+                  }`}
               >
                 <select
                   id="regimen"
@@ -1739,22 +1738,22 @@ function PqrsForm({
               </div>
 
               {form.tipo_solicitud === "Tutela" && (
-  <div className="floating-label">
-    <input
-      id="radicado_juzgado"
-      name="radicado_juzgado"
-      type="text"
-      value={form.radicado_juzgado}
-      onChange={handleChange}
-      onBlur={handleBlur}
-      required
-    />
-    <label htmlFor="radicado_juzgado">Radicado del juzgado</label>
-    {errors.radicado_juzgado && (
-      <p className="error">{errors.radicado_juzgado}</p>
-    )}
-  </div>
-)}
+                <div className="floating-label">
+                  <input
+                    id="radicado_juzgado"
+                    name="radicado_juzgado"
+                    type="text"
+                    value={form.radicado_juzgado}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    required
+                  />
+                  <label htmlFor="radicado_juzgado">Radicado del juzgado</label>
+                  {errors.radicado_juzgado && (
+                    <p className="error">{errors.radicado_juzgado}</p>
+                  )}
+                </div>
+              )}
 
               {/* 🟢 Campo Clasificaciones */}
               <div
@@ -1771,23 +1770,22 @@ function PqrsForm({
                   <span
                     className={
                       Array.isArray(form.clasificaciones) &&
-                      form.clasificaciones.length
+                        form.clasificaciones.length
                         ? "selected"
                         : "placeholder"
                     }
                   >
                     {Array.isArray(form.clasificaciones) &&
-                    form.clasificaciones.length
+                      form.clasificaciones.length
                       ? availableClasificaciones
-                          .filter((c) => form.clasificaciones.includes(c.id))
-                          .map((c) => c.nombre)
-                          .join(", ")
+                        .filter((c) => form.clasificaciones.includes(c.id))
+                        .map((c) => c.nombre)
+                        .join(", ")
                       : "Selecciona clasificaciones"}
                   </span>
                   <span
-                    className={`clasificaciones-caret ${
-                      showClasificacionesDropdown ? "open" : ""
-                    }`}
+                    className={`clasificaciones-caret ${showClasificacionesDropdown ? "open" : ""
+                      }`}
                   ></span>
                 </div>
 
@@ -1895,9 +1893,8 @@ function PqrsForm({
                         : "Accionado"}
                     </span>
                     <span
-                      className={`accionado-caret ${
-                        showAccionadoDropdown ? "open" : ""
-                      }`}
+                      className={`accionado-caret ${showAccionadoDropdown ? "open" : ""
+                        }`}
                     ></span>
                   </div>
 
@@ -1952,26 +1949,26 @@ function PqrsForm({
                     value={
                       form.fecha_inicio_real
                         ? (() => {
-                            const date = new Date(form.fecha_inicio_real); // Obtener componentes de fecha y hora local
-                            const year = date.getFullYear();
-                            const month = (date.getMonth() + 1)
-                              .toString()
-                              .padStart(2, "0");
-                            const day = date
-                              .getDate()
-                              .toString()
-                              .padStart(2, "0");
-                            const hours = date
-                              .getHours()
-                              .toString()
-                              .padStart(2, "0");
-                            const minutes = date
-                              .getMinutes()
-                              .toString()
-                              .padStart(2, "0");
+                          const date = new Date(form.fecha_inicio_real); // Obtener componentes de fecha y hora local
+                          const year = date.getFullYear();
+                          const month = (date.getMonth() + 1)
+                            .toString()
+                            .padStart(2, "0");
+                          const day = date
+                            .getDate()
+                            .toString()
+                            .padStart(2, "0");
+                          const hours = date
+                            .getHours()
+                            .toString()
+                            .padStart(2, "0");
+                          const minutes = date
+                            .getMinutes()
+                            .toString()
+                            .padStart(2, "0");
 
-                            return `${year}-${month}-${day}T${hours}:${minutes}`;
-                          })()
+                          return `${year}-${month}-${day}T${hours}:${minutes}`;
+                        })()
                         : ""
                     }
                     onChange={handleChange}
@@ -2032,7 +2029,7 @@ function PqrsForm({
               ) ? (
                 <div key={clasificacion} className="file-input-group">
                   {clasificacion ===
-                  "Envío de historia clínica o informes finales" ? (
+                    "Envío de historia clínica o informes finales" ? (
                     <>
                       {/* Lógica para la historia clínica */}
                       <div className="subopcion-historia">
@@ -2040,9 +2037,8 @@ function PqrsForm({
                         <select
                           value={subOpcionHistoria}
                           onChange={(e) => setSubOpcionHistoria(e.target.value)}
-                          className={`${
-                            errors["subOpcionHistoria"] ? "input-error" : ""
-                          }`}
+                          className={`${errors["subOpcionHistoria"] ? "input-error" : ""
+                            }`}
                         >
                           <option value="">-- Seleccione una opción --</option>
                           {Object.keys(historiaClinicaOptions).map((op) => (
@@ -2082,7 +2078,6 @@ function PqrsForm({
                                       htmlFor={`file-upload-${requisitoId}`}
                                       className="file-upload-button ml-auto"
                                     >
-                                      Subir archivo
                                     </label>
                                     <input
                                       id={`file-upload-${requisitoId}`}
@@ -2211,6 +2206,8 @@ function PqrsForm({
               >
                 Subir archivo
               </label>
+              <label className="peso-archivo">El archivo debe ser inferior a 14 mb</label>
+
               <input
                 id="archivos-adicionales"
                 type="file"
@@ -2219,14 +2216,14 @@ function PqrsForm({
                 onChange={(e) => {
                   const nuevos = Array.from(e.target.files);
 
-                  // Filtrar por tamaño (máximo 7MB)
+                  // Filtrar por tamaño (máximo 15MB)
                   const validos = [];
                   nuevos.forEach((file) => {
-                    if (file.size > 7 * 1024 * 1024) {
+                    if (file.size > 15 * 1024 * 1024) {
                       Swal.fire({
                         icon: "error",
                         title: "Archivo demasiado grande",
-                        text: `El archivo "${file.name}" supera los 7 MB.`,
+                        text: `El archivo "${file.name}" supera los 15 MB.`,
                       });
                     } else {
                       validos.push(file);
@@ -2275,11 +2272,10 @@ function PqrsForm({
                 <p className="error">{errors.descripcion}</p>
               )}
               <small
-                className={`contador-caracteres ${
-                  form.descripcion.length > MAX_CARACTERES_DESCRIPCION * 0.9
-                    ? "alerta"
-                    : ""
-                }`}
+                className={`contador-caracteres ${form.descripcion.length > MAX_CARACTERES_DESCRIPCION * 0.9
+                  ? "alerta"
+                  : ""
+                  }`}
               >
                 {form.descripcion.length} / {MAX_CARACTERES_DESCRIPCION}{" "}
                 caracteres
@@ -2296,7 +2292,7 @@ function PqrsForm({
                 />
                 <div className="politica-texto">
                   <span className="politica-descripcion">
-                    Acepto la 
+                    Acepto la
                     <a
                       href="https://passusips.com/nosotros-politica-manejo-datos"
                       target="_blank"
@@ -2443,6 +2439,98 @@ function PqrsForm({
 
 export default PqrsForm;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // import React, { useState, useEffect, useCallback, useRef } from "react";
 // import { createPqr } from "./pqrsService"; // Asegúrate de tener createPqr y updatePqr si los usas
 // import "./styles/Pqrs.css";
@@ -2566,7 +2654,7 @@ export default PqrsForm;
 //     "Psiquiatría",
 //     "Fisiatría",
 //   ],
-//   "Cedritos-Divertido": ["Natación", "Yoga", "Pilates"],
+//   "Divertido": ["Natación", "Yoga", "Pilates"],
 // };
 
 // const parentesco = [
@@ -2624,6 +2712,7 @@ export default PqrsForm;
 //     regimen: "",
 //     regimenLocked: false,
 //     tipo_solicitud: defaultTipoSolicitud || "",
+//     radicado_juzgado: "",
 //     clasificacion_tutela: "",
 //     accionado: [],
 //     descripcion: "",
@@ -2801,7 +2890,7 @@ export default PqrsForm;
 //   }, [form.registra_otro, form.documento_tipo]);
 
 //   useEffect(() => {
-//     if (form.sede === "Cedritos-Divertido") {
+//     if (form.sede === "Divertido") {
 //       setForm((prev) => ({
 //         ...prev,
 //         eps: "Particular",
@@ -2926,6 +3015,7 @@ export default PqrsForm;
 //         eps: pqrData.eps || "",
 //         regimen: pqrData.regimen || "",
 //         tipo_solicitud: pqrData.tipo_solicitud || defaultTipoSolicitud || "",
+//         radicado_juzgado: pqrData.radicado_juzgado || "",
 //         clasificacion_tutela: pqrData.clasificacion_tutela || "",
 //         accionado: pqrData.accionado || "",
 //         descripcion: pqrData.descripcion || "",
@@ -3084,12 +3174,12 @@ export default PqrsForm;
 //     const selectedFile = e.target.files[0]; // solo 1 archivo por requisito
 //     if (!selectedFile) return;
 
-//     // Validar tamaño (7MB)
-//     if (selectedFile.size > 7 * 1024 * 1024) {
+//     // Validar tamaño (15MB)
+//     if (selectedFile.size > 15 * 1024 * 1024) {
 //       Swal.fire({
 //         icon: "error",
 //         title: "Archivo demasiado grande",
-//         html: `El archivo <b>${selectedFile.name}</b> supera el tamaño máximo (7 MB).`,
+//         html: `El archivo <b>${selectedFile.name}</b> supera el tamaño máximo (15 MB).`,
 //         confirmButtonColor: "#d33",
 //       });
 //       e.target.value = ""; // reset input
@@ -3360,24 +3450,24 @@ export default PqrsForm;
 //         await createPqr(formData);
 
 //         // Determina los destinatarios del correo basándose en la lógica del parentesco
-//      let mensajeDestinatario = "";
+//         let mensajeDestinatario = "";
 
-// if (form.tipo_solicitud !== "Tutela") {
-//   if (
-//     form.parentesco === "Asegurador" ||
-//     form.parentesco === "Ente de control"
-//   ) {
-//     // Si el parentesco es Asegurador o Ente de control, el correo solo va al registrador.
-//     mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.registrador_correo}</strong>.`;
-//   } else {
-//     // Si no, el correo va al paciente y al registrador (si este existe).
-//     if (form.registrador_correo) {
-//       mensajeDestinatario = `El número de radicado será enviado a los correos <strong>${form.correo}</strong> y <strong>${form.registrador_correo}</strong>.`;
-//     } else {
-//       mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.correo}</strong>.`;
-//     }
-//   }
-// }
+//         if (form.tipo_solicitud !== "Tutela") {
+//           if (
+//             form.parentesco === "Asegurador" ||
+//             form.parentesco === "Ente de control"
+//           ) {
+//             // Si el parentesco es Asegurador o Ente de control, el correo solo va al registrador.
+//             mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.registrador_correo}</strong>.`;
+//           } else {
+//             // Si no, el correo va al paciente y al registrador (si este existe).
+//             if (form.registrador_correo) {
+//               mensajeDestinatario = `El número de radicado será enviado a los correos <strong>${form.correo}</strong> y <strong>${form.registrador_correo}</strong>.`;
+//             } else {
+//               mensajeDestinatario = `El número de radicado será enviado al correo <strong>${form.correo}</strong>.`;
+//             }
+//           }
+//         }
 
 //         // Muestra el mensaje de SweetAlert2 con el texto dinámico
 //         Swal.fire({
@@ -3682,27 +3772,27 @@ export default PqrsForm;
 //                   </div>
 //                   {(form.parentesco === "Ente de control" ||
 //                     form.parentesco === "Asegurador") && (
-//                     <div className="floating-label">
-//                       <input
-//                         id="nombre_entidad"
-//                         name="nombre_entidad"
-//                         value={form.nombre_entidad}
-//                         onChange={handleChange}
-//                         onBlur={handleBlur}
-//                         // 🔹 Solo requerido si el parentesco es "Ente de control" o "Entidad"
-//                         required={
-//                           form.parentesco === "Ente de control" ||
-//                           form.parentesco === "Asegurador"
-//                         }
-//                       />
-//                       <label htmlFor="nombre_entidad">
-//                         Nombre de la entidad
-//                       </label>
-//                       {errors.nombre_entidad && (
-//                         <p className="error">{errors.nombre_entidad}</p>
-//                       )}
-//                     </div>
-//                   )}
+//                       <div className="floating-label">
+//                         <input
+//                           id="nombre_entidad"
+//                           name="nombre_entidad"
+//                           value={form.nombre_entidad}
+//                           onChange={handleChange}
+//                           onBlur={handleBlur}
+//                           // 🔹 Solo requerido si el parentesco es "Ente de control" o "Entidad"
+//                           required={
+//                             form.parentesco === "Ente de control" ||
+//                             form.parentesco === "Asegurador"
+//                           }
+//                         />
+//                         <label htmlFor="nombre_entidad">
+//                           Nombre de la entidad
+//                         </label>
+//                         {errors.nombre_entidad && (
+//                           <p className="error">{errors.nombre_entidad}</p>
+//                         )}
+//                       </div>
+//                     )}
 
 //                   <div className="floating-label">
 //                     <input
@@ -3841,22 +3931,6 @@ export default PqrsForm;
 
 //                   <div className="floating-label">
 //                     <input
-//                       id="registrador_correo"
-//                       name="registrador_correo"
-//                       type="email"
-//                       value={form.registrador_correo}
-//                       onChange={handleChange}
-//                       onBlur={handleBlur}
-//                       required
-//                     />
-//                     <label htmlFor="registrador_correo">Correo</label>
-//                     {errors.registrador_correo && (
-//                       <p className="error">{errors.registrador_correo}</p>
-//                     )}
-//                   </div>
-
-//                   <div className="floating-label">
-//                     <input
 //                       id="registrador_telefono"
 //                       name="registrador_telefono"
 //                       type="text"
@@ -3875,24 +3949,46 @@ export default PqrsForm;
 
 //                   {(form.parentesco === "Ente de control" ||
 //                     form.parentesco === "Asegurador") && (
-//                     <div className="floating-label">
-//                       <input
-//                         id="registrador_cargo"
-//                         name="registrador_cargo"
-//                         value={form.registrador_cargo}
-//                         onChange={handleChange}
-//                         onBlur={handleBlur}
-//                         required={
-//                           form.parentesco === "Ente de control" ||
-//                           form.parentesco === "Asegurador"
-//                         }
-//                       />
-//                       <label htmlFor="registrador_cargo">Cargo</label>
-//                       {errors.registrador_cargo && (
-//                         <p className="error">{errors.registrador_cargo}</p>
-//                       )}
-//                     </div>
-//                   )}
+//                       <div className="floating-label">
+//                         <input
+//                           id="registrador_cargo"
+//                           name="registrador_cargo"
+//                           value={form.registrador_cargo}
+//                           onChange={handleChange}
+//                           onBlur={handleBlur}
+//                           required={
+//                             form.parentesco === "Ente de control" ||
+//                             form.parentesco === "Asegurador"
+//                           }
+//                         />
+//                         <label htmlFor="registrador_cargo">Cargo</label>
+//                         {errors.registrador_cargo && (
+//                           <p className="error">{errors.registrador_cargo}</p>
+//                         )}
+//                       </div>
+//                     )}
+
+//                   <div className="floating-label">
+//                     <input
+//                       id="registrador_correo"
+//                       name="registrador_correo"
+//                       type="text"
+//                       value={form.registrador_correo}
+//                       onChange={handleChange}
+//                       onBlur={handleBlur}
+//                       required
+//                     />
+//                     <label htmlFor="registrador_correo">
+//                       Correo del registrador
+//                     </label>
+//                     {/* <label htmlFor="registrador_correo">Correo(s) del registrador</label>
+//   <small className="text-gray-500">
+//     Puedes ingresar varios correos separados por coma. Ej: juan@mail.com, maria@mail.com
+//   </small> */}
+//                     {errors.registrador_correo && (
+//                       <p className="error">{errors.registrador_correo}</p>
+//                     )}
+//                   </div>
 //                 </div>
 //               </>
 //             )}
@@ -4062,8 +4158,8 @@ export default PqrsForm;
 //                   <option value="Bogota-Sur-Occidente-Rehabilitación">
 //                     Bogotá Sur Occidente Rehabilitación
 //                   </option>
-//                   <option value="Cedritos-Divertido">Cedritos-Divertido</option>
 //                   <option value="Chia">Chía</option>
+//                   <option value="Divertido">Divertido</option>
 //                   <option value="Florencia">Florencia</option>
 //                   <option value="Ibague">Ibagué</option>
 //                 </select>
@@ -4104,7 +4200,7 @@ export default PqrsForm;
 //                   onBlur={handleBlur}
 //                   required
 //                 >
-//                   {form.sede === "Cedritos-Divertido" ? (
+//                   {form.sede === "Divertido" ? (
 //                     <option value="Particular">Particular</option>
 //                   ) : (
 //                     <>
@@ -4122,9 +4218,8 @@ export default PqrsForm;
 //               </div>
 
 //               <div
-//                 className={`floating-label regimen-select ${
-//                   form.regimen ? "has-value" : ""
-//                 }`}
+//                 className={`floating-label regimen-select ${form.regimen ? "has-value" : ""
+//                   }`}
 //               >
 //                 <select
 //                   id="regimen"
@@ -4175,6 +4270,24 @@ export default PqrsForm;
 //                 )}
 //               </div>
 
+//               {form.tipo_solicitud === "Tutela" && (
+//                 <div className="floating-label">
+//                   <input
+//                     id="radicado_juzgado"
+//                     name="radicado_juzgado"
+//                     type="text"
+//                     value={form.radicado_juzgado}
+//                     onChange={handleChange}
+//                     onBlur={handleBlur}
+//                     required
+//                   />
+//                   <label htmlFor="radicado_juzgado">Radicado del juzgado</label>
+//                   {errors.radicado_juzgado && (
+//                     <p className="error">{errors.radicado_juzgado}</p>
+//                   )}
+//                 </div>
+//               )}
+
 //               {/* 🟢 Campo Clasificaciones */}
 //               <div
 //                 className="clasificaciones-container"
@@ -4190,23 +4303,22 @@ export default PqrsForm;
 //                   <span
 //                     className={
 //                       Array.isArray(form.clasificaciones) &&
-//                       form.clasificaciones.length
+//                         form.clasificaciones.length
 //                         ? "selected"
 //                         : "placeholder"
 //                     }
 //                   >
 //                     {Array.isArray(form.clasificaciones) &&
-//                     form.clasificaciones.length
+//                       form.clasificaciones.length
 //                       ? availableClasificaciones
-//                           .filter((c) => form.clasificaciones.includes(c.id))
-//                           .map((c) => c.nombre)
-//                           .join(", ")
+//                         .filter((c) => form.clasificaciones.includes(c.id))
+//                         .map((c) => c.nombre)
+//                         .join(", ")
 //                       : "Selecciona clasificaciones"}
 //                   </span>
 //                   <span
-//                     className={`clasificaciones-caret ${
-//                       showClasificacionesDropdown ? "open" : ""
-//                     }`}
+//                     className={`clasificaciones-caret ${showClasificacionesDropdown ? "open" : ""
+//                       }`}
 //                   ></span>
 //                 </div>
 
@@ -4314,9 +4426,8 @@ export default PqrsForm;
 //                         : "Accionado"}
 //                     </span>
 //                     <span
-//                       className={`accionado-caret ${
-//                         showAccionadoDropdown ? "open" : ""
-//                       }`}
+//                       className={`accionado-caret ${showAccionadoDropdown ? "open" : ""
+//                         }`}
 //                     ></span>
 //                   </div>
 
@@ -4371,26 +4482,26 @@ export default PqrsForm;
 //                     value={
 //                       form.fecha_inicio_real
 //                         ? (() => {
-//                             const date = new Date(form.fecha_inicio_real); // Obtener componentes de fecha y hora local
-//                             const year = date.getFullYear();
-//                             const month = (date.getMonth() + 1)
-//                               .toString()
-//                               .padStart(2, "0");
-//                             const day = date
-//                               .getDate()
-//                               .toString()
-//                               .padStart(2, "0");
-//                             const hours = date
-//                               .getHours()
-//                               .toString()
-//                               .padStart(2, "0");
-//                             const minutes = date
-//                               .getMinutes()
-//                               .toString()
-//                               .padStart(2, "0");
+//                           const date = new Date(form.fecha_inicio_real); // Obtener componentes de fecha y hora local
+//                           const year = date.getFullYear();
+//                           const month = (date.getMonth() + 1)
+//                             .toString()
+//                             .padStart(2, "0");
+//                           const day = date
+//                             .getDate()
+//                             .toString()
+//                             .padStart(2, "0");
+//                           const hours = date
+//                             .getHours()
+//                             .toString()
+//                             .padStart(2, "0");
+//                           const minutes = date
+//                             .getMinutes()
+//                             .toString()
+//                             .padStart(2, "0");
 
-//                             return `${year}-${month}-${day}T${hours}:${minutes}`;
-//                           })()
+//                           return `${year}-${month}-${day}T${hours}:${minutes}`;
+//                         })()
 //                         : ""
 //                     }
 //                     onChange={handleChange}
@@ -4451,7 +4562,7 @@ export default PqrsForm;
 //               ) ? (
 //                 <div key={clasificacion} className="file-input-group">
 //                   {clasificacion ===
-//                   "Envío de historia clínica o informes finales" ? (
+//                     "Envío de historia clínica o informes finales" ? (
 //                     <>
 //                       {/* Lógica para la historia clínica */}
 //                       <div className="subopcion-historia">
@@ -4459,9 +4570,8 @@ export default PqrsForm;
 //                         <select
 //                           value={subOpcionHistoria}
 //                           onChange={(e) => setSubOpcionHistoria(e.target.value)}
-//                           className={`${
-//                             errors["subOpcionHistoria"] ? "input-error" : ""
-//                           }`}
+//                           className={`${errors["subOpcionHistoria"] ? "input-error" : ""
+//                             }`}
 //                         >
 //                           <option value="">-- Seleccione una opción --</option>
 //                           {Object.keys(historiaClinicaOptions).map((op) => (
@@ -4638,14 +4748,14 @@ export default PqrsForm;
 //                 onChange={(e) => {
 //                   const nuevos = Array.from(e.target.files);
 
-//                   // Filtrar por tamaño (máximo 7MB)
+//                   // Filtrar por tamaño (máximo 15MB)
 //                   const validos = [];
 //                   nuevos.forEach((file) => {
-//                     if (file.size > 7 * 1024 * 1024) {
+//                     if (file.size > 15 * 1024 * 1024) {
 //                       Swal.fire({
 //                         icon: "error",
 //                         title: "Archivo demasiado grande",
-//                         text: `El archivo "${file.name}" supera los 7 MB.`,
+//                         text: `El archivo "${file.name}" supera los 15 MB.`,
 //                       });
 //                     } else {
 //                       validos.push(file);
@@ -4694,11 +4804,10 @@ export default PqrsForm;
 //                 <p className="error">{errors.descripcion}</p>
 //               )}
 //               <small
-//                 className={`contador-caracteres ${
-//                   form.descripcion.length > MAX_CARACTERES_DESCRIPCION * 0.9
+//                 className={`contador-caracteres ${form.descripcion.length > MAX_CARACTERES_DESCRIPCION * 0.9
 //                     ? "alerta"
 //                     : ""
-//                 }`}
+//                   }`}
 //               >
 //                 {form.descripcion.length} / {MAX_CARACTERES_DESCRIPCION}{" "}
 //                 caracteres
@@ -4861,3 +4970,4 @@ export default PqrsForm;
 // }
 
 // export default PqrsForm;
+

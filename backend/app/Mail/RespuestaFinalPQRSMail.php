@@ -11,6 +11,7 @@ use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class RespuestaFinalPQRSMail extends Mailable
 {
@@ -58,38 +59,80 @@ class RespuestaFinalPQRSMail extends Mailable
      *
      * @return $this
      */
-    public function build()
-    {
-        // Se enfoca únicamente en la lógica de adjuntar archivos.
-        // Se usa un bloque try-catch para manejar errores en la descarga del archivo.
-        foreach ($this->adjuntos as $adjunto) {
-            $fileUrl = $adjunto['url'] ?? null;
 
-            if ($fileUrl) {
-                try {
-                    // Obtenemos el contenido del archivo desde la URL de forma segura.
-                    $fileContent = file_get_contents($fileUrl);
-                    if ($fileContent !== false) {
-                        // Para obtener el tipo MIME de forma correcta y segura,
-                        // lo guardamos temporalmente para usar la función `mime_content_type`.
-                        $tempFile = tempnam(sys_get_temp_dir(), 'attachment');
-                        file_put_contents($tempFile, $fileContent);
+  public function build()
+{
+    // 1. Adjuntar los archivos subidos por el usuario (ya lo tienes)
+    foreach ($this->adjuntos as $adjunto) {
+        $fileUrl = $adjunto['url'] ?? null;
 
-                        $this->attachData($fileContent, $adjunto['original_name'], [
-                            'mime' => mime_content_type($tempFile),
-                        ]);
+        if ($fileUrl) {
+            try {
+                $fileContent = file_get_contents($fileUrl);
+                if ($fileContent !== false) {
+                    $tempFile = tempnam(sys_get_temp_dir(), 'attachment');
+                    file_put_contents($tempFile, $fileContent);
 
-                        // Es importante eliminar el archivo temporal después de adjuntarlo.
-                        unlink($tempFile);
-                    }
-                } catch (\Exception $e) {
-                    // En caso de que la URL no sea válida o el archivo no se pueda descargar,
-                    // se registra un error y se continúa con los otros adjuntos.
-                    Log::warning("No se pudo adjuntar el archivo desde la URL: " . $fileUrl . ". Error: " . $e->getMessage());
+                    $this->attachData($fileContent, $adjunto['original_name'], [
+                        'mime' => mime_content_type($tempFile),
+                    ]);
+
+                    unlink($tempFile);
                 }
+            } catch (\Exception $e) {
+                Log::warning("No se pudo adjuntar el archivo: " . $fileUrl);
             }
         }
-
-        return $this;
     }
+
+    // 2. ⬅️ GENERAR PDF DESDE LA PLANTILLA respuesta_pdf.blade.php
+    $pdf = Pdf::loadView('emails.respuesta_pdf', [
+        'pqr' => $this->pqr,
+        'respuesta' => $this->respuesta,
+    ])->setPaper('letter');
+
+    // 3. ⬅️ ADJUNTAR EL PDF AL CORREO
+    $this->attachData(
+        $pdf->output(),
+        'Respuesta-PQRS-' . $this->pqr->pqr_codigo . '.pdf',
+        ['mime' => 'application/pdf']
+    );
+
+    return $this;
+}
+
+    // public function build()
+    // {
+    //     // Se enfoca únicamente en la lógica de adjuntar archivos.
+    //     // Se usa un bloque try-catch para manejar errores en la descarga del archivo.
+    //     foreach ($this->adjuntos as $adjunto) {
+    //         $fileUrl = $adjunto['url'] ?? null;
+
+    //         if ($fileUrl) {
+    //             try {
+    //                 // Obtenemos el contenido del archivo desde la URL de forma segura.
+    //                 $fileContent = file_get_contents($fileUrl);
+    //                 if ($fileContent !== false) {
+    //                     // Para obtener el tipo MIME de forma correcta y segura,
+    //                     // lo guardamos temporalmente para usar la función `mime_content_type`.
+    //                     $tempFile = tempnam(sys_get_temp_dir(), 'attachment');
+    //                     file_put_contents($tempFile, $fileContent);
+
+    //                     $this->attachData($fileContent, $adjunto['original_name'], [
+    //                         'mime' => mime_content_type($tempFile),
+    //                     ]);
+
+    //                     // Es importante eliminar el archivo temporal después de adjuntarlo.
+    //                     unlink($tempFile);
+    //                 }
+    //             } catch (\Exception $e) {
+    //                 // En caso de que la URL no sea válida o el archivo no se pueda descargar,
+    //                 // se registra un error y se continúa con los otros adjuntos.
+    //                 Log::warning("No se pudo adjuntar el archivo desde la URL: " . $fileUrl . ". Error: " . $e->getMessage());
+    //             }
+    //         }
+    //     }
+
+    //     return $this;
+    // }
 }

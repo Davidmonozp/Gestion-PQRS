@@ -73,6 +73,7 @@ class Pqr extends Model
         // 🔑 CASTS AGREGADOS PARA CORREGIR EL PROBLEMA DEL ICONO
         'es_duplicada' => 'boolean',
         'es_asociada' => 'boolean',
+        'registrador_correo' => 'array',
     ];
     public function respuestas()
     {
@@ -81,7 +82,7 @@ class Pqr extends Model
 
     public function asignados()
     {
-        return $this->belongsToMany(User::class, 'pqrs_user');
+        return $this->belongsToMany(User::class, 'pqrs_user', 'pqr_id', 'user_id');
     }
     public function asignado()
     {

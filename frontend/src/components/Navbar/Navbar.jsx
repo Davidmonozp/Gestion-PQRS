@@ -161,7 +161,7 @@ const Navbar = () => {
                 )}
               </div>
             </li>
-            {tienePermiso(["Administrador"]) && (
+            {tienePermiso(["Administrador", "Consultor", "Supervisor/Atencion al usuario"]) && (
               <>
                 <li>
                   <div

@@ -38,9 +38,24 @@
     margin-top: 2rem;
 }
 
-.pqrs-res-form p {
+strong {
     color: rgb(4, 61, 126);
 }
+
+.pqrs-res-form p {
+    color: black;
+}
+
+.recuadro {
+    border: 2px solid #d4d4d4;
+    /* gris suave */
+    background: #fafafa;
+    /* fondo claro */
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
 
 .pqrs-res-textarea {
     width: 100%;

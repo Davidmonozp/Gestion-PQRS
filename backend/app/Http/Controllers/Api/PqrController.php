@@ -69,7 +69,7 @@ class PqrController extends Controller
                 'eps' => 'required|string',
                 'regimen' => 'required|string',
                 'tipo_solicitud' => 'required|string',
-                'radicado_juzgado' => 'required_if:tipo_solicitud,Tutela|string|max:255',
+                'radicado_juzgado' => 'nullable|required_if:tipo_solicitud,Tutela|string|max:255',
                 'descripcion' => 'required|string',
                 'archivos' => 'nullable|array',
                 'archivos.*' => 'file|max:8000',
@@ -299,7 +299,6 @@ class PqrController extends Controller
             ], 500);
         }
     }
-
     // public function store(Request $request, CodigoPqrService $codigoService)
     // {
     //     try {
@@ -313,24 +312,53 @@ class PqrController extends Controller
     //             'apellido' => 'required|string|max:100',
     //             'segundo_apellido' => 'nullable|string|max:100',
     //             'documento_tipo' => 'required|string',
-    //             'documento_numero' => 'required|string',
+    //             'documento_numero' => [
+    //                 'required',
+    //                 'string',
+    //                 function ($attribute, $value, $fail) use ($request) {
+    //                     $tipo = strtoupper(trim($request->documento_tipo));
+
+    //                     if (in_array($tipo, ['PA', 'PT', 'CE'])) {
+    //                         // Solo letras y números
+    //                         if (!preg_match('/^[A-Za-z0-9]+$/', $value)) {
+    //                             $fail('El número de documento solo puede contener letras y números.');
+    //                         }
+    //                     } else {
+    //                         // Solo números
+    //                         if (!preg_match('/^[0-9]+$/', $value)) {
+    //                             $fail('El número de documento solo puede contener solo números.');
+    //                         }
+    //                     }
+
+    //                     if (strlen($value) < 5 || strlen($value) > 15) {
+    //                         $fail('El número de documento debe tener entre 5 y 15 caracteres.');
+    //                     }
+    //                 }
+    //             ],
     //             'correo' => 'required|email',
     //             'correo_confirmacion' => 'required|email|same:correo',
-    //             'telefono' => 'nullable|string', // Considera validar formato con regex si es numérico
+    //             'telefono' => 'nullable|string',
     //             'sede' => 'required|string',
     //             'servicio_prestado' => 'required|string',
     //             'eps' => 'required|string',
     //             'regimen' => 'required|string',
     //             'tipo_solicitud' => 'required|string',
+    //             'radicado_juzgado' => 'required_if:tipo_solicitud,Tutela|string|max:255',
     //             'descripcion' => 'required|string',
-    //             'archivos' => 'nullable|array', // 'archivos' es el nombre del array de files
-    //             'archivos.*' => 'file|max:8000', // Cada archivo dentro del array
+    //             'archivos' => 'nullable|array',
+    //             'archivos.*' => 'file|max:15000',
+    //             'archivos_adicionales' => 'nullable|array',
+    //             'archivos_adicionales.*' => 'file|max:15000',
     //             'registra_otro' => 'required|in:si,no',
     //             'politica_aceptada' => 'required',
 
     //             // INICIALIZA estos campos como NULLABLE por defecto
     //             'fecha_inicio_real' => 'nullable|date_format:Y-m-d H:i',
-    //             'fuente' => 'nullable|string|max:100', // La regla 'in' se añade condicionalmente
+    //             'fuente' => 'nullable|string|max:100',
+
+    //             // ✅ Validación para clasificaciones
+    //             'clasificaciones' => 'nullable|array',
+    //             'clasificaciones.*' => 'exists:clasificaciones,id',
     //         ];
 
     //         // Reglas condicionales para el registrador
@@ -342,19 +370,27 @@ class PqrController extends Controller
     //                 'registrador_segundo_nombre' => 'nullable|string|max:100',
     //                 'registrador_apellido' => 'required|string|max:100',
     //                 'registrador_segundo_apellido' => 'nullable|string|max:100',
-    //                 'registrador_correo' => 'required|email',
+    //                 'registrador_correo' => [
+    //                     'required',
+    //                     function ($attribute, $value, $fail) {
+    //                         $correos = array_map('trim', explode(',', $value));
+    //                         foreach ($correos as $correo) {
+    //                             if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+    //                                 $fail("Uno o más correos en $attribute no son válidos.");
+    //                             }
+    //                         }
+    //                     },
+    //                 ],
     //                 'registrador_telefono' => 'nullable|string',
     //                 'parentesco' => 'required|string|max:50',
     //             ]);
 
-    //             if ($parentesco === 'Ente de control' || $parentesco === 'Entidad') {
-    //                 // ✅ Solo pedimos cargo
+    //             if ($parentesco === 'Ente de control' || $parentesco === 'Asegurador') {
     //                 $rules['registrador_cargo'] = 'required|string|max:100';
     //                 $rules['registrador_documento_tipo'] = 'nullable|string';
     //                 $rules['registrador_documento_numero'] = 'nullable|string';
     //                 $rules['nombre_entidad'] = 'required|string|max:100';
     //             } else {
-    //                 // ✅ Solo pedimos documentos
     //                 $rules['registrador_documento_tipo'] = 'required|string';
     //                 $rules['registrador_documento_numero'] = 'required|string';
     //                 $rules['registrador_cargo'] = 'nullable|string|max:100';
@@ -377,48 +413,49 @@ class PqrController extends Controller
     //         }
 
     //         // Lógica condicional para 'fecha_inicio_real' y 'fuente'
-    //         // Esto asume que tienes alguna forma de saber si el usuario está "logeado" en el backend.
-    //         // Si tu API usa autenticación de Laravel (ej. Sanctum, Passport), Auth::check() funcionará.
-    //         // Si no, necesitarías otra forma de determinar si el usuario es un "admin" o "logeado".
-    //         $isLoggedInBackend = Auth::check(); // Verifica si hay un usuario autenticado
-
-    //         Log::info('Backend Auth Check:', ['isLoggedIn' => $isLoggedInBackend]);
-
+    //         $isLoggedInBackend = Auth::check();
     //         if ($isLoggedInBackend) {
-    //             // Si el usuario está logeado, estas reglas se vuelven 'required'
     //             $rules['fecha_inicio_real'] = 'required|date_format:Y-m-d H:i';
     //             $rules['fuente'] = 'required|string|in:Formulario de la web,Correo atención al usuario,Correo de Agendamiento NAC,Encuesta de satisfacción IPS,Callcenter,Presencial';
     //         }
 
-    //         Log::info('Valor de politica_aceptada recibido antes de validación:', ['politica_aceptada_raw' => $request->input('politica_aceptada')]);
-    //         Log::info('Todos los datos del request antes de validación:', $request->all());
-
-    //         // Validar la solicitud
     //         $validated = $request->validate($rules);
-    //         Log::info('Datos validados:', $validated); // Verifica lo que Laravel realmente valida y devuelve
 
+    //         // Guardar archivos
     //         $uploadedFilesData = [];
-    //         // Guardar archivos si se enviaron (solo si el Content-Type es multipart/form-data)
     //         if ($request->hasFile('archivos')) {
     //             foreach ($request->file('archivos') as $file) {
     //                 $path = $file->store('pqrs_files', 'public');
-    //                 $originalName = $file->getClientOriginalName();
-
     //                 $uploadedFilesData[] = [
     //                     'path' => $path,
-    //                     'original_name' => $originalName,
+    //                     'original_name' => $file->getClientOriginalName(),
+    //                     'url' => asset("storage/{$path}"),
     //                 ];
     //             }
     //         }
 
-    //         // Generar el código único de la PQR
+    //         // ✨ NUEVO: Guardar archivos adicionales
+    //         if ($request->hasFile('archivos_adicionales')) {
+    //             foreach ($request->file('archivos_adicionales') as $file) {
+    //                 $path = $file->store('pqrs_files', 'public');
+    //                 $uploadedFilesData[] = [
+    //                     'path' => $path,
+    //                     'original_name' => $file->getClientOriginalName(),
+    //                     'url' => asset("storage/{$path}"),
+    //                 ];
+    //             }
+    //         }
+
+    //         // Generar código PQR
     //         $codigoPqr = $codigoService->generarCodigoPqr($validated['tipo_solicitud'], $validated['documento_numero']);
 
-    //         // Preparar los datos para la creación de la PQR
+    //         // Datos de creación
     //         $dataToCreate = [
     //             'pqr_codigo' => $codigoPqr,
     //             'nombre' => $validated['nombre'],
+    //             'segundo_nombre' => $validated['segundo_nombre'] ?? null,
     //             'apellido' => $validated['apellido'],
+    //             'segundo_apellido' => $validated['segundo_apellido'] ?? null,
     //             'documento_tipo' => $validated['documento_tipo'],
     //             'documento_numero' => $validated['documento_numero'],
     //             'correo' => $validated['correo'],
@@ -428,6 +465,7 @@ class PqrController extends Controller
     //             'eps' => $validated['eps'],
     //             'regimen' => $validated['regimen'],
     //             'tipo_solicitud' => $validated['tipo_solicitud'],
+    //             'radicado_juzgado' => $validated['radicado_juzgado'] ?? null,
     //             'clasificacion_tutela' => $validated['clasificacion_tutela'] ?? null,
     //             'accionado' => $request->input('accionado', []),
     //             'fuente' => $validated['fuente'] ?? null,
@@ -435,44 +473,86 @@ class PqrController extends Controller
     //             'archivo' => $uploadedFilesData,
     //             'registra_otro' => $validated['registra_otro'] === 'si',
     //             'registrador_nombre' => $validated['registrador_nombre'] ?? null,
+    //             'registrador_segundo_nombre' => $validated['registrador_segundo_nombre'] ?? null,
     //             'registrador_apellido' => $validated['registrador_apellido'] ?? null,
+    //             'registrador_segundo_apellido' => $validated['registrador_segundo_apellido'] ?? null,
     //             'registrador_documento_tipo' =>
-    //             in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Entidad'])
+    //             in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Asegurador'])
     //                 ? null
     //                 : ($validated['registrador_documento_tipo'] ?? null),
-
     //             'registrador_documento_numero' =>
-    //             in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Entidad'])
+    //             in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Asegurador'])
     //                 ? null
     //                 : ($validated['registrador_documento_numero'] ?? null),
-
     //             'registrador_correo' => $validated['registrador_correo'] ?? null,
     //             'registrador_telefono' => $validated['registrador_telefono'] ?? null,
     //             'registrador_cargo' => $validated['registrador_cargo'] ?? null,
     //             'parentesco' => $validated['parentesco'] ?? null,
     //             'fecha_inicio_real' => $validated['fecha_inicio_real'] ?? null,
     //             'nombre_entidad' =>
-    //             in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Entidad'])
+    //             in_array(($validated['parentesco'] ?? null), ['Ente de control', 'Asegurador'])
     //                 ? ($validated['nombre_entidad'] ?? null)
     //                 : null,
     //         ];
 
-
     //         // Crear la PQR
     //         $pqr = Pqr::create($dataToCreate);
 
-    //         // Enviar correo al paciente
-    //         Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
-
-    //         // Enviar al registrador SOLO si existe correo
-    //         if (!empty($pqr->registrador_correo)) {
-    //             Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+    //         // ✅ Guardar clasificaciones en la tabla pivot
+    //         if ($request->has('clasificaciones') && is_array($request->clasificaciones)) {
+    //             $pqr->clasificaciones()->sync($request->clasificaciones);
     //         }
 
+    //         // Enviar correos a paciente y registrador
+    //         // Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
+    //         // if (!empty($pqr->registrador_correo)) {
+    //         //     Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+    //         // }
 
-    //         // Agregar URL del archivo para respuesta (si es necesario en la respuesta JSON)
+
+
+    //         // if (!empty($pqr->registrador_correo)) {
+    //         //     Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+    //         // } else {
+    //         //     Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
+    //         // }
+
+
+    //         // Comprueba si el parentesco de la PQR es "Asegurador" o "Ente de control"
+    //         if ($pqr->tipo_solicitud !== 'Tutela') {
+    //             if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control') {
+    //                 // Si la condición es verdadera, solo se envía el correo al registrador (si existe)
+    //                 if (!empty($pqr->registrador_correo)) {
+    //                     Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+    //                 }
+    //             } else {
+    //                 // Si la condición es falsa, el correo se envía tanto al paciente como al registrador (si existe)
+    //                 Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
+
+    //                 if (!empty($pqr->registrador_correo)) {
+    //                     Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+    //                 }
+    //             }
+    //         }
+
+    //         // if ($pqr->parentesco === 'Asegurador' || $pqr->parentesco === 'Ente de control') {
+    //         //     // Si la condición es verdadera, solo se envía el correo al registrador (si existe)
+    //         //     if (!empty($pqr->registrador_correo)) {
+    //         //         Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+    //         //     }
+    //         // } else {
+    //         //     // Si la condición es falsa, el correo se envía tanto al paciente como al registrador (si existe)
+    //         //     Mail::to($pqr->correo)->send(new \App\Mail\PqrRegistrada($pqr));
+
+    //         //     if (!empty($pqr->registrador_correo)) {
+    //         //         Mail::to($pqr->registrador_correo)->send(new \App\Mail\PqrRegistrada($pqr));
+    //         //     }
+    //         // }
+
+
+
+    //         // Agregar URLs de archivo
     //         $pqr->archivo_urls = collect($pqr->archivo)->map(function ($fileItem) {
-    //             // Asegúrate de que $fileItem sea un objeto o array asociativo
     //             $path = is_array($fileItem) ? $fileItem['path'] : $fileItem->path;
     //             return asset('storage/' . $path);
     //         })->all();
@@ -482,19 +562,18 @@ class PqrController extends Controller
     //             'pqr' => $pqr,
     //         ], 201);
     //     } catch (\Illuminate\Validation\ValidationException $e) {
-    //         Log::error('Error de validación de PQR:', $e->errors());
     //         return response()->json([
     //             'message' => 'Los datos proporcionados no son válidos.',
     //             'errors' => $e->errors()
     //         ], 422);
     //     } catch (\Exception $e) {
-    //         Log::error('Error al crear PQR:', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
     //         return response()->json([
     //             'message' => 'Error interno del servidor al crear la PQR.',
     //             'error' => $e->getMessage(),
     //         ], 500);
     //     }
     // }
+
 
 
     public function index(Request $request)
@@ -1019,6 +1098,32 @@ class PqrController extends Controller
             // 👉 2️⃣ Guardar cambios en asignados y registrar log si cambian
             $asignadosAntes = $pqr->asignados->pluck('id')->toArray();
             $nuevosAsignados = $request->input('asignados', []);
+
+            // 🔒 Validar que los usuarios asignados estén activos
+            if (!empty($nuevosAsignados)) {
+                $usuariosInactivos = User::whereIn('id', $nuevosAsignados)
+                    ->where('activo', 0)
+                    // ->pluck('name')
+                    ->get(['name', 'segundo_nombre', 'primer_apellido', 'segundo_apellido']);
+
+                $usuariosInactivos = $usuariosInactivos->map(function ($user) {
+                    return trim(implode(' ', array_filter([
+                        $user->name,
+                        $user->segundo_nombre,
+                        $user->primer_apellido,
+                        $user->segundo_apellido,
+                    ])));
+                })->toArray();
+
+                if (!empty($usuariosInactivos)) {
+                    return response()->json([
+                        'message' => 'No se puede asignar la PQR a los siguientes usuarios porque están INACTIVOS: '
+                            . implode(', ', $usuariosInactivos),
+                        'usuarios_inactivos' => $usuariosInactivos,
+                    ], 422);
+                }
+            }
+
             $pqr->asignados()->sync($nuevosAsignados);
 
             // 🔹 Crear log si hubo cambios en los asignados
@@ -1252,7 +1357,67 @@ class PqrController extends Controller
         }
     }
 
+    public function cambiarSede(Request $request, $pqr_codigo)
+    {
+        try {
+            $request->validate([
+                'sede' => 'required|string'
+            ]);
 
+            $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+
+            $sedeAnterior = $pqr->sede;
+
+            $pqr->sede = $request->sede;
+            $pqr->save();
+
+            EventLog::create([
+                'user_id' => Auth::id(),
+                'event_type'    => 'cambio_sede',
+                'description'   => "Cambio de sede en PQR {$pqr->pqr_codigo}: '{$sedeAnterior}' → '{$request->sede}'",
+                'pqr_id'        => $pqr->id,
+                'pqr_codigo'    => $pqr->pqr_codigo,
+                'estado_anterior' => $sedeAnterior,
+                'estado_nuevo'  => $request->sede,
+                'fecha_evento'  => now(),
+            ]);
+
+            return response()->json([
+                'message' => 'El cambio de sede se realizó correctamente',
+                'pqr' => $pqr
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al cambiar la sede',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // public function cambiarSede(Request $request, $pqr_codigo)
+    // {
+    //     try {
+    //         $request->validate([
+    //             'sede' => 'required|string'
+    //         ]);
+
+    //         // Buscar por pqr_codigo en lugar de id
+    //         $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+
+    //         $pqr->sede = $request->sede;
+    //         $pqr->save();
+
+    //         return response()->json([
+    //             'message' => 'El cambio de sede se realizó correctamente',
+    //             'pqr' => $pqr
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'error' => 'Error al cambiar la sede',
+    //             'message' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
 
 
@@ -1790,7 +1955,7 @@ class PqrController extends Controller
                 // -- Actualización de campos de cierre y asociación --
                 $pqr->id_pqrs_maestra = $idMaestra;
                 $pqr->es_asociada = true;
-                $pqr->estado_respuesta = 'Cerrado por duplicidad';
+                $pqr->estado_respuesta = 'Cerrado';
                 $pqr->respuesta_enviada = true;
                 $pqr->respondido_en = $fechaCierre;
                 $pqr->deadline_interno = $fechaCierre; // Detiene el tiempo

@@ -1,12 +1,12 @@
 /* El botón flotante (|||) */
-.menu {
+.menu-panel {
     width: 2.7rem;
     height: 2.7rem;
     /* background: #00933f; */
     /* border-radius: 50%; */
     position: absolute;
     /* Anclado al .pqr-card-container */
-    top: 526px;
+    top: 634px;
     /* Posición desde la parte superior del contenedor */
     right: -3px;
     /* Posición desde la parte derecha del contenedor */
@@ -32,7 +32,7 @@
     background: #e6e6e6;
     position: absolute;
     /* Anclado al .pqr-card-container */
-    top: 25rem;
+    top: 53rem;
     /* A la misma altura del botón */
     margin-right: -18px;
     display: flex;
@@ -49,7 +49,7 @@
 }
 
 /* Cuando el checkbox está marcado, el panel se hace visible */
-.checkbox:checked~.left-panel {
+.checkbox-panel:checked~.left-panel {
     right: 4rem;
     /* Donde se mostrará el panel una vez visible, a la izquierda del botón */
     opacity: 1;
@@ -58,7 +58,7 @@
 }
 
 /* El checkbox se mantiene oculto */
-.checkbox {
+.checkbox-panel {
     display: none;
 }
 

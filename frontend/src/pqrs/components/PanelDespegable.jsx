@@ -3,8 +3,8 @@ import "../styles/PanelDespegable.css";
 export const PanelDespegable = () => {
   return (
     <>
-      <input type="checkbox" className="checkbox" id="check" />
-      <label htmlFor="check" className="menu">
+      <input type="checkbox" className="checkbox-panel" id="check" />
+      <label htmlFor="check" className="menu-panel">
         ⬅️
       </label>
       <div className="left-panel">

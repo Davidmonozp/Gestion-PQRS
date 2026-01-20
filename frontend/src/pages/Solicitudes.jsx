@@ -234,7 +234,7 @@ export const Solicitudes = () => {
             <hr />
           </h1>
 
-          <a href="servicios_passusIPS.php">
+          <a href="https://test-web.passusips.com/servicios_passusIPS.php">
             <button className="reflected-button">Servicios Passus IPS</button>
           </a>
         </div>
