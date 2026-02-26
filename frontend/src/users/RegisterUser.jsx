@@ -117,6 +117,7 @@ const RegisterUser = () => {
       name: "Profesional Analista De Modelo De Atención Y Seguridad Del Paciente",
     },
     { areaId: 25, name: "Gestor Administrativo De Agencia" },
+    { areaId: 25, name: "Gestor asistencial" },
     { areaId: 26, name: "Auxiliar De Enfermería De Agencia Nivel 2" },
     { areaId: 26, name: "Auxiliar De Enfermería De Agencia Nivel 1" },
     { areaId: 27, name: "Educador Especial" },

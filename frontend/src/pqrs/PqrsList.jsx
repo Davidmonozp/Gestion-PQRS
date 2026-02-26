@@ -128,6 +128,8 @@ function PqrsList() {
     eps: [],
     fecha_inicio: "",
     fecha_fin: "",
+    respondido_inicio: "",
+    respondido_fin: "",
     respuesta_enviada: [],
     clasificaciones: [],
     asignados: [],
@@ -135,25 +137,25 @@ function PqrsList() {
   });
 
   // useEffect para filtros de paginación
-  useEffect(() => {
-    api
-      .get("/pqrs", {
-        params: {
-          page: pagination.current_page,
-          per_page: pagination.per_page,
-          ...filters,
-        },
-      })
-      .then((res) => {
-        setPqrs(res.data.pqrs);
-        setPagination({
-          total: res.data.total,
-          current_page: res.data.current_page,
-          per_page: res.data.per_page,
-          last_page: res.data.last_page,
-        });
-      });
-  }, [pagination.current_page, pagination.per_page, filters]);
+  // useEffect(() => {
+  //   api
+  //     .get("/pqrs", {
+  //       params: {
+  //         page: pagination.current_page,
+  //         per_page: pagination.per_page,
+  //         ...filters,
+  //       },
+  //     })
+  //     .then((res) => {
+  //       setPqrs(res.data.pqrs);
+  //       setPagination({
+  //         total: res.data.total,
+  //         current_page: res.data.current_page,
+  //         per_page: res.data.per_page,
+  //         last_page: res.data.last_page,
+  //       });
+  //     });
+  // }, [pagination.current_page, pagination.per_page, filters]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -238,6 +240,12 @@ function PqrsList() {
         if (filters.fecha_fin) {
           queryParams.append("fecha_fin", filters.fecha_fin);
         }
+        if (filters.respondido_inicio) {
+          queryParams.append("respondido_inicio", filters.respondido_inicio);
+        }
+        if (filters.respondido_fin) {
+          queryParams.append("respondido_fin", filters.respondido_fin);
+        }
         if (filters.respuesta_enviada?.length) {
           filters.respuesta_enviada.forEach((estado) =>
             queryParams.append("respuesta_enviada[]", estado)
@@ -249,7 +257,8 @@ function PqrsList() {
           );
         }
       }
-
+// console.log("Filtros actuales:", filters);
+// console.log("URL generada:", queryParams.toString());
       const res = await api.get(`${apiUrl}?${queryParams.toString()}`);
 
       const processedPqrs = res.data.pqrs.map((pqr) => {
@@ -608,7 +617,7 @@ function PqrsList() {
                           ]) && (
                               <button
                                 onClick={() =>
-                                  navigate(`/pqrs/${pqr.pqr_codigo}`)
+                                  window.open(`/pqrs/${pqr.pqr_codigo}`, '_blank')
                                 }
                               >
                                 <i className="fa fa-eye icono-ver"></i>

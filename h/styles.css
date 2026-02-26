@@ -1,0 +1,51 @@
+body {
+  background-color: rgb(4, 82, 134);
+}
+
+.speaker-hero {
+  position: relative;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  color: white;
+}
+
+.info-card {
+  background: rgba(255, 255, 255, 0.1); 
+  backdrop-filter: blur(15px); 
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 3rem;
+  border-radius: 8px;
+  max-width: 600px;
+}
+
+.speaker-name {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.quote {
+  font-style: italic;
+  font-size: 1.2rem;
+  border-left: 2px solid #6c5ce7; 
+  padding-left: 1rem;
+  margin: 2rem 0;
+}
+
+
+.side-contact {
+  position: absolute;
+  right: 0;
+  top: 30%;
+  background-color: #00a8ff; 
+  writing-mode: vertical-rl;
+  padding: 15px 5px;
+  border-radius: 5px 0 0 5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

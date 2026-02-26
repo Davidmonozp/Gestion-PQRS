@@ -343,27 +343,58 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
             placeholder="Estado de la PQR-S"
           />
         </div>
+
+
         {tienePermiso(["Administrador"]) && (
-          <div className="filtro-asignados">
-            <DropdownMultiSelect
-              options={usuariosOptions.map((opt) => opt.label)} // array de nombres
-              selected={tempFilters.asignadosNombres || []}
-              setSelected={(selectedNames) => {
-                const selectedIds = usuariosOptions
-                  .filter((opt) => selectedNames.includes(opt.label))
-                  .map((opt) => opt.value);
-
-                setTempFilters({
-                  ...tempFilters,
-                  asignados: selectedIds,
-                  asignadosNombres: selectedNames,
-                });
+          <>
+            <input
+              type={tempFilters.respondido_inicio ? "date" : "text"}
+              className="input-placeholder"
+              placeholder="Finalizado desde"
+              onFocus={(e) => (e.target.type = "date")}
+              onBlur={(e) => {
+                if (!e.target.value) e.target.type = "text";
               }}
-              placeholder="Asignado a"
-              searchable={true} // 👈 añadimos esta prop para activar buscador
+              value={tempFilters.respondido_inicio || ""}
+              onChange={(e) =>
+                setTempFilters({ ...tempFilters, respondido_inicio: e.target.value })
+              }
             />
-          </div>
 
+            <input
+              type={tempFilters.respondido_fin ? "date" : "text"}
+              className="input-placeholder"
+              placeholder="Finalizado hasta"
+              onFocus={(e) => (e.target.type = "date")}
+              onBlur={(e) => {
+                if (!e.target.value) e.target.type = "text";
+              }}
+              value={tempFilters.respondido_fin || ""}
+              onChange={(e) =>
+                setTempFilters({ ...tempFilters, respondido_fin: e.target.value })
+              }
+            />
+
+            <div className="filtro-asignados">
+              <DropdownMultiSelect
+                options={usuariosOptions.map((opt) => opt.label)} // array de nombres
+                selected={tempFilters.asignadosNombres || []}
+                setSelected={(selectedNames) => {
+                  const selectedIds = usuariosOptions
+                    .filter((opt) => selectedNames.includes(opt.label))
+                    .map((opt) => opt.value);
+
+                  setTempFilters({
+                    ...tempFilters,
+                    asignados: selectedIds,
+                    asignadosNombres: selectedNames,
+                  });
+                }}
+                placeholder="Asignado a"
+                searchable={true} // 👈 añadimos esta prop para activar buscador
+              />
+            </div>
+          </>
         )}
         <div className="iconos-filtros">
           {/* <button
@@ -379,14 +410,28 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
               <span className="texto-iconos">Buscar</span>
             </i>
           </button> */}
-          <span 
+          <span
             type="button"
             onClick={() => {
               setFilters(tempFilters);
-              onBuscar();
+              onBuscar(tempFilters);
             }}
             title="Buscar"
           >🔎Buscar</span>
+          {/* <span
+            style={{ cursor: 'pointer' }} // Para que el cursor cambie a la mano al pasar por encima
+            onClick={() => {
+              // 1. Actualizamos el estado global (para que los filtros se mantengan si navegas)
+              setFilters(tempFilters);
+
+              // 2. Enviamos los filtros "frescos" directamente a la función de búsqueda
+              // Esto evita esperar a que el estado de React se actualice
+              onBuscar(tempFilters);
+            }}
+            title="Buscar"
+          >
+            🔎 Buscar
+          </span> */}
           {/* <button
             type="button"
             className="eraser-button"
@@ -425,6 +470,8 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
                 eps: [],
                 fecha_inicio: "",
                 fecha_fin: "",
+                respondido_inicio: "",
+                respondido_fin: "",
                 respuesta_enviada: [],
                 clasificaciones: [],
                 clasificacionesNombres: [],
@@ -456,6 +503,27 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
 }
 
 export default PqrsFilters;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // import React, { useState, useEffect, useRef } from "react";
 // import "../styles/PqrsFilters.css";

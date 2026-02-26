@@ -4,6 +4,7 @@
     align-items: center;
     justify-content: center;
     padding: 20px;
+    min-height: calc(100vh - 200px);
 }
 
 /* .inicio-container {
@@ -59,7 +60,7 @@
     align-items: center;
     justify-content: center;
     margin-top: 32px;
-    margin-bottom: 62px;
+    /* margin-bottom: 62px; */
 }
 
 .card-inicio-radicado:hover {

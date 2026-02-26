@@ -89,7 +89,8 @@ class FelicitacionController extends Controller
 
         // SOLO A LA DRA LILIANA MURCIA
         $gestores = User::where('activo', 1)
-            ->where('primer_apellido', 'ZUÑIGA') // filtramos por primer apellido
+            // ->where('primer_apellido', 'ZUÑIGA') 
+            ->whereIn('primer_apellido', ['ZUÑIGA', 'MURCIA'])
             ->whereHas('sedes', function ($query) use ($pqr) {
                 $query->where('name', $pqr->sede);
             })

@@ -57,7 +57,7 @@ Route::post('/encuesta/{token}', [EncuestaController::class, 'guardarRespuesta']
 Route::middleware(['auth:api', 'check.role:Administrador,Supervisor/Atencion al usuario,Gestor,Gestor Administrativo,Consultor,Digitador'])->group(function () {
 
     // Rutas de visualización de PQRS (solo roles autorizados pueden ver la lista o detalles)
-    Route::get('pqrs', [PqrController::class, 'index']);
+    Route::get('/pqrs', [PqrController::class, 'index']);
     Route::get('pqrs/codigo/{pqr_codigo}', [PqrController::class, 'show']);
     Route::get('/pqrs/estado', [PqrController::class, 'filtros_estado_respuesta'])->middleware('auth:api');
     Route::get('/pqrs/{pqr}/clasificaciones', [ClasificacionController::class, 'obtenerClasificacionesPorPqr']);

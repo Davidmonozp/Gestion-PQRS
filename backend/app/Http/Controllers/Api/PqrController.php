@@ -667,6 +667,18 @@ class PqrController extends Controller
                 }
             }
 
+            // --- Filtro por rango de fecha de respuesta ---
+            if ($request->filled('respondido_inicio') || $request->filled('respondido_fin')) {
+                $query->where(function ($q) use ($request) {
+                    if ($request->filled('respondido_inicio')) {
+                        $q->whereDate('respondido_en', '>=', $request->respondido_inicio);
+                    }
+                    if ($request->filled('respondido_fin')) {
+                        $q->whereDate('respondido_en', '<=', $request->respondido_fin);
+                    }
+                });
+            }
+
             if ($request->has('clasificaciones') && is_array($request->clasificaciones) && count($request->clasificaciones) > 0) {
                 $ids = array_map('intval', $request->clasificaciones);
                 $query->whereHas('clasificaciones', function ($q) use ($ids) {
