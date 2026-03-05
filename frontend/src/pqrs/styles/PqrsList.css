@@ -428,7 +428,6 @@ tbody td:hover::before {
     cursor: default;
 }
 
-/* FIN PAGINACION */
 @media (max-width: 1365px) {
     .filtros-busqueda button {
         width: 6%;

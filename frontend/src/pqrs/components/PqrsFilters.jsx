@@ -239,18 +239,27 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
           }
         />
         <input
-          type="date"
+          type={tempFilters.fecha_inicio ? "date" : "text"}
           className="input-placeholder"
           placeholder="Fecha de Inicio"
+          onFocus={(e) => (e.target.type = "date")}
+          onBlur={(e) => {
+            if (!e.target.value) e.target.type = "text";
+          }}
           value={tempFilters.fecha_inicio || ""}
           onChange={(e) =>
             setTempFilters({ ...tempFilters, fecha_inicio: e.target.value })
           }
         />
+
         <input
-          type="date"
+          type={tempFilters.fecha_fin ? "date" : "text"}
           className="input-placeholder"
           placeholder="Fecha de Fin"
+          onFocus={(e) => (e.target.type = "date")}
+          onBlur={(e) => {
+            if (!e.target.value) e.target.type = "text";
+          }}
           value={tempFilters.fecha_fin || ""}
           onChange={(e) =>
             setTempFilters({ ...tempFilters, fecha_fin: e.target.value })
@@ -343,38 +352,35 @@ function PqrsFilters({ filters, setFilters, onBuscar }) {
             placeholder="Estado de la PQR-S"
           />
         </div>
+        <input
+          type={tempFilters.respondido_inicio ? "date" : "text"}
+          className="input-placeholder"
+          placeholder="Finalizado desde"
+          onFocus={(e) => (e.target.type = "date")}
+          onBlur={(e) => {
+            if (!e.target.value) e.target.type = "text";
+          }}
+          value={tempFilters.respondido_inicio || ""}
+          onChange={(e) =>
+            setTempFilters({ ...tempFilters, respondido_inicio: e.target.value })
+          }
+        />
 
-
+        <input
+          type={tempFilters.respondido_fin ? "date" : "text"}
+          className="input-placeholder"
+          placeholder="Finalizado hasta"
+          onFocus={(e) => (e.target.type = "date")}
+          onBlur={(e) => {
+            if (!e.target.value) e.target.type = "text";
+          }}
+          value={tempFilters.respondido_fin || ""}
+          onChange={(e) =>
+            setTempFilters({ ...tempFilters, respondido_fin: e.target.value })
+          }
+        />
         {tienePermiso(["Administrador"]) && (
           <>
-            <input
-              type={tempFilters.respondido_inicio ? "date" : "text"}
-              className="input-placeholder"
-              placeholder="Finalizado desde"
-              onFocus={(e) => (e.target.type = "date")}
-              onBlur={(e) => {
-                if (!e.target.value) e.target.type = "text";
-              }}
-              value={tempFilters.respondido_inicio || ""}
-              onChange={(e) =>
-                setTempFilters({ ...tempFilters, respondido_inicio: e.target.value })
-              }
-            />
-
-            <input
-              type={tempFilters.respondido_fin ? "date" : "text"}
-              className="input-placeholder"
-              placeholder="Finalizado hasta"
-              onFocus={(e) => (e.target.type = "date")}
-              onBlur={(e) => {
-                if (!e.target.value) e.target.type = "text";
-              }}
-              value={tempFilters.respondido_fin || ""}
-              onChange={(e) =>
-                setTempFilters({ ...tempFilters, respondido_fin: e.target.value })
-              }
-            />
-
             <div className="filtro-asignados">
               <DropdownMultiSelect
                 options={usuariosOptions.map((opt) => opt.label)} // array de nombres
