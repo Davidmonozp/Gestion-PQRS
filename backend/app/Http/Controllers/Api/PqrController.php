@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Mail\PqrDuplicadaCerrada;
 use App\Models\EventLog;
+use App\Models\Respuesta;
 
 class PqrController extends Controller
 {

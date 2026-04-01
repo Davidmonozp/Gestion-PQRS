@@ -350,7 +350,7 @@ C.C. 66814219
 Representante Legal
 ',
             ],
-                        [
+            [
                 'nombre' => 'FORMATO DE DESVINCULACION DE PASSUS IPS -2',
                 'contenido' => '
 Señor
@@ -399,10 +399,41 @@ C.C. 66814219
 Representante Legal
 ',
             ],
+            [
+                'nombre' => 'AGENDAMIENTO DE CITAS DE RHB',
+                'contenido' => '
+
+Bogotá, [FECHA]
+
+Paciente [NOMBRE]
+
+Ciudad: BOGOTÁ
+
+Reciba un cordial saludo de PASSUS IPS Taller Psicomotriz S.A.S.,
+
+En atención a su solicitud relacionada con la solicitud de valoración de ingreso a programa de rehabilitación, deseamos informarle lo siguiente:
+
+Se realiza programación de valoración inicial para el día xx de xxxx a las xxxx  p. m/ am. en la sede xxxx ubicado en la dirección xxxxxxxxxx. Agradecemos su puntual asistencia con el fin de brindar una atención oportuna y adecuada.
+
+Para la realización de la consulta, es importante que el día de la cita presente la orden médica correspondiente y su historia clínica, ya que estos documentos son necesarios para el adecuado desarrollo de la valoración.
+
+En PASSUS trabajamos con un firme compromiso hacia la mejora continua y la calidad en la prestación de los servicios de salud y bienestar. Agradecemos su confianza y el haberse puesto en contacto con nosotros, pues sus solicitudes, comentarios y sugerencias son fundamentales para seguir fortaleciendo nuestro servicio en beneficio de todos los usuarios.
+
+Cordialmente,
+
+Área de Experiencia al Usuario
+PASSUS IPS Taller Psicomotriz S.A.S.
+
+',
+            ],
         ];
 
         foreach ($plantillas as $plantilla) {
-            PlantillaRespuesta::create($plantilla);
+            // Busca por nombre, si no existe lo crea, si existe lo actualiza
+            PlantillaRespuesta::updateOrCreate(
+                ['nombre' => $plantilla['nombre']],
+                ['contenido' => $plantilla['contenido']]
+            );
         }
     }
 }

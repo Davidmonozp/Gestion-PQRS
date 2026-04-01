@@ -75,7 +75,6 @@ class RespuestaController extends Controller
 
     //     return response()->json(['mensaje' => 'Respuesta preliminar guardada']);
     // }
-
     public function registrarRespuesta(Request $request, $pqr_codigo)
     {
         $request->validate([
@@ -86,18 +85,22 @@ class RespuestaController extends Controller
 
         $pqrs = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
 
+        // 1. 👉 Validar si la PQRS ya fue enviada (bloqueo maestro)
+        if ($pqrs->respuesta_enviada == 1) {
+            return response()->json([
+                'error' => 'Esta PQRS ya fue cerrada formalmente. No se admiten más respuestas.'
+            ], 403);
+        }
+
+        // 2. Validar autorización de asignación
         if (!$pqrs->asignados->contains(Auth::id())) {
-            return response()->json(['error' => 'No autorizado'], 403);
+            return response()->json(['error' => 'No autorizado para responder esta PQRS'], 403);
         }
 
-        $respuestaExistente = Respuesta::where('pqrs_id', $pqrs->id)
-            ->where('user_id', Auth::id())
-            ->exists();
+        // Nota: El bloqueo de "Ya has registrado una respuesta" queda comentado 
+        // según lo que hablamos para permitir re-intentos o correcciones.
 
-        if ($respuestaExistente) {
-            return response()->json(['error' => 'Ya has registrado una respuesta para esta PQRS'], 400);
-        }
-
+        // 3. Procesar adjuntos
         $adjuntosData = [];
         if ($request->hasFile('adjuntos')) {
             foreach ($request->file('adjuntos') as $file) {
@@ -111,6 +114,7 @@ class RespuestaController extends Controller
             }
         }
 
+        // 4. Crear la respuesta
         Respuesta::create([
             'pqrs_id' => $pqrs->id,
             'user_id' => Auth::id(),
@@ -118,27 +122,38 @@ class RespuestaController extends Controller
             'adjuntos' => $adjuntosData,
         ]);
 
+        // 5. Actualizar estado si es la primera interacción
         if ($pqrs->estado_respuesta === 'Asignado') {
             $pqrs->estado_respuesta = 'En proceso';
             $pqrs->save();
         }
+
 
         // ----------------------------------------
         // 👉 Asignar automáticamente si es TUTELA
         // ----------------------------------------
         if ($pqrs->tipo_solicitud === 'Tutela') {
 
-            $usuarioAuto = User::where('documento_numero', '1013627044')->first();
+            // 1. Definimos los documentos de los usuarios a asignar
+            $documentosAuto = ['1013627044', '1000000004'];
 
-            if (Auth::id() !== $usuarioAuto->id) {
+            // 2. Buscamos a todos los usuarios que coincidan con esos documentos
+            $usuariosAuto = User::whereIn('documento_numero', $documentosAuto)->get();
 
-                // 👉 Asignar sin borrar los asignados actuales
-                $pqrs->asignados()->syncWithoutDetaching([$usuarioAuto->id]);
+            foreach ($usuariosAuto as $usuario) {
+                // 3. Validamos que el usuario que está respondiendo no sea el mismo que se va a auto-asignar
+                if (Auth::id() !== $usuario->id) {
 
-                // 👉 Enviar correo como si fuera asignación normal
-                Mail::to($usuarioAuto->email)->send(new PqrAsignada($pqrs, $usuarioAuto));
+                    // 👉 Asignar sin borrar los asignados actuales (Evita duplicados automáticamente)
+                    $pqrs->asignados()->syncWithoutDetaching([$usuario->id]);
+
+                    // 👉 Enviar correo de notificación
+                    Mail::to($usuario->email)->send(new PqrAsignada($pqrs, $usuario));
+                }
             }
         }
+
+        // 6. Retornar la PQRS actualizada con sus relaciones
         return response()->json(
             Pqr::with([
                 'respuestas.autor',
@@ -229,120 +244,120 @@ class RespuestaController extends Controller
     // }
 
 
-   public function registrarRespuestaFinal(Request $request)
-{
-    // 1️⃣ Validación
-    $request->validate([
-        'contenido' => 'required|string',
-        'adjuntos' => 'nullable|array',
-        'adjuntos.*' => 'file|max:8000',
-    ]);
-
-    $pqr_codigo = $request->route('pqr_codigo');
-    $pqrs = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
-    $usuarioActual = Auth::user();
-
-    // 2️⃣ 🔹 ASIGNACIÓN AUTOMÁTICA SI NO ESTÁ ASIGNADO
-    if (!$pqrs->asignados()->where('users.id', $usuarioActual->id)->exists()) {
-
-        // 🔒 Validar usuario activo
-        if (!$usuarioActual->activo) {
-            return response()->json([
-                'message' => 'No puedes registrar una respuesta final porque tu usuario está inactivo.'
-            ], 403);
-        }
-
-        // 🔹 Asignados ANTES
-        $asignadosAntes = $pqrs->asignados
-            ->map(fn ($user) => trim($user->name . ' ' . $user->primer_apellido))
-            ->toArray();
-
-        // ➕ Asignar sin eliminar otros asignados
-        $pqrs->asignados()->syncWithoutDetaching([$usuarioActual->id]);
-
-        // 🔄 CLAVE: recargar la relación
-        $pqrs->load('asignados');
-
-        // 🔹 Asignados DESPUÉS
-        $asignadosDespues = $pqrs->asignados
-            ->map(fn ($user) => trim($user->name . ' ' . $user->primer_apellido))
-            ->toArray();
-
-        // 📝 Registrar evento
-        \App\Models\EventLog::create([
-            'event_type' => 'auto_asignacion',
-            'description' => "El usuario {$usuarioActual->name} se asignó automáticamente al registrar la respuesta final.",
-            'pqr_id' => $pqrs->id,
-            'pqr_codigo' => $pqrs->pqr_codigo,
-            'estado_anterior' => $asignadosAntes
-                ? implode(', ', $asignadosAntes)
-                : 'Sin asignación',
-            'estado_nuevo' => implode(', ', $asignadosDespues),
-            'fecha_evento' => now(),
-            'user_id' => $usuarioActual->id,
+    public function registrarRespuestaFinal(Request $request)
+    {
+        // 1️⃣ Validación
+        $request->validate([
+            'contenido' => 'required|string',
+            'adjuntos' => 'nullable|array',
+            'adjuntos.*' => 'file|max:8000',
         ]);
 
-        // 🔄 Cambiar estado si aún no estaba asignada
-        if (in_array($pqrs->estado_respuesta, ['Sin asignar', ''])) {
-            $pqrs->estado_respuesta = 'Asignado';
+        $pqr_codigo = $request->route('pqr_codigo');
+        $pqrs = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+        $usuarioActual = Auth::user();
+
+        // 2️⃣ 🔹 ASIGNACIÓN AUTOMÁTICA SI NO ESTÁ ASIGNADO
+        if (!$pqrs->asignados()->where('users.id', $usuarioActual->id)->exists()) {
+
+            // 🔒 Validar usuario activo
+            if (!$usuarioActual->activo) {
+                return response()->json([
+                    'message' => 'No puedes registrar una respuesta final porque tu usuario está inactivo.'
+                ], 403);
+            }
+
+            // 🔹 Asignados ANTES
+            $asignadosAntes = $pqrs->asignados
+                ->map(fn($user) => trim($user->name . ' ' . $user->primer_apellido))
+                ->toArray();
+
+            // ➕ Asignar sin eliminar otros asignados
+            $pqrs->asignados()->syncWithoutDetaching([$usuarioActual->id]);
+
+            // 🔄 CLAVE: recargar la relación
+            $pqrs->load('asignados');
+
+            // 🔹 Asignados DESPUÉS
+            $asignadosDespues = $pqrs->asignados
+                ->map(fn($user) => trim($user->name . ' ' . $user->primer_apellido))
+                ->toArray();
+
+            // 📝 Registrar evento
+            \App\Models\EventLog::create([
+                'event_type' => 'auto_asignacion',
+                'description' => "El usuario {$usuarioActual->name} se asignó automáticamente al registrar la respuesta final.",
+                'pqr_id' => $pqrs->id,
+                'pqr_codigo' => $pqrs->pqr_codigo,
+                'estado_anterior' => $asignadosAntes
+                    ? implode(', ', $asignadosAntes)
+                    : 'Sin asignación',
+                'estado_nuevo' => implode(', ', $asignadosDespues),
+                'fecha_evento' => now(),
+                'user_id' => $usuarioActual->id,
+            ]);
+
+            // 🔄 Cambiar estado si aún no estaba asignada
+            if (in_array($pqrs->estado_respuesta, ['Sin asignar', ''])) {
+                $pqrs->estado_respuesta = 'Asignado';
+                $pqrs->save();
+            }
+        }
+
+        // 3️⃣ Cambiar estado si estaba asignado
+        if ($pqrs->estado_respuesta === 'Asignado') {
+            $pqrs->estado_respuesta = 'En proceso';
             $pqrs->save();
         }
-    }
 
-    // 3️⃣ Cambiar estado si estaba asignado
-    if ($pqrs->estado_respuesta === 'Asignado') {
-        $pqrs->estado_respuesta = 'En proceso';
-        $pqrs->save();
-    }
+        // 4️⃣ Verificar si ya existe respuesta final
+        $respuestaFinal = Respuesta::where('pqrs_id', $pqrs->id)
+            ->where('es_final', true)
+            ->first();
 
-    // 4️⃣ Verificar si ya existe respuesta final
-    $respuestaFinal = Respuesta::where('pqrs_id', $pqrs->id)
-        ->where('es_final', true)
-        ->first();
+        $adjuntosData = [];
 
-    $adjuntosData = [];
+        // 5️⃣ Manejo de archivos adjuntos
+        if ($request->hasFile('adjuntos')) {
+            foreach ($request->file('adjuntos') as $file) {
+                $path = $file->store('respuestas', 'public');
 
-    // 5️⃣ Manejo de archivos adjuntos
-    if ($request->hasFile('adjuntos')) {
-        foreach ($request->file('adjuntos') as $file) {
-            $path = $file->store('respuestas', 'public');
-
-            $adjuntosData[] = [
-                'path' => $path,
-                'original_name' => $file->getClientOriginalName(),
-                'url' => asset("storage/{$path}"),
-            ];
+                $adjuntosData[] = [
+                    'path' => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'url' => asset("storage/{$path}"),
+                ];
+            }
         }
+
+        // 6️⃣ Crear o actualizar respuesta final
+        if ($respuestaFinal) {
+            $respuestaFinal->contenido = $request->contenido;
+            $respuestaFinal->user_id = $usuarioActual->id;
+
+            $existingAdjuntos = \Illuminate\Support\Arr::wrap($respuestaFinal->adjuntos);
+            $respuestaFinal->adjuntos = array_merge($existingAdjuntos, $adjuntosData);
+
+            $respuestaFinal->save();
+        } else {
+            $respuestaFinal = Respuesta::create([
+                'pqrs_id' => $pqrs->id,
+                'user_id' => $usuarioActual->id,
+                'contenido' => $request->contenido,
+                'es_final' => true,
+                'adjuntos' => $adjuntosData,
+            ]);
+        }
+
+        // 7️⃣ Cargar autor
+        $respuestaFinal->load('autor');
+
+        // 8️⃣ Respuesta
+        return response()->json([
+            'mensaje' => 'Respuesta final registrada correctamente',
+            'respuesta' => $respuestaFinal,
+        ], 200);
     }
-
-    // 6️⃣ Crear o actualizar respuesta final
-    if ($respuestaFinal) {
-        $respuestaFinal->contenido = $request->contenido;
-        $respuestaFinal->user_id = $usuarioActual->id;
-
-        $existingAdjuntos = \Illuminate\Support\Arr::wrap($respuestaFinal->adjuntos);
-        $respuestaFinal->adjuntos = array_merge($existingAdjuntos, $adjuntosData);
-
-        $respuestaFinal->save();
-    } else {
-        $respuestaFinal = Respuesta::create([
-            'pqrs_id' => $pqrs->id,
-            'user_id' => $usuarioActual->id,
-            'contenido' => $request->contenido,
-            'es_final' => true,
-            'adjuntos' => $adjuntosData,
-        ]);
-    }
-
-    // 7️⃣ Cargar autor
-    $respuestaFinal->load('autor');
-
-    // 8️⃣ Respuesta
-    return response()->json([
-        'mensaje' => 'Respuesta final registrada correctamente',
-        'respuesta' => $respuestaFinal,
-    ], 200);
-}
 
 
     // ENVIO CON ENCUESTA
@@ -604,16 +619,22 @@ class RespuestaController extends Controller
     }
 
     public function listarRespuestas($pqr_codigo)
-    {
-        // Obtener la PQR primero (según tu lógica)
-        $pqr = Pqr::where('pqr_codigo', $pqr_codigo)->firstOrFail();
+{
+    // 1. Buscamos la PQR y cargamos TODAS sus relaciones de una vez
+    $pqr = Pqr::with([
+        'respuestas.autor', 
+        'respuestas.adjuntos', // Importante para que se vean los archivos
+        'asignados',
+        'clasificaciones'
+    ])
+    ->where('pqr_codigo', $pqr_codigo)
+    ->firstOrFail();
 
-        // Luego obtener las respuestas con la relación 'autor' cargada
-        $respuestas = Respuesta::with('autor')->where('pqrs_id', $pqr->id)->get();
-
-        // Devolver como JSON
-        return response()->json($respuestas);
-    }
+    // 2. Devolvemos el objeto PQR completo, que ya contiene el array 'respuestas'
+    return response()->json([
+        'pqr' => $pqr
+    ]);
+}
 
     //  public function updateRespuestaFinal(Request $request, Respuesta $respuesta) // Aquí usamos Route Model Binding
     // {

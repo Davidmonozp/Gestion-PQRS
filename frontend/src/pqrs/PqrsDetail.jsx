@@ -1072,6 +1072,7 @@ function PqrsDetail() {
                         {/* Lista filtrada y AHORA ordenada */}
                         {filteredUsuarios.length > 0 ? (
                           [...filteredUsuarios] // Crea una copia para no mutar el array original
+                          .filter((u) => u.activo === 1)
                             .sort((a, b) => a.name.localeCompare(b.name)) // Ordena por nombre
                             .map((u) => (
                               <label key={u.id} className="checkbox-item">
